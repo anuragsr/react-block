@@ -1,0 +1,38 @@
+body{
+  background: #f5f7fa;
+}
+
+input:focus{
+  // outline: none;
+}
+
+.btn-accent{
+  padding: .5rem 1rem;
+  color: $w;
+  background-color: $acc;
+  border-color: $acc;
+  &:hover{
+    color: $w;
+    background-color: $acc-dark;
+    border-color: $acc-dark;
+  }
+}
+
+.custom-control-label{
+  margin-left: .5rem;
+  &:before, &:after{
+    top: .05rem;
+    width: 1.25rem;
+    height: 1.25rem;
+    left: -2rem;
+  }
+}
+
+.custom-control-input:checked~.custom-control-label::before{
+  color: $w;
+  border-color: $tagbg;
+  background-color: $tagbg;
+}
+// .custom-control-label::before,
+// .custom-control-label::after{
+// }

@@ -1,0 +1,17 @@
+$mont-sb: 'mont-sb';
+@font-face {
+  font-family: $mont-sb;
+  src: url(./fonts/Montserrat-SemiBold.ttf) format('truetype');
+}
+
+$mont-m: 'mont-m';
+@font-face {
+  font-family: $mont-m;
+  src: url(./fonts/Montserrat-Medium.ttf) format('truetype');
+}
+
+$heebo-r: 'heebo-r';
+@font-face {
+  font-family: $heebo-r;
+  src: url(./fonts/Heebo-Regular.ttf) format('truetype');
+}

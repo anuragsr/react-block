@@ -1,0 +1,61 @@
+$w: #fff;
+$b: #000;
+$pr: #2c405a;
+$sc: #3f536e;
+$line: #d8e5ee;
+$tagbg: #5bb884;
+$acc: #54b6b8;
+$acc-dark: #418688;
+
+// Justify content: space between
+%j-s-b {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+// Justify content: center
+%j-c {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+// Keyframe mixin
+@mixin prefixed($property, $value) {
+
+  -webkit-#{$property}: #{$value};
+  -moz-#{$property}: #{$value};
+  -ms-#{$property}: #{$value};
+  -o-#{$property}: #{$value};
+  #{$property}: #{$value};
+
+}
+
+// Prefix & Keyframes mixins
+
+@mixin prefixed($property, $value) {
+  -webkit-#{$property}: #{$value};
+  -moz-#{$property}: #{$value};
+  -ms-#{$property}: #{$value};
+  -o-#{$property}: #{$value};
+  #{$property}: #{$value};
+}
+
+@mixin keyframes($name) {
+  @-webkit-keyframes #{$name} {
+    @content;
+  }
+  @-moz-keyframes #{$name} {
+    @content;
+  }
+  @-ms-keyframes #{$name} {
+    @content;
+  }
+  @-o-keyframes #{$name} {
+    @content;
+  }
+  @keyframes #{$name} {
+    @content;
+  }
+}
