@@ -5,6 +5,12 @@ import { l } from '../helpers/common'
 
 import 'react-autocomplete-input/dist/bundle.css'
 
+const getDisplayName = item => {
+  let arr = item.split(":")
+  , length = arr.length
+  return [arr[length - 2], arr[length - 1]].join(":")
+}
+
 class TagInput extends Component {
   constructor(props) {
     super(props)
@@ -55,11 +61,8 @@ class TagInput extends Component {
       .get('/api/v1/tags', { params: { query: part } })
       .then(res => {
         const currRes = res.data.results
-        l(currRes)
-        let autoCmplOpts = []        
-        if(currRes.length){
-          autoCmplOpts = currRes.map(obj => obj.full_name)
-        }
+        const autoCmplOpts = currRes.map(obj => obj.full_name)        
+        // l(autoCmplOpts, currRes)
         this.setState({ autoCmplOpts, currRes })
       })
     }
@@ -79,7 +82,8 @@ class TagInput extends Component {
           this.setState({
             items: items,
             input: '',
-            // currRes: [],
+            autoCmplOpts: [],
+            currRes: [],
           })
           
           let showAnim = false, showAttr = true
@@ -116,14 +120,14 @@ class TagInput extends Component {
           className="tag-inp form-control"
           placeholder="Add tag .."
           Component="input"
-          options={this.state.autoCmplOpts}
-          onRequestOptions={this.handleRequestOptions}
           trigger=""
           spacer=""
           matchAny={true}
-          requestOnlyIfNoOptions ={false}
+          requestOnlyIfNoOptions={false}
           maxOptions={0}
           value={this.state.input}
+          options={this.state.autoCmplOpts}
+          onRequestOptions={this.handleRequestOptions}
           onChange={this.handleInputChange}
           onKeyDown={this.handleInputKeyDown}
         />
@@ -140,7 +144,8 @@ class TagInput extends Component {
             <li key={i}>
               <div>
                 <img src={item.image} alt="" />
-                {item.full_name} <span onClick={this.handleRemoveItem(i)}>&times;</span>
+                {getDisplayName(item.full_name)}
+                <span onClick={this.handleRemoveItem(i)}>&times;</span>
               </div>
             </li>
           )}          

@@ -28,9 +28,9 @@ export default class HttpService {
     .reply(200, {
       "count": 2,
       "results": [
-        {"id": 1, "name": "tag1:tag2:tag3", "image": "assets/tag-plh.png"},
-        {"id": 2, "name": "tag2:tag3:tag4", "image": "assets/tag-plh.png"},
-        {"id": 3, "name": "tag3:tag4:tag5", "image": "assets/tag-plh.png"},
+        {"id": 1, "name": "tag1:tag2:tag3", "full_name": "tag1:tag2:tag3", "image": "assets/tag-plh.png"},
+        {"id": 2, "name": "tag2:tag3:tag4", "full_name": "tag2:tag3:tag4", "image": "assets/tag-plh.png"},
+        {"id": 3, "name": "tag3:tag4:tag5", "full_name": "tag3:tag4:tag5", "image": "assets/tag-plh.png"},
       ]
     })
     .onGet('api/v1/undo')
@@ -50,10 +50,10 @@ export default class HttpService {
     .reply(200, {
       "count": 2,
       "results": [
-        {"id": 1, "name": "tag1:tag2:tag3", "image": "assets/tag-plh-sug.png"},
-        {"id": 2, "name": "tag2:tag3:tag4", "image": "assets/tag-plh-sug.png"},
-        {"id": 3, "name": "tag3:tag4:tag5", "image": "assets/tag-plh-sug.png"},
-        {"id": 4, "name": "american", "image": "assets/tag-plh-sug.png"},
+        {"id": 1, "name": "tag1:tag2:tag3", "full_name": "tag1:tag2:tag3", "image": "assets/tag-plh-sug.png"},
+        {"id": 2, "name": "tag2:tag3:tag4", "full_name": "tag2:tag3:tag4", "image": "assets/tag-plh-sug.png"},
+        {"id": 3, "name": "tag3:tag4:tag5", "full_name": "tag3:tag4:tag5", "image": "assets/tag-plh-sug.png"},
+        {"id": 4, "name": "american", "full_name": "american", "image": "assets/tag-plh-sug.png"},
       ]
     })
     .onPost('/api/v1/get_attraction_for_tags'/* , {

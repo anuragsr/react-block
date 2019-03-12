@@ -66,7 +66,7 @@ export default class PhotoBlock extends Component {
       // l(tags)
       l("Call ML with list of tags if ML on")
       this.http
-      .post('/api/v1/get_attraction_for_tags', { "tags_ids": tags.map(x => x.id) })
+      .post('/api/v1/get_attraction_for_tags', { tags_ids: tags.map(x => x.id) })
       .then(res => {
         l(res.data)
         let attr = res.data.attraction?res.data.attraction:0
@@ -105,10 +105,11 @@ export default class PhotoBlock extends Component {
     // l(this.state)
     if(this.state.tags.length){
       const request = {
-        "tags_ids": this.state.tags.map(x => x.id),
-        "ML_attraction": this.state.ml?this.state.att.auto:"None",
-        "editor_attraction": this.state.att.manual, 
-        "editor_id": 1
+        tags_ids: this.state.tags.map(x => x.id),
+        ML_attraction: this.state.ml?this.state.att.auto:"None",
+        editor_attraction: this.state.att.manual, 
+        editor_id: 1,
+        bot_id: this.state.currBot.id,
       }
       l(request)
   
