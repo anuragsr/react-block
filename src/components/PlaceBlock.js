@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import TagInput from './TagInput'
+import TagInput from './TagInputOld'
 import SliderInput from './SliderInput'
 import HttpService from '../services/HttpService'
 import { l, rand } from '../helpers/common'

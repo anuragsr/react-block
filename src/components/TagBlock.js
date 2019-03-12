@@ -1,4 +1,5 @@
 import React, { Component } from 'react'
+// import TagInputOld from './TagInputOld'
 import TagInput from './TagInput'
 import SliderInput from './SliderInput'
 import HttpService from '../services/HttpService'
@@ -133,9 +134,9 @@ export default class TagBlock extends Component {
             Tags: {this.state.tags.length?
               this.state.tags.map((t, i) => {
                 if(i === this.state.tags.length - 1)
-                  return "#" + t.name
+                  return t.full_name
                 else
-                  return "#" + t.name + ", "
+                  return t.full_name + ", "
               }
               ):"None"}
             <br/>
@@ -160,6 +161,10 @@ export default class TagBlock extends Component {
                   })}
                 </select>
               </div>
+              {/* <div className="b-section">
+                <TagInputOld tags={this.state.tags} changeInput={this.inputChanged} changeTags={this.tagsChanged}/>
+              </div> */}
+              
               <div className="b-section">
                 <TagInput tags={this.state.tags} changeInput={this.inputChanged} changeTags={this.tagsChanged}/>
               </div>
