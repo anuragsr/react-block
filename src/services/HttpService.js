@@ -1,17 +1,20 @@
 import axios from 'axios'
 import MockAdapter from 'axios-mock-adapter'
+import { l, mock } from '../helpers/common'
+let apiHost = ''
 
-class HttpService {
-
+export default class HttpService {
+  
   constructor(){
-    this.initMock()
+    if(mock){
+      this.initMock()     
+    }else{
+      apiHost = 'https://api-admin-staging.oyster.ai'
+    }
   }
   
   initMock(){
-    // const mock = new MockAdapter(axios, { delayResponse: 1000 })
-    
     new MockAdapter(axios, { delayResponse: 1000 })
-    // .onGet('/api/v1/tags', { params: { query: 'a' } }).reply(200, {      
     .onGet('/api/v1/bots')
     .reply(200, {
       "count": 2,
@@ -32,6 +35,27 @@ class HttpService {
     })
     .onGet('api/v1/undo')
     .reply(204)
+    .onGet('/api/v1/places')
+    .reply(200, {
+      "count": 2,
+      "results": [
+        {"id": 1, "title": "Panama City Title", "subtitle": "Panama City Subtitle"},
+        {"id": 2, "title": "New Jersey Title", "subtitle": "New Jersey Subtitle"},
+        {"id": 3, "title": "Moscow Title", "subtitle": "Moscow Subtitle"},
+        {"id": 4, "title": "St. Petersburg Title", "subtitle": "St. Petersburg Subtitle"},
+        {"id": 5, "title": "Vladivostok Title", "subtitle": "Vladivostok Subtitle"},
+      ]
+    })
+    .onGet('/api/v1/suggested_tags')
+    .reply(200, {
+      "count": 2,
+      "results": [
+        {"id": 1, "name": "tag1:tag2:tag3", "image": "assets/tag-plh-sug.png"},
+        {"id": 2, "name": "tag2:tag3:tag4", "image": "assets/tag-plh-sug.png"},
+        {"id": 3, "name": "tag3:tag4:tag5", "image": "assets/tag-plh-sug.png"},
+        {"id": 4, "name": "american", "image": "assets/tag-plh-sug.png"},
+      ]
+    })
     .onPost('/api/v1/get_attraction_for_tags'/* , {
       "tags_ids": [1, 2, 3]
     } */)
@@ -42,20 +66,19 @@ class HttpService {
       "tags_ids": [1, 2, 3], 
       "ML_attraction": 73 (or None), 
       "editor_attraction": 65, 
-      "editor_id": 1
+      "editor_id": 1,
+      "bot_id": 1
     } */)
     .reply(200, {
       "id": 1
     })
   }
 
-  get(url, data) {
-    return axios.get(url, data)
+  get(url, data) {    
+    return axios.get(apiHost + url, data)
   }
   
-  post(url, data) {  	
-    return axios.post(url, data)
+  post(url, data) {
+    return axios.post(apiHost + url, data)
   }  
 }
-
-export default HttpService

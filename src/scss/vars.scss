@@ -4,8 +4,10 @@ $pr: #2c405a;
 $sc: #3f536e;
 $line: #d8e5ee;
 $tagbg: #5bb884;
+$tagbgsc: #ab7df6;
 $acc: #54b6b8;
 $acc-dark: #418688;
+$plinpbg: #f6f6f6;
 
 // Justify content: space between
 %j-s-b {
@@ -21,19 +23,14 @@ $acc-dark: #418688;
   align-items: center;
 }
 
-// Keyframe mixin
-@mixin prefixed($property, $value) {
-
-  -webkit-#{$property}: #{$value};
-  -moz-#{$property}: #{$value};
-  -ms-#{$property}: #{$value};
-  -o-#{$property}: #{$value};
-  #{$property}: #{$value};
-
+// Justify content: flex-end
+%j-f-e {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
 }
 
 // Prefix & Keyframes mixins
-
 @mixin prefixed($property, $value) {
   -webkit-#{$property}: #{$value};
   -moz-#{$property}: #{$value};

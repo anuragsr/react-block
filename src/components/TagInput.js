@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import TextInput from 'react-autocomplete-input'
 import HttpService from '../services/HttpService'
+import { l } from '../helpers/common'
 
 import 'react-autocomplete-input/dist/bundle.css'
 
@@ -11,7 +12,6 @@ class TagInput extends Component {
     this.state = {
       items: this.props.tags,
       input: '',
-      // autoCmplOpts: ["apple", "apricot", "banana", "carrot"]
       autoCmplOpts: [],
       currRes: []
     }
@@ -26,7 +26,7 @@ class TagInput extends Component {
   }
 
   handleInputChange(input){
-    // console.log(input.length)
+    // l(input.length)
     let showAnim = false, showAttr = false
     if(input.length){
       // If input has length -> show loading animation
@@ -44,51 +44,51 @@ class TagInput extends Component {
     }
     this.setState({ input })
     this.props.changeInput(showAnim, showAttr)
-    // console.log(this.state.showAnim)
+    // l(this.state.showAnim)
   }
 
   handleRequestOptions(part) {
-    // console.log(part)
+    // l(part)
     if(part.length){
       // Simulate request to get tags here
       this.http
       .get('/api/v1/tags', { params: { query: part } })
       .then(res => {
         const currRes = res.data.results
+        l(currRes)
         let autoCmplOpts = []        
         if(currRes.length){
-          autoCmplOpts = currRes.map(obj => obj.name)
+          autoCmplOpts = currRes.map(obj => obj.full_name)
         }
         this.setState({ autoCmplOpts, currRes })
       })
     }
-
-    // setTimeout(() => {
-    //   this.setState({ autoCmplOpts: ['apple', 'apricot', 'avocado'] })
-    // }, 2000)
   }
 
   handleInputKeyDown(evt){
     let items
     if ( evt.keyCode === 13 ) {
-      let value = evt.target.value.trim()
+      let value = evt.target.value
       if(value !== ""){
-        let chosenObj = this.state.currRes.filter(x => x.name === value)      
-        if(!chosenObj.length){
-          chosenObj = [{id: "any", name: value, "image": "assets/tag-plh.png"}]
+        l(value)
+        let chosenObj = this.state.currRes.filter(x => x.full_name === value)
+        l(chosenObj) 
+        if(chosenObj.length){
+          items = [...this.state.items, chosenObj[0]]
+          
+          this.setState({
+            items: items,
+            input: '',
+            // currRes: [],
+          })
+          
+          let showAnim = false, showAttr = true
+          this.props.changeTags(items)
+          this.props.changeInput(showAnim, showAttr)
+        }else{
+          // chosenObj = [{id: "any", name: value, "image": "assets/tag-plh.png"}]
         }
         
-        items = [...this.state.items, chosenObj[0]]
-        
-        this.setState({
-          items: items,
-          input: '',
-          currRes: [],
-        })
-        
-        let showAnim = false, showAttr = true
-        this.props.changeTags(items)
-        this.props.changeInput(showAnim, showAttr)
       }
     }
 
@@ -119,6 +119,10 @@ class TagInput extends Component {
           options={this.state.autoCmplOpts}
           onRequestOptions={this.handleRequestOptions}
           trigger=""
+          spacer=""
+          matchAny={true}
+          requestOnlyIfNoOptions ={false}
+          maxOptions={0}
           value={this.state.input}
           onChange={this.handleInputChange}
           onKeyDown={this.handleInputKeyDown}
@@ -134,8 +138,10 @@ class TagInput extends Component {
         <ul className="tag-ctn">
           {this.state.items.map((item, i) => 
             <li key={i}>
-              <img src={item.image} alt="" />
-              {item.name} <span onClick={this.handleRemoveItem(i)}>&times;</span>
+              <div>
+                <img src={item.image} alt="" />
+                {item.full_name} <span onClick={this.handleRemoveItem(i)}>&times;</span>
+              </div>
             </li>
           )}          
         </ul>
