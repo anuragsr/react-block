@@ -17,6 +17,7 @@ input.tag-inp{
 //   background: $acc;
 // }
 
+// For tags
 ul.tag-ctn{
   padding: 5px;
   border-radius: 2px;
@@ -145,6 +146,11 @@ ul.tag-ctn li{
   font-size: 18px;
   color: $sc;
   margin-bottom: 15px;
+}
+
+.att-inp{
+  font-weight: bold;
+  width: 85px;
 }
 
 .btn-reset{

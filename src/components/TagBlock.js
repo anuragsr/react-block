@@ -41,6 +41,10 @@ export default class TagBlock extends Component {
       let bots = res.data.results, currBot = bots[0]
       this.setState({ bots, currBot })
     })
+    .catch(error => {
+      // error callback
+      l(error)
+    })
   }
   
   inputChanged(showAnim, showAttr){
@@ -73,7 +77,11 @@ export default class TagBlock extends Component {
             auto: attr
           }
         }))
-      })      
+      })
+      .catch(error => {
+        // error callback
+        l(error)
+      }) 
     }
     this.setState({ tags })
   }
@@ -102,7 +110,11 @@ export default class TagBlock extends Component {
     if(this.state.tags.length){
       this.setState({ 
         showAttr: false, 
-        showTags: false
+        showTags: false,
+        att: {
+          manual: 0,
+          auto: 0
+        }
       })
       const request = {
         tags_ids: this.state.tags.map(x => x.id),
@@ -152,59 +164,57 @@ export default class TagBlock extends Component {
             Attraction: {this.state.att.manual}
           </div>
         </div>
-        {
-          this.state.bots.length > 0 &&
-          <div className="body row">
-            <div className="col-lg-7">
-              <div className="b-section">
-                <img src={this.state.currBot.avatar} alt="bot" height="50" />
-                <select 
-                  className="custom" 
-                  value={this.state.currBot.id} 
-                  onChange={this.botChanged}
-                >
-                  {this.state.bots.map(function(bot, idx){
-                    return (
-                      <option key={bot.id} value={bot.id}>{bot.name}</option>
-                    )
-                  })}
-                </select>
-              </div>
-              {/* <div className="b-section">
-                <TagInputOld tags={this.state.tags} changeInput={this.inputChanged} changeTags={this.tagsChanged}/>
-              </div> */}
-              
-              <div className="b-section">
-                <TagInput tags={this.state.tags} showTags={this.state.showTags} changeInput={this.inputChanged} changeTags={this.tagsChanged}/>
-              </div>
-                {/* ShowAnim: <pre>{JSON.stringify(this.state.showAnim, null, 2)}</pre> */}
-                {/* ShowAttr: <pre>{JSON.stringify(this.state.showAttr, null, 2)}</pre> */}
-              <div className="b-section">
-                {
-                  this.state.showAnim &&
-                  <div className="ctn-anim">
-                    <div className="dot"></div>
-                    <div className="dot"></div>
-                    <div className="dot"></div>
-                    <div className="dot"></div>
-                  </div>
-                }{
-                  this.state.showAttr &&
-                  <SliderInput att={this.state.att} changeAtt={this.attChanged}/>
-                }
-              </div>
-              <div className="b-section">
-                <div className="custom-control custom-checkbox">
-                  <input checked={this.state.ml?"checked":""} onChange={this.mlChanged} type="checkbox" className="custom-control-input" id={checkId} />
-                  <label className="custom-control-label" htmlFor={checkId}>Turn On ML</label>
+        <div className="body row">
+          <div className="col-lg-7">            
+            {this.state.bots.length > 0 &&
+            <div className="b-section">
+              <img src={this.state.currBot.avatar} alt="bot" height="50" />
+              <select 
+                className="custom" 
+                value={this.state.currBot.id} 
+                onChange={this.botChanged}
+              >
+                {this.state.bots.map(function(bot, idx){
+                  return (
+                    <option key={bot.id} value={bot.id}>{bot.name}</option>
+                  )
+                })}
+              </select>
+            </div>}
+            {/* <div className="b-section">
+              <TagInputOld tags={this.state.tags} changeInput={this.inputChanged} changeTags={this.tagsChanged}/>
+            </div> */}
+            
+            <div className="b-section">
+              <TagInput tags={this.state.tags} showTags={this.state.showTags} changeInput={this.inputChanged} changeTags={this.tagsChanged}/>
+            </div>
+              {/* ShowAnim: <pre>{JSON.stringify(this.state.showAnim, null, 2)}</pre> */}
+              {/* ShowAttr: <pre>{JSON.stringify(this.state.showAttr, null, 2)}</pre> */}
+            <div className="b-section">
+              {
+                this.state.showAnim &&
+                <div className="ctn-anim">
+                  <div className="dot"></div>
+                  <div className="dot"></div>
+                  <div className="dot"></div>
+                  <div className="dot"></div>
                 </div>
-              </div>
-              <div className="b-section">
-                <button onClick={this.submit} className="btn btn-accent">Submit</button>
+              }{
+                this.state.showAttr &&
+                <SliderInput att={this.state.att} changeAtt={this.attChanged}/>
+              }
+            </div>
+            <div className="b-section">
+              <div className="custom-control custom-checkbox">
+                <input checked={this.state.ml?"checked":""} onChange={this.mlChanged} type="checkbox" className="custom-control-input" id={checkId} />
+                <label className="custom-control-label" htmlFor={checkId}>Turn On ML</label>
               </div>
             </div>
-          </div>    
-        }
+            <div className="b-section">
+              <button onClick={this.submit} className="btn btn-accent">Submit</button>
+            </div>
+          </div>
+        </div>            
       </div>
     )
   }

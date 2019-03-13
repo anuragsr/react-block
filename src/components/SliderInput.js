@@ -3,6 +3,7 @@ import Slider from 'rc-slider'
 import 'rc-slider/assets/index.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faRedo } from '@fortawesome/free-solid-svg-icons'
+import { l } from '../helpers/common'
 
 class SliderInput extends Component {
   constructor(props) {
@@ -11,11 +12,23 @@ class SliderInput extends Component {
       att: this.props.att
     }
     this.onSliderChange = this.onSliderChange.bind(this)
+    this.onManualChange = this.onManualChange.bind(this)
     this.resetAttr = this.resetAttr.bind(this)
   }
 
   componentWillReceiveProps(nextProps) {
     this.setState({ att: nextProps.att }) 
+  }
+
+  onManualChange(e){
+    let value = parseInt(e.target.value)
+    this.setState( state => ({
+      att: {
+        ...state.att,
+        manual: value
+      }
+    }))
+    this.props.changeAtt(value)
   }
 
   onSliderChange(value){
@@ -51,7 +64,13 @@ class SliderInput extends Component {
       <div>
         <div className="sl-title">
           <div>Attraction</div>
-          <div>{this.state.att.manual}</div>       
+          <input 
+            type="number" 
+            min={0} max={100} 
+            className="att-inp form-control" 
+            value={Number(this.state.att.manual).toString()} 
+            onChange={this.onManualChange} 
+          />
         </div>
         <Slider
           value={this.state.att.manual}

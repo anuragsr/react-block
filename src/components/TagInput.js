@@ -83,7 +83,7 @@ export default class TagInput extends Component {
     let showAnim = true, showAttr = false
     this.props.changeInput(showAnim, showAttr)
     this.http
-    .get('/api/v1/tags', { params: { query: value } })
+    .get('/api/v1/tags', { query: value })
     .then(res => {
       const currRes = res.data.results
       l("Total API Results:", currRes)
@@ -99,6 +99,10 @@ export default class TagInput extends Component {
       this.setState({ suggestions: currRes })
       
       this.props.changeInput(showAnim, showAttr)
+    })
+    .catch(error => {
+      // error callback
+      l(error)
     })
   }
 

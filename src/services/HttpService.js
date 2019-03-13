@@ -1,7 +1,8 @@
 import axios from 'axios'
 import MockAdapter from 'axios-mock-adapter'
 import { l, mock } from '../helpers/common'
-let apiHost = ''
+
+let apiHost = '', call
 
 export default class HttpService {
   
@@ -74,11 +75,31 @@ export default class HttpService {
     })
   }
 
-  get(url, data) {    
-    return axios.get(apiHost + url, data)
+  get(url, params) {
+    let config = {
+      method: "get",
+      url: apiHost + url,
+      params
+    }
+    if(call){
+      call.cancel('One request at a time, fellas!')
+    }
+    call = axios.CancelToken.source()
+    config.cancelToken = call.token
+    return axios(config)
   }
   
   post(url, data) {
-    return axios.post(apiHost + url, data)
+    let config = {
+      method: "post",
+      url: apiHost + url,
+      data
+    }
+    if(call){
+      call.cancel('One request at a time, fellas!')
+    }
+    call = axios.CancelToken.source()
+    config.cancelToken = call.token
+    return axios(config)
   }  
 }

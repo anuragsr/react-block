@@ -12,7 +12,6 @@ export default class App extends Component {
         <Block show={false} type="Photo" />
         <Block show={false} type="Place" />
         <Block show={true} type="Tag" />
-        <Block show={false} type="Tag" />
       </div>
     )
   }
