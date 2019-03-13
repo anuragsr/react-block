@@ -36,9 +36,8 @@ const getIndicesOf = (str, searchStr, caseSensitive) => {
 // Use your imagination to render suggestions.
 const renderSuggestion = (suggestion, { query }) => {  
   const suggestionText = `${suggestion.full_name}`
-  const matches = getIndicesOf(suggestionText, query)
-  const parts = AutosuggestHighlightParse(suggestionText, matches)
-  // l(suggestionText, matches, parts)
+  const parts = AutosuggestHighlightParse(suggestionText, getIndicesOf(suggestionText, query))
+  // l(suggestionText, parts)
   return (
     <div>
       {/* {suggestion.full_name}<br/> */}
@@ -88,11 +87,17 @@ export default class TagInput extends Component {
     .then(res => {
       const currRes = res.data.results
       l("Total API Results:", currRes)
-      let suggestions = currRes.filter(x => x.full_name.toLowerCase().includes(value.toLowerCase()))
+      let suggestions = currRes.filter(x => x.full_name.toLowerCase().includes(value.toLowerCase()))      
       l("Results containing current query:", suggestions)
       showAnim = false
       showAttr = true
-      this.setState({ suggestions })
+
+      // To set filtered options 
+      // this.setState({ suggestions })
+
+      // To set all options 
+      this.setState({ suggestions: currRes })
+      
       this.props.changeInput(showAnim, showAttr)
     })
   }
@@ -132,10 +137,10 @@ export default class TagInput extends Component {
 
   handleRemoveItem = index => {
     return () => {
-      let items = this.state.items.filter((item, i) => i !== index), showAttr = !!items.length
+      let items = this.state.items.filter((item, i) => i !== index)
       this.setState({ items })
       this.props.changeTags(items)
-      this.props.changeInput(showAttr)
+      this.props.changeInput(false, !!items.length)
     }
   }
 

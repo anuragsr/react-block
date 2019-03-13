@@ -39,8 +39,8 @@ class SliderInput extends Component {
       handleStyle: {
         height: 20,
         width: 20,
-        marginLeft: this.state.value?-10:0,
-        // marginLeft: -10,
+        // marginLeft: this.state.value?-10:0,
+        marginLeft: -10,
         marginTop: -7,
         borderColor: '#5bb884',
         backgroundColor: '#5bb884',
