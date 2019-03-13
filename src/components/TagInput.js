@@ -138,9 +138,10 @@ export default class TagInput extends Component {
   handleRemoveItem = index => {
     return () => {
       let items = this.state.items.filter((item, i) => i !== index)
+      let showAttr = !!items.length
       this.setState({ items })
       this.props.changeTags(items)
-      this.props.changeInput(false, !!items.length)
+      this.props.changeInput(false, showAttr)
     }
   }
 
