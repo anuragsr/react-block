@@ -23,6 +23,15 @@
         font-size: 17px;
       }
     }
+    .bot-img{        
+      height: 50px;
+      width: 50px;
+      display: inline-block;
+      vertical-align: middle;
+      background-size: contain;      
+      background-repeat: no-repeat;
+      background-position: center;
+    }
     .notif{
       // visibility: hidden;
       z-index: -1;
@@ -35,6 +44,7 @@
       padding: 20px;
       box-shadow: 0 0 5px 1px rgba($b, .2);
       transition: opacity .5s;
+      border-radius: 5px;
       &.shown{
         // visibility: visible;
         z-index: 0;
@@ -53,6 +63,7 @@
         cursor: pointer;
       }
       .n-body{
+        word-break: break-all;
         margin-top: 10px;
         font-size: 13px;
         font-family: $heebo-r;

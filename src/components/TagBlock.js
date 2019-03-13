@@ -12,7 +12,8 @@ export default class TagBlock extends Component {
     super(props)
     this.http = new HttpService()
     this.state = {
-      showNotif: false, 
+      showNotif: false,
+      notifType: "submit",
       showAnim: false,
       showAttr: false,
       showTags: true,
@@ -24,6 +25,7 @@ export default class TagBlock extends Component {
         manual: 0,
         auto: 0
       },
+      lastTagId: 0,
     }
     this.inputChanged = this.inputChanged.bind(this)
     this.botChanged = this.botChanged.bind(this)
@@ -32,6 +34,7 @@ export default class TagBlock extends Component {
     this.tagsChanged = this.tagsChanged.bind(this)
     this.submit = this.submit.bind(this)
     this.undo = this.undo.bind(this)
+    this.onUndo = this.onUndo.bind(this)
   }
 
   componentDidMount(){
@@ -96,13 +99,27 @@ export default class TagBlock extends Component {
   }
 
   undo(){
+    let params = { type: 'tag', id: this.state.lastTagId }
+    l(params)
     this.http
-    .get('/api/v1/undo', { 
-      params: { type: 'tag', id: 1 }
-    })
+    .get('/api/v1/undo', params)
     .then(res => {
-      alert("Undo status:" + res.status)
+      l(res)
+      this.setState({
+        showNotif: true, 
+        notifType: "undo"
+      })
+      setTimeout(() => {
+        this.setState({ 
+          showNotif: false,
+          notifType: "submit"
+        })
+      }, 5000)
     })
+  }
+
+  onUndo(){
+    this.setState({ showNotif: false, notifType: "submit" })
   }
 
   submit(){
@@ -110,11 +127,7 @@ export default class TagBlock extends Component {
     if(this.state.tags.length){
       this.setState({ 
         showAttr: false, 
-        showTags: false,
-        att: {
-          manual: 0,
-          auto: 0
-        }
+        showTags: false
       })
       const request = {
         tags_ids: this.state.tags.map(x => x.id),
@@ -130,13 +143,20 @@ export default class TagBlock extends Component {
       .then(res => {
         l(res.data)
         //  Show notif, undo
-        this.setState({ showNotif: true })
+        this.setState({ showNotif: true, lastTagId: res.data.id })
         setTimeout(() => {
           this.setState({ 
-            showNotif: false, 
             tags: [], 
-            showTags: true
+            showAttr: false,         
+            showTags: true,
+            att: {
+              manual: 0,
+              auto: 0
+            }
           })
+          if(this.state.notifType === "submit"){
+            this.setState({ showNotif: false })
+          }
         }, 5000)
       })    
     }
@@ -149,26 +169,42 @@ export default class TagBlock extends Component {
           Create new tag block            
         </div>
         <div className={this.state.showNotif?"shown notif":"notif"}>
-          <div className="n-title">New tag block created!</div>
-          <div onClick={this.undo} className="undo float-right">Undo</div>
-          <div className="n-body">
-            Tags: {this.state.tags.length?
-              this.state.tags.map((t, i) => {
-                if(i === this.state.tags.length - 1)
-                  return t.full_name
-                else
-                  return t.full_name + ", "
-              }
-              ):"None"}
-            <br/>
-            Attraction: {this.state.att.manual}
-          </div>
+          {
+            this.state.notifType === "submit" &&
+            <div>
+              <div className="n-title">New tag block created!</div>
+              <div onClick={this.undo} className="undo float-right">Undo</div>
+              <div className="n-body">
+                Tags: {this.state.tags.length?
+                  this.state.tags.map((t, i) => {
+                    if(i === this.state.tags.length - 1)
+                      return t.full_name
+                    else
+                      return t.full_name + ", "
+                  }
+                  ):"None"}
+                <br/>
+                Attraction: {this.state.att.manual}
+              </div>
+            </div>
+          }{
+            this.state.notifType === "undo" &&
+            <div>
+              <div className="n-title">Tag block deleted successfully!</div>
+              <div onClick={this.onUndo} className="undo float-left">Ok</div>    
+            </div>
+          }
         </div>
         <div className="body row">
           <div className="col-lg-7">            
             {this.state.bots.length > 0 &&
             <div className="b-section">
-              <img src={this.state.currBot.avatar} alt="bot" height="50" />
+              <div
+                className="bot-img"
+                style={{ backgroundImage: `url(${this.state.currBot.avatar})` }}
+              >
+              </div>
+              {/* <img src={this.state.currBot.avatar} alt="bot" height="50" /> */}
               <select 
                 className="custom" 
                 value={this.state.currBot.id} 
