@@ -2,9 +2,9 @@ body{
   background: #f5f7fa;
 }
 
-input:focus{
-  // outline: none;
-}
+// input:focus{
+//   outline: none;
+// }
 
 .btn-accent{
   padding: .5rem 1rem;
@@ -34,11 +34,11 @@ input:focus{
   background-color: $tagbg;
 }
 
-.apiSwitch{  
-  position: absolute;
-  right: 0;
-  top: 0;
-  background: $w;
-  font-family: $mont-sb;
-  box-shadow: 0 0 5px 1px rgba($b, .2);
-}
+// .apiSwitch{  
+//   position: absolute;
+//   right: 0;
+//   top: 0;
+//   background: $w;
+//   font-family: $mont-sb;
+//   box-shadow: 0 0 5px 1px rgba($b, .2);
+// }

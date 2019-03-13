@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
 import Autosuggest from 'react-autosuggest'
+import AutosuggestHighlightParse from 'autosuggest-highlight/parse'
 import HttpService from '../services/HttpService'
 import { l } from '../helpers/common'
 
@@ -14,24 +15,41 @@ const getDisplayName = item => {
 // input value for every given suggestion.
 const getSuggestionValue = suggestion => suggestion.full_name
 
-// Use your imagination to render suggestions.
-const renderSuggestion = (suggestion, { query }) => {
-  // const suggestionText = `${suggestion.first} ${suggestion.last}`
-  // const matches = AutosuggestHighlightMatch(suggestionText, query)
-  // const parts = AutosuggestHighlightParse(suggestionText, matches)
+// Gets matches in the string
+const getIndicesOf = (str, searchStr, caseSensitive) => {
+  var searchStrLen = searchStr.length
+  if (searchStrLen === 0) {
+      return []
+  }
+  var startIndex = 0, index, indices = []
+  if (!caseSensitive) {
+    str = str.toLowerCase()
+    searchStr = searchStr.toLowerCase()
+  }
+  while ((index = str.indexOf(searchStr, startIndex)) > -1) {
+    startIndex = index + searchStrLen
+    indices.push([index, startIndex])
+  }
+  return indices
+}
 
+// Use your imagination to render suggestions.
+const renderSuggestion = (suggestion, { query }) => {  
+  const suggestionText = `${suggestion.full_name}`
+  const matches = getIndicesOf(suggestionText, query)
+  const parts = AutosuggestHighlightParse(suggestionText, matches)
+  // l(suggestionText, matches, parts)
   return (
     <div>
-      {suggestion.full_name}<br/>
-      {/* {
+      {/* {suggestion.full_name}<br/> */}
+      {
         parts.map((part, index) => {
           const className = part.highlight ? 'highlight' : null
-
           return (
             <span className={className} key={index}>{part.text}</span>
           )
         })
-      } */}
+      }
     </div>
   )
 }
@@ -39,7 +57,6 @@ const renderSuggestion = (suggestion, { query }) => {
 export default class TagInput extends Component {
   constructor(props) {
     super(props)
-
     // Autosuggest is a controlled component.
     // This means that you need to provide an input value
     // and an onChange handler that updates this value (see below).
@@ -49,12 +66,16 @@ export default class TagInput extends Component {
     this.state = {
       items: this.props.tags,
       value: '',
-      suggestions: []
+      suggestions: [],
+      showTags: this.props.showTags,
     }
   }
 
-  componentWillReceiveProps(nextProps) {
-    this.setState({ items: nextProps.tags }) 
+  componentWillReceiveProps = nextProps => {
+    this.setState({ 
+      items: nextProps.tags,
+      showTags: nextProps.showTags,
+    }) 
   }
   
   // Teach Autosuggest how to calculate suggestions for any given input value.
@@ -109,7 +130,7 @@ export default class TagInput extends Component {
     this.props.changeInput(showAnim, showAttr)
   }
 
-  handleRemoveItem = index =>{
+  handleRemoveItem = index => {
     return () => {
       let items = this.state.items.filter((item, i) => i !== index), showAttr = !!items.length
       this.setState({ items })
@@ -142,18 +163,19 @@ export default class TagInput extends Component {
           highlightFirstSuggestion={true}
           inputProps={inputProps}
         />
-
-        <ul className="tag-ctn">
-          {this.state.items.map((item, i) => 
-            <li key={i}>
-              <div>
-                <img src={item.image} alt="" />
-                {getDisplayName(item.full_name)}
-                <span onClick={this.handleRemoveItem(i)}>&times;</span>
-              </div>
-            </li>
-          )}          
-        </ul>
+          <ul className="tag-ctn">
+            {
+            this.state.showTags && 
+            this.state.items.map((item, i) => 
+              <li key={i}>
+                <div>
+                  <img src={item.image} alt="" />
+                  {getDisplayName(item.full_name)}
+                  <span onClick={this.handleRemoveItem(i)}>&times;</span>
+                </div>
+              </li>
+            )}        
+          </ul>        
       </div>
     )
   }

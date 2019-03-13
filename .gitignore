@@ -18,7 +18,7 @@
 .env.development.local
 .env.test.local
 .env.production.local
-.ws.code-workspace
+ws.code-workspace
 specs
 
 npm-debug.log*

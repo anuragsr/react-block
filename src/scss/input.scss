@@ -13,9 +13,9 @@ input.tag-inp{
   padding: 25px 15px;
 }
 
-ul.react-autocomplete-input > li.active{
-  background: $acc;
-}
+// ul.react-autocomplete-input > li.active{
+//   background: $acc;
+// }
 
 ul.tag-ctn{
   padding: 5px;
@@ -54,28 +54,8 @@ ul.tag-ctn li{
   position: relative;
 }
 
-.react-autosuggest__input {
-  width: 240px;
-  height: 30px;
-  padding: 10px 20px;
-  font-family: Helvetica, sans-serif;
-  font-weight: 300;
-  font-size: 16px;
-  border: 1px solid #aaa;
-  border-radius: 4px;
-}
-
 .react-autosuggest__input:focus {
   outline: none;
-}
-
-.react-autosuggest__container--open .react-autosuggest__input {
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
-}
-
-.react-autosuggest__suggestions-container {
-  // display: none;
 }
 
 .react-autosuggest__container--open .react-autosuggest__suggestions-container {
@@ -83,10 +63,9 @@ ul.tag-ctn li{
   position: absolute;
   top: 51px;
   width: 100%;
-  border: 1px solid rgba(0,0,0,0.15);
-  background-color: #fff;
-  box-shadow: 0 6px 12px rgba(0,0,0,0.175);
-  // font-family: Helvetica, sans-serif;
+  border: 1px solid rgba($b, .15);
+  background-color: $w;
+  box-shadow: 0 6px 12px rgba($b, .175);
   font-weight: 300;
   font-size: 14px;
   border-bottom-left-radius: 4px;
@@ -105,18 +84,20 @@ ul.tag-ctn li{
   padding: 10px 20px;
 }
 
-.react-autosuggest__suggestion:not(:first-child) {
-  // border-top: 1px solid #ddd;
-}
-
-.react-autosuggest__suggestion--focused {
-  // background-color: #0C7EAF;
-  // color: #fff;
-}
-
 .react-autosuggest__suggestion--highlighted {
   background: $acc;
   color: $w;
+}
+
+.highlight {
+  color: $b;  
+  font-weight: bold;
+}
+
+.react-autosuggest__suggestion--highlighted {
+  .highlight {
+    color: $w;
+  }
 }
 
 // Animation Dots

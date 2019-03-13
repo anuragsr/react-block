@@ -15,6 +15,7 @@ export default class TagBlock extends Component {
       showNotif: false, 
       showAnim: false,
       showAttr: false,
+      showTags: true,
       bots: [],
       currBot: {},
       tags: [],
@@ -99,6 +100,10 @@ export default class TagBlock extends Component {
   submit(){
     // l(this.state)
     if(this.state.tags.length){
+      this.setState({ 
+        showAttr: false, 
+        showTags: false
+      })
       const request = {
         tags_ids: this.state.tags.map(x => x.id),
         ML_attraction: this.state.ml?this.state.att.auto:"None",
@@ -115,7 +120,11 @@ export default class TagBlock extends Component {
         //  Show notif, undo
         this.setState({ showNotif: true })
         setTimeout(() => {
-          this.setState({ showNotif: false, tags: [], showAttr: false })
+          this.setState({ 
+            showNotif: false, 
+            tags: [], 
+            showTags: true
+          })
         }, 5000)
       })    
     }
@@ -166,7 +175,7 @@ export default class TagBlock extends Component {
               </div> */}
               
               <div className="b-section">
-                <TagInput tags={this.state.tags} changeInput={this.inputChanged} changeTags={this.tagsChanged}/>
+                <TagInput tags={this.state.tags} showTags={this.state.showTags} changeInput={this.inputChanged} changeTags={this.tagsChanged}/>
               </div>
                 {/* ShowAnim: <pre>{JSON.stringify(this.state.showAnim, null, 2)}</pre> */}
                 {/* ShowAttr: <pre>{JSON.stringify(this.state.showAttr, null, 2)}</pre> */}
