@@ -63,13 +63,14 @@ export default class SliderComponent extends Component {
           <div>Attraction</div>
           <input 
             type="number" 
-            min={0} max={100} 
+            min={-100} max={100} 
             className="att-inp form-control" 
             value={Number(this.state.att.manual).toString()} 
             onChange={this.onManualChange} 
           />
         </div>
         <Slider
+          min={-100} max={100}
           value={this.state.att.manual}
           onChange={this.onSliderChange} 
           trackStyle={styles.trackStyle}

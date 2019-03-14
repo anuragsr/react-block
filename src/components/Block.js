@@ -9,12 +9,9 @@ export default class Block extends Component {
   constructor(props) {
     super(props)
     this.state = { show: this.props.show }
-    this.toggled = this.toggled.bind(this)
   }
   
-  toggled(show){
-    this.setState({ show })
-  }
+  toggled = show => this.setState({ show })
 
   render() {
     return (

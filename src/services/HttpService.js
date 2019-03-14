@@ -34,6 +34,15 @@ export default class HttpService {
         {"id": 3, "name": "tag3:tag4:tag5", "full_name": "tag3:tag4:tag5", "image": "assets/tag-plh.png"},
       ]
     })
+    .onGet('/api/v1/random_tags')
+    .reply(200, {
+      "count": 2,
+      "results": [
+        {"id": 1, "name": "random_tag1:tag2:tag3", "full_name": "random_tag1:tag2:tag3", "image": "assets/tag-plh.png"},
+        {"id": 2, "name": "random_tag2:tag3:tag4", "full_name": "random_tag2:tag3:tag4", "image": "assets/tag-plh.png"},
+        {"id": 3, "name": "random_tag3:tag4:tag5", "full_name": "random_tag3:tag4:tag5", "image": "assets/tag-plh.png"},
+      ]
+    })
     .onGet('api/v1/undo')
     .reply(204)
     .onGet('/api/v1/places')

@@ -1,3 +1,4 @@
+// export const mock = false
 export const mock = true
 export const l = console.log.bind(window.console)
 export const rand = length => {
