@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
-import TagInput from './TagInputOld'
-import SliderInput from './SliderInput'
+import TagInput from './TagInput'
+import SliderComponent from './SliderComponent'
 import HttpService from '../services/HttpService'
 import { l, rand } from '../helpers/common'
 const checkId = rand(5)
@@ -44,15 +44,15 @@ export default class PlaceBlock extends Component {
     .then(res => {
       let bots = res.data.results, currBot = bots[0]
       this.setState({ bots, currBot })
+      this.http
+      .get('/api/v1/places')
+      .then(res => {
+        let places = res.data.results
+        this.setState({ places })
+        this.placeChanged(places[0])
+      })
     })
 
-    this.http
-    .get('/api/v1/places')
-    .then(res => {
-      let places = res.data.results
-      this.setState({ places })
-      this.placeChanged(places[0])
-    })
   }
 
   placeChanged(currPlace){
@@ -246,7 +246,7 @@ export default class PlaceBlock extends Component {
                   </div>
                 }{
                   this.state.showAttr &&
-                  <SliderInput att={this.state.att} changeAtt={this.attChanged}/>
+                  <SliderComponent att={this.state.att} changeAtt={this.attChanged}/>
                 }
               </div>
               <div className="b-section">

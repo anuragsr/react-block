@@ -5,22 +5,19 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faRedo } from '@fortawesome/free-solid-svg-icons'
 import { l } from '../helpers/common'
 
-class SliderInput extends Component {
+export default class SliderComponent extends Component {
   constructor(props) {
     super(props)
     this.state = { 
       att: this.props.att
     }
-    this.onSliderChange = this.onSliderChange.bind(this)
-    this.onManualChange = this.onManualChange.bind(this)
-    this.resetAttr = this.resetAttr.bind(this)
   }
 
-  componentWillReceiveProps(nextProps) {
+  componentWillReceiveProps = nextProps => {
     this.setState({ att: nextProps.att }) 
   }
 
-  onManualChange(e){
+  onManualChange = e =>{
     let value = parseInt(e.target.value)
     this.setState( state => ({
       att: {
@@ -31,7 +28,7 @@ class SliderInput extends Component {
     this.props.changeAtt(value)
   }
 
-  onSliderChange(value){
+  onSliderChange = value => {
     this.setState( state => ({
       att: {
         ...state.att,
@@ -41,7 +38,7 @@ class SliderInput extends Component {
     this.props.changeAtt(value)
   }
 
-  resetAttr(){
+  resetAttr = () => {
     this.onSliderChange(this.state.att.auto)
   }
 
@@ -86,5 +83,3 @@ class SliderInput extends Component {
     )
   }
 }
-
-export default SliderInput

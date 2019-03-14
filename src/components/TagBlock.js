@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
-// import TagInputOld from './TagInputOld'
-import TagInput from './TagInput'
-import SliderInput from './SliderInput'
+import AutoCompleteComponent from './AutoCompleteComponent'
+import TagsComponent from './TagsComponent'
+import SliderComponent from './SliderComponent'
 import HttpService from '../services/HttpService'
 import { l, rand } from '../helpers/common'
 const checkId = rand(5)
@@ -17,9 +17,11 @@ export default class TagBlock extends Component {
       showAnim: false,
       showAttr: false,
       showTags: true,
+      showSugTags: false,
       bots: [],
       currBot: {},
       tags: [],
+      suggTags: [],
       ml: false,
       att: {
         manual: 0,
@@ -27,22 +29,15 @@ export default class TagBlock extends Component {
       },
       lastTagId: 0,
     }
-    this.inputChanged = this.inputChanged.bind(this)
-    this.botChanged = this.botChanged.bind(this)
-    this.mlChanged = this.mlChanged.bind(this)
-    this.attChanged = this.attChanged.bind(this)
-    this.tagsChanged = this.tagsChanged.bind(this)
-    this.submit = this.submit.bind(this)
-    this.undo = this.undo.bind(this)
-    this.onUndo = this.onUndo.bind(this)
   }
 
-  componentDidMount(){
+  componentDidMount = () => {
     this.http
     .get('/api/v1/bots')
     .then(res => {
       let bots = res.data.results, currBot = bots[0]
-      this.setState({ bots, currBot })
+      this.setState({ bots, currBot })      
+      this.getSuggTags()
     })
     .catch(error => {
       // error callback
@@ -50,26 +45,62 @@ export default class TagBlock extends Component {
     })
   }
   
-  inputChanged(showAnim, showAttr){
+  getSuggTags = () => {
+    this.http
+    .get('/api/v1/suggested_tags')
+    .then(res => {
+      let suggTags = res.data.results
+      l(suggTags)
+      this.setState({ showSugTags: true, suggTags })
+    })
+  }
+
+  inputChanged = (showAnim, showAttr) => {
     this.setState({ showAnim, showAttr })
   }
   
-  botChanged(e){
+  botChanged = e => {
     let currBot = this.state.bots.filter(bot => { return bot.id === parseInt(e.target.value) })[0]
     this.setState({ currBot })
   }
   
-  mlChanged(e){    
+  mlChanged = e => {
     let ml = e.target.checked
     this.setState({ ml })
   } 
+
+  tagSuggested = tag => {
+    // l(tag)
+    let tags = [...this.state.tags, tag]
+    , suggTags = this.state.suggTags.filter(curr => curr.id !== tag.id)
+    , showAttr = !!tags.length
+    , showTags = !!tags.length
+
+    this.setState({ tags, suggTags, showAttr, showTags })
+    this.tagsChanged()
+  }
   
-  tagsChanged(tags){
-    if(tags.length && this.state.ml){
-      // l(tags)
+  tagAdded = tag => {
+    let tags = [...this.state.tags, tag]
+    , showTags = !!tags.length
+
+    this.setState({ tags, showTags })
+    this.tagsChanged()
+  }
+
+  tagRemoved = tag => {
+    let tags = this.state.tags.filter(curr => curr.id !== tag.id)
+    , showAttr = !!tags.length
+
+    this.setState({ showAttr, tags })
+    this.tagsChanged()
+  }
+
+  tagsChanged = () => {
+    if(this.state.tags.length && this.state.ml){
       l("Call ML with list of tags if ML on")
       this.http
-      .post('/api/v1/get_attraction_for_tags', { tags_ids: tags.map(x => x.id) })
+      .post('/api/v1/get_attraction_for_tags', { tags_ids: this.state.tags.map(x => x.id) })
       .then(res => {
         l(res.data)
         let attr = res.data.attraction?res.data.attraction:0
@@ -86,10 +117,9 @@ export default class TagBlock extends Component {
         l(error)
       }) 
     }
-    this.setState({ tags })
   }
   
-  attChanged(val){
+  attChanged = val => {
     this.setState( state => ({
       att: {
         ...state.att,
@@ -98,7 +128,7 @@ export default class TagBlock extends Component {
     }))
   }
 
-  undo(){
+  undo = () => {
     let params = { type: 'tag', id: this.state.lastTagId }
     l(params)
     this.http
@@ -118,11 +148,11 @@ export default class TagBlock extends Component {
     })
   }
 
-  onUndo(){
+  onUndo = () => {
     this.setState({ showNotif: false, notifType: "submit" })
   }
 
-  submit(){
+  submit = () => {
     // l(this.state)
     if(this.state.tags.length){
       this.setState({ 
@@ -143,12 +173,12 @@ export default class TagBlock extends Component {
       .then(res => {
         l(res.data)
         //  Show notif, undo
+        this.getSuggTags()
         this.setState({ showNotif: true, lastTagId: res.data.id })
         setTimeout(() => {
           this.setState({ 
             tags: [], 
             showAttr: false,         
-            showTags: true,
             att: {
               manual: 0,
               auto: 0
@@ -204,7 +234,6 @@ export default class TagBlock extends Component {
                 style={{ backgroundImage: `url(${this.state.currBot.avatar})` }}
               >
               </div>
-              {/* <img src={this.state.currBot.avatar} alt="bot" height="50" /> */}
               <select 
                 className="custom" 
                 value={this.state.currBot.id} 
@@ -216,13 +245,21 @@ export default class TagBlock extends Component {
                   )
                 })}
               </select>
-            </div>}
-            {/* <div className="b-section">
-              <TagInputOld tags={this.state.tags} changeInput={this.inputChanged} changeTags={this.tagsChanged}/>
-            </div> */}
-            
+            </div>}            
             <div className="b-section">
-              <TagInput tags={this.state.tags} showTags={this.state.showTags} changeInput={this.inputChanged} changeTags={this.tagsChanged}/>
+              <div className="mb-2">
+                {this.state.showTags && 
+                <TagsComponent
+                  type="default"
+                  tags={this.state.tags}
+                  removeTag={this.tagRemoved}
+                  clickedTag={() => {}}
+                />}
+              </div>
+              <AutoCompleteComponent 
+                changeInput={this.inputChanged}
+                optionSelected={this.tagAdded}
+              />
             </div>
               {/* ShowAnim: <pre>{JSON.stringify(this.state.showAnim, null, 2)}</pre> */}
               {/* ShowAttr: <pre>{JSON.stringify(this.state.showAttr, null, 2)}</pre> */}
@@ -237,7 +274,7 @@ export default class TagBlock extends Component {
                 </div>
               }{
                 this.state.showAttr &&
-                <SliderInput att={this.state.att} changeAtt={this.attChanged}/>
+                <SliderComponent att={this.state.att} changeAtt={this.attChanged}/>
               }
             </div>
             <div className="b-section">
@@ -245,6 +282,19 @@ export default class TagBlock extends Component {
                 <input checked={this.state.ml?"checked":""} onChange={this.mlChanged} type="checkbox" className="custom-control-input" id={checkId} />
                 <label className="custom-control-label" htmlFor={checkId}>Turn On ML</label>
               </div>
+            </div>
+            <div className="b-section">
+              {this.state.showSugTags && 
+              <div>
+                <div className="sl-title">
+                  <div>Suggested Tags</div>
+                </div>
+                <TagsComponent
+                  type="suggested"
+                  tags={this.state.suggTags}
+                  clickedTag={this.tagSuggested}
+                />
+              </div>}
             </div>
             <div className="b-section">
               <button onClick={this.submit} className="btn btn-accent">Submit</button>

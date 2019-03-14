@@ -20,11 +20,18 @@ input.tag-inp{
 // For tags
 ul.tag-ctn{
   padding: 5px;
+  padding-left: 0;
   border-radius: 2px;
-  margin-top: 10px;
   margin-bottom: 0;
+  // margin-bottom: 10px;
   &.sug li{
     background: $tagbgsc;
+    &.optional{
+      background: rgba($tagbgsc, .7);
+      img{
+        opacity: .7;
+      }
+    }
   }
 }
 
@@ -36,7 +43,13 @@ ul.tag-ctn li{
   color: $w;
   border-radius: 5px;
   margin-right: 5px;
-  margin-bottom: 5px;
+  margin-bottom: 5px;  
+  &.optional{
+    background: rgba($tagbg, .7);
+    img{
+      opacity: .7;
+    }
+  }
   div{
     @extend %j-s-b;
   }
@@ -140,7 +153,7 @@ ul.tag-ctn li{
 }
 
 //  For the slider
-.sl-title{
+.sl-title{ // For both slider and tags title
   @extend %j-s-b;
   font-family: $mont-m;
   font-size: 18px;

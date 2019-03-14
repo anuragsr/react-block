@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
-import TagInput from './TagInputOld'
-import SliderInput from './SliderInput'
+import TagInput from './TagInput'
+import SliderComponent from './SliderComponent'
 import HttpService from '../services/HttpService'
 import { l, rand } from '../helpers/common'
 const checkId = rand(5)
@@ -182,7 +182,7 @@ export default class PhotoBlock extends Component {
                   </div>
                 }{
                   this.state.showAttr &&
-                  <SliderInput att={this.state.att} changeAtt={this.attChanged}/>
+                  <SliderComponent att={this.state.att} changeAtt={this.attChanged}/>
                 }
               </div>
               <div className="b-section">

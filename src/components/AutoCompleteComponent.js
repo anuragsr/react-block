@@ -4,24 +4,14 @@ import AutosuggestHighlightParse from 'autosuggest-highlight/parse'
 import HttpService from '../services/HttpService'
 import { l } from '../helpers/common'
 
-const getDisplayName = item => {
-  let arr = item.split(":")
-  , length = arr.length
-  return [arr[length - 2], arr[length - 1]].join(":")
-}
-
-// When suggestion is clicked, Autosuggest needs to populate the input
-// based on the clicked suggestion. Teach Autosuggest how to calculate the
-// input value for every given suggestion.
 const getSuggestionValue = suggestion => suggestion.full_name
 
-// Gets matches in the string
-const getIndicesOf = (str, searchStr, caseSensitive) => {
-  var searchStrLen = searchStr.length
+const getIndices = (str, searchStr, caseSensitive) => {
+  let searchStrLen = searchStr.length
   if (searchStrLen === 0) {
       return []
   }
-  var startIndex = 0, index, indices = []
+  let startIndex = 0, index, indices = []
   if (!caseSensitive) {
     str = str.toLowerCase()
     searchStr = searchStr.toLowerCase()
@@ -33,14 +23,11 @@ const getIndicesOf = (str, searchStr, caseSensitive) => {
   return indices
 }
 
-// Use your imagination to render suggestions.
 const renderSuggestion = (suggestion, { query }) => {  
   const suggestionText = `${suggestion.full_name}`
-  const parts = AutosuggestHighlightParse(suggestionText, getIndicesOf(suggestionText, query))
-  // l(suggestionText, parts)
+  const parts = AutosuggestHighlightParse(suggestionText, getIndices(suggestionText, query))
   return (
     <div>
-      {/* {suggestion.full_name}<br/> */}
       {
         parts.map((part, index) => {
           const className = part.highlight ? 'highlight' : null
@@ -53,33 +40,17 @@ const renderSuggestion = (suggestion, { query }) => {
   )
 }
 
-export default class TagInput extends Component {
+export default class AutoCompleteComponent extends Component {
   constructor(props) {
     super(props)
-    // Autosuggest is a controlled component.
-    // This means that you need to provide an input value
-    // and an onChange handler that updates this value (see below).
-    // Suggestions also need to be provided to the Autosuggest,
-    // and they are initially empty because the Autosuggest is closed.
     this.http = new HttpService()
     this.state = {
-      items: this.props.tags,
       value: '',
       suggestions: [],
-      showTags: this.props.showTags,
     }
   }
-
-  componentWillReceiveProps = nextProps => {
-    this.setState({ 
-      items: nextProps.tags,
-      showTags: nextProps.showTags,
-    }) 
-  }
   
-  // Teach Autosuggest how to calculate suggestions for any given input value.
   getSuggestions = value => {
-    // l(value)
     let showAnim = true, showAttr = false
     this.props.changeInput(showAnim, showAttr)
     this.http
@@ -112,14 +83,11 @@ export default class TagInput extends Component {
     })
   }
 
-  // Autosuggest will call this function every time you need to update suggestions.
-  // You already implemented this logic above, so just use it.
   onSuggestionsFetchRequested = ({ value }) => {
     if(value.trim() !== "")
       this.getSuggestions(value)
   }
 
-  // Autosuggest will call this function every time you need to clear suggestions.
   onSuggestionsClearRequested = () => {
     this.setState({
       suggestions: [] 
@@ -128,31 +96,16 @@ export default class TagInput extends Component {
 
   onSuggestionSelected = (event, { suggestion, suggestionValue, suggestionIndex, sectionIndex, method }) => {
     // l({ suggestion, suggestionValue, suggestionIndex, sectionIndex, method })
-    // l(this.state)
-    let items = [...this.state.items, suggestion], showAnim = false, showAttr = true
+    this.props.optionSelected(suggestion)
     this.setState({
-      items,
       value: '',
       suggestions: []
     })
-    this.props.changeTags(items)
-    this.props.changeInput(showAnim, showAttr)
-  }
-
-  handleRemoveItem = index => {
-    return () => {
-      let items = this.state.items.filter((item, i) => i !== index)
-      let showAttr = !!items.length
-      this.setState({ items })
-      this.props.changeTags(items)
-      this.props.changeInput(false, showAttr)
-    }
   }
 
   render() {
     const { value, suggestions } = this.state
 
-    // Autosuggest will pass through all these props to the input.
     const inputProps = {
       className: 'tag-inp form-control',
       placeholder: 'Add tag ..',
@@ -160,7 +113,6 @@ export default class TagInput extends Component {
       onChange: this.onChange
     }
 
-    // Finally, render it!
     return (
       <div>
         <Autosuggest
@@ -173,19 +125,6 @@ export default class TagInput extends Component {
           highlightFirstSuggestion={true}
           inputProps={inputProps}
         />
-          <ul className="tag-ctn">
-            {
-            this.state.showTags && 
-            this.state.items.map((item, i) => 
-              <li key={i}>
-                <div>
-                  <img src={item.image} alt="" />
-                  {getDisplayName(item.full_name)}
-                  <span onClick={this.handleRemoveItem(i)}>&times;</span>
-                </div>
-              </li>
-            )}        
-          </ul>        
       </div>
     )
   }

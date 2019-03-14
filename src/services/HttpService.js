@@ -55,6 +55,9 @@ export default class HttpService {
         {"id": 2, "name": "tag2:tag3:tag4", "full_name": "tag2:tag3:tag4", "image": "assets/tag-plh-sug.png"},
         {"id": 3, "name": "tag3:tag4:tag5", "full_name": "tag3:tag4:tag5", "image": "assets/tag-plh-sug.png"},
         {"id": 4, "name": "american", "full_name": "american", "image": "assets/tag-plh-sug.png"},
+        {"id": 5, "name": "weather", "full_name": "weather", "image": "assets/tag-plh-sug.png", "optional": true},
+        {"id": 6, "name": "distance", "full_name": "distance", "image": "assets/tag-plh-sug.png", "optional": true},
+        {"id": 7, "name": "time", "full_name": "time", "image": "assets/tag-plh-sug.png", "optional": true},
       ]
     })
     .onPost('/api/v1/get_attraction_for_tags'/* , {
