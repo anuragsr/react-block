@@ -7,6 +7,7 @@ import { l } from '../helpers/common'
 
 export default class SliderComponent extends Component {
   constructor(props) {
+    l()
     super(props)
     this.state = { 
       att: this.props.att

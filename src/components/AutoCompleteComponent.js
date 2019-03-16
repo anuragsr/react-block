@@ -106,12 +106,9 @@ export default class AutoCompleteComponent extends Component {
   render() {
     const { value, suggestions } = this.state
 
-    const inputProps = {
-      className: 'tag-inp form-control',
-      placeholder: 'Add tag ..',
-      value,
-      onChange: this.onChange
-    }
+    const inputProps = this.props.inputProps
+    inputProps.value = value
+    inputProps.onChange = this.onChange
 
     return (
       <div>

@@ -25,6 +25,7 @@ export default class TagBlock extends Component {
       showSugTags: false,
       toggleSugTags: true,
       randomMode: false,
+      allowAdd: true,
       bots: [],
       currBot: {},
       tags: [],
@@ -64,7 +65,7 @@ export default class TagBlock extends Component {
     .get('/api/v1/random_tags')
     .then(res => {
       let tags = res.data.results
-      this.setState({ 
+      this.setState({
         tags, 
         showTags: true,
         showAttr: true,
@@ -84,7 +85,6 @@ export default class TagBlock extends Component {
       l(suggTags)
       this.setState({ 
         showSugTags: true, 
-        allowAdd: true,
         suggTags 
       })
       if(this.state.randomMode){
@@ -176,10 +176,11 @@ export default class TagBlock extends Component {
       })
       setTimeout(() => {
         this.setState({
+          allowAdd: true,
           showNotif: false,
           notifType: "submit"
         })
-        this.getSuggTags()
+        // this.getSuggTags()
       }, 5000)
     })
   }
@@ -190,8 +191,14 @@ export default class TagBlock extends Component {
     // l(this.state)
     if(this.state.tags.length){
       this.setState({ 
-        showAttr: false, 
-        showTags: false,
+        showAttr: false,
+        tagsText: this.state.tags.map((t, i) => {
+          if(i === this.state.tags.length - 1)
+            return t.full_name
+          else
+            return t.full_name + ", "
+        }),
+        // showTags: false,
         allowAdd: false,
       })
 
@@ -209,20 +216,26 @@ export default class TagBlock extends Component {
       .then(res => {
         l(res.data)
         //  Show notif, undo
-        this.setState({ showNotif: true, lastTagId: res.data.id })
+        this.getSuggTags()
+        this.setState({ 
+          showNotif: true, 
+          tags: [],
+          lastTagId: res.data.id 
+        })
         setTimeout(() => {
           this.setState({ 
-            tags: [], 
             showAttr: false,
             att: {
               manual: 0,
               auto: 0
             }
           })
-
+          
           if(this.state.notifType === "submit"){
-            this.getSuggTags()
-            this.setState({ showNotif: false })
+            this.setState({ 
+              allowAdd: true,
+              showNotif: false 
+            })
           }
         }, 5000)
       })    
@@ -261,14 +274,7 @@ export default class TagBlock extends Component {
               <div className="n-title">New tag block created!</div>
               <div onClick={this.undo} className="undo float-right">Undo</div>
               <div className="n-body">
-                Tags: {this.state.tags.length?
-                  this.state.tags.map((t, i) => {
-                    if(i === this.state.tags.length - 1)
-                      return t.full_name
-                    else
-                      return t.full_name + ", "
-                  }
-                  ):"None"}
+                Tags: {this.state.tagsText}
                 <br/>
                 Attraction: {this.state.att.manual}
               </div>
@@ -313,6 +319,10 @@ export default class TagBlock extends Component {
                 />}
               </div>
               <AutoCompleteComponent 
+                inputProps={{
+                  className: 'tag-inp form-control',
+                  placeholder: 'Add tag ..',
+                }}
                 changeInput={this.inputChanged}
                 optionSelected={this.tagAdded}
               />

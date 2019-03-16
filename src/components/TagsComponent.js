@@ -1,8 +1,8 @@
 import React, { Component } from 'react'
 import { l } from '../helpers/common'
-
 export default class TagsComponent extends Component {
   constructor(props) {
+    l()
     super(props)
     this.state = {
       items: this.props.tags

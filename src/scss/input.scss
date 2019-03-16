@@ -1,9 +1,35 @@
 // Place input
 .search{
   @extend %j-f-e;
+  // text-align: right;
   .pl-inp{
+    width: 250px;
     background: $plinpbg;
     font-family: $heebo-r;
+    padding: 1.25rem 1rem;
+    &::-webkit-input-placeholder {
+      font-size: 11px;
+      font-family: $mont-m;
+      letter-spacing: 1.4px;
+    }
+    
+    &:-ms-input-placeholder {
+      font-size: 11px;
+      font-family: $mont-m;
+      letter-spacing: 1.4px;
+    }
+    
+    &:-moz-placeholder {
+      font-size: 11px;
+      font-family: $mont-m;
+      letter-spacing: 1.4px;
+    }
+    
+    &::-moz-placeholder {
+      font-size: 11px;
+      font-family: $mont-m;
+      letter-spacing: 1.4px;
+    }
   }
 }
 

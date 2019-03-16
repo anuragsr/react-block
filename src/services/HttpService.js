@@ -7,6 +7,7 @@ let apiHost = '', call
 export default class HttpService {
   
   constructor(){
+    l()    
     if(mock){
       this.initMock()     
     }else{

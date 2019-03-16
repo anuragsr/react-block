@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import TagInput from './TagInput'
+import AutoCompleteComponent from './AutoCompleteComponent';
 import SliderComponent from './SliderComponent'
 import HttpService from '../services/HttpService'
 import { l, rand } from '../helpers/common'
@@ -26,16 +26,6 @@ export default class PlaceBlock extends Component {
         auto: 0
       },
     }
-    this.placeChanged = this.placeChanged.bind(this)
-    this.placeInputChanged = this.placeInputChanged.bind(this)
-    this.inputChanged = this.inputChanged.bind(this)
-    this.botChanged = this.botChanged.bind(this)
-    this.mlChanged = this.mlChanged.bind(this)
-    this.attChanged = this.attChanged.bind(this)
-    this.tagsChanged = this.tagsChanged.bind(this)
-    this.addToTags = this.addToTags.bind(this)
-    this.submit = this.submit.bind(this)
-    this.undo = this.undo.bind(this)
   }
 
   componentDidMount(){
@@ -55,7 +45,7 @@ export default class PlaceBlock extends Component {
 
   }
 
-  placeChanged(currPlace){
+  placeChanged = currPlace => {
     this.setState({ currPlace })
     this.http
     .get('/api/v1/suggested_tags', { 
@@ -68,29 +58,34 @@ export default class PlaceBlock extends Component {
     })
   }
   
-  inputChanged(showAnim, showAttr){
+  inputChanged = (showAnim, showAttr) => {
     this.setState({ showAnim, showAttr })
   }  
   
-  placeInputChanged(e){
+  placeInputChanged = e => {
     this.setState({ placeInput: e.target.value })
   }
+
+  placeSelected = e => {
+    l(e.target.value)
+    // this.setState({ placeInput: e.target.value })
+  }
   
-  botChanged(e){
+  botChanged = e => {
     let currBot = this.state.bots.filter(bot => { return bot.id === parseInt(e.target.value) })[0]
     this.setState({ currBot })
   }
   
-  mlChanged(e){
+  mlChanged = e => {
     let ml = e.target.checked
     this.setState({ ml })
   } 
   
-  addToTags(item){
+  addToTags = item => {
     l(item)
   }
 
-  tagsChanged(tags){
+  tagsChanged = tags => {
     if(tags.length && this.state.ml){
       // l(tags)
       l("Call ML with list of tags if ML on")
@@ -111,7 +106,7 @@ export default class PlaceBlock extends Component {
     this.setState({ tags })
   }
   
-  attChanged(val){
+  attChanged = val => {
     this.setState( state => ({
       att: {
         ...state.att,
@@ -120,7 +115,7 @@ export default class PlaceBlock extends Component {
     }))
   }
 
-  undo(){
+  undo = () => {
     this.http
     .get('/api/v1/undo', { 
       params: { type: 'tag', id: 1 }
@@ -130,7 +125,7 @@ export default class PlaceBlock extends Component {
     })
   }
 
-  submit(){
+  submit = () => {
     // l(this.state)
     if(this.state.tags.length){
       const request = {
@@ -161,22 +156,30 @@ export default class PlaceBlock extends Component {
         {
           this.state.places.length > 0 &&
           <div className="row">
-            <div className="col-lg-8">
+            <div className="col-lg-7">
               <div className="title">
                 {this.state.currPlace.title}
                 <div className="sub-title">{this.state.currPlace.subtitle}</div>
               </div>
             </div>
-            <div className="col-lg-4">
+            <div className="col-lg-5">
               <div className="search">
-                <input 
+                <AutoCompleteComponent
+                  inputProps={{
+                    className: 'pl-inp form-control',
+                    placeholder: 'FIND THE PLACE'
+                  }}
+                  changeInput={this.placeInputChanged}
+                  optionSelected={this.placeSelected}
+                />
+                {/* <input 
                   type="text" 
                   className="pl-inp form-control mr-2"
                   value={this.state.placeInput} 
                   onChange={this.placeInputChanged} 
                   placeholder="FIND THE PLACE"
-                  />
-                <button type="submit" className="btn btn-primary">Submit</button>
+                  /> */}
+                <button type="submit" className="ml-2 btn btn-accent-outline">Next Place</button>
               </div>
             </div>
           </div>
@@ -215,8 +218,8 @@ export default class PlaceBlock extends Component {
                   })}
                 </select>
               </div>
-              <div className="b-section">
-                <TagInput tags={this.state.tags} changeInput={this.inputChanged} changeTags={this.tagsChanged}/>
+              <div className="b-section"> 
+                {/* <TagInput tags={this.state.tags} changeInput={this.inputChanged} changeTags={this.tagsChanged}/> */}
               </div>
               { 
                 this.state.suggestedTags.length > 0 &&

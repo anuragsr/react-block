@@ -18,6 +18,18 @@ body{
   }
 }
 
+.btn-accent-outline{
+  padding: .5rem 1rem;
+  color: $acc;
+  background-color: $w;
+  border-color: $acc;
+  &:hover{
+    color: $w;
+    background-color: $acc-dark;
+    border-color: $acc-dark;
+  }
+}
+
 .custom-control-label{
   margin-left: .5rem;
   &:before, &:after{

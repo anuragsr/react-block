@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import TagInput from './TagInput'
+// import TagInput from './TagInput'
 import SliderComponent from './SliderComponent'
 import HttpService from '../services/HttpService'
 import { l, rand } from '../helpers/common'
@@ -166,8 +166,8 @@ export default class PhotoBlock extends Component {
                   })}
                 </select>
               </div>
-              <div className="b-section">
-                <TagInput tags={this.state.tags} changeInput={this.inputChanged} changeTags={this.tagsChanged}/>
+              <div className="b-section"> 
+                {/* <TagInput tags={this.state.tags} changeInput={this.inputChanged} changeTags={this.tagsChanged}/> */}
               </div>
                 {/* ShowAnim: <pre>{JSON.stringify(this.state.showAnim, null, 2)}</pre> */}
                 {/* ShowAttr: <pre>{JSON.stringify(this.state.showAttr, null, 2)}</pre> */}
