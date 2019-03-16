@@ -3,10 +3,11 @@ import AutoCompleteComponent from './AutoCompleteComponent'
 import TagsComponent from './TagsComponent'
 import SliderComponent from './SliderComponent'
 import HttpService from '../services/HttpService'
-import { l, rand } from '../helpers/common'
+import { l, rand, withIndex } from '../helpers/common'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlusSquare, faMinusSquare } from '@fortawesome/free-regular-svg-icons'
+
 const checkId = rand(5)
 
 export default class PlaceBlock extends Component {
@@ -43,7 +44,10 @@ export default class PlaceBlock extends Component {
       let bots = res.data.results, currBot = bots[0]
       this.setState({ bots, currBot })
       this.http
-      .get('/api/v1/places')
+      .get('/api/v1/places', {        
+        query: "",
+        approved: true
+      })
       .then(res => {
         let places = res.data.results
         this.setState({ places })
@@ -68,6 +72,17 @@ export default class PlaceBlock extends Component {
       //   this.getRandomTags()
       // }
     })
+  }
+
+  nextPlace = () => {
+    let idx = withIndex(this.state.places).filter(x => x.value.id === this.state.currPlace.id)[0].index;
+    l(idx)
+    if(idx === this.state.places.length - 1){
+      idx = 0
+    }else{
+      idx++
+    }
+    this.placeChanged(this.state.places[idx])
   }
 
   placeChanged = currPlace => {
@@ -117,7 +132,10 @@ export default class PlaceBlock extends Component {
     if(this.state.tags.length && this.state.ml){
       l("Call ML with list of tags if ML on")
       this.http
-      .post('/api/v1/get_attraction_for_tags', { tags_ids: this.state.tags.map(x => x.id) })
+      .post('/api/v1/get_attraction_for_place', { 
+        tags_ids: this.state.tags.map(x => x.id),
+        place_id: this.state.currPlace.id
+      })
       .then(res => {
         l(res.data)
         let attr = res.data.attraction?res.data.attraction:0
@@ -191,11 +209,12 @@ export default class PlaceBlock extends Component {
         editor_attraction: this.state.att.manual, 
         editor_id: 1,
         bot_id: this.state.currBot.id,
+        place_id: this.state.currPlace.id
       }
       l(request)
   
       this.http
-      .post('/api/v1/send_attraction_for_tags', request)
+      .post('/api/v1/send_attraction_for_place', request)
       .then(res => {
         l(res.data)
         //  Show notif, undo
@@ -247,7 +266,7 @@ export default class PlaceBlock extends Component {
                   // changeInput={this.placeInputChanged}
                   optionSelected={this.placeChanged}
                 />
-                <button type="submit" className="ml-4 btn btn-accent-outline">Next Place</button>
+                <button onClick={this.nextPlace} className="ml-4 btn btn-accent-outline">Next Place</button>
               </div>
             </div>
           </div>
@@ -308,6 +327,8 @@ export default class PlaceBlock extends Component {
                   placeholder: 'Add tag ..',
                 }}
                 type="tag"
+                parent="place"
+                placeId={this.state.currPlace.id}
                 changeInput={this.placeInputChanged}
                 optionSelected={this.tagAdded}
               />

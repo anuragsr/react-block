@@ -1,5 +1,5 @@
-export const mock = false
-// export const mock = true
+// export const mock = false
+export const mock = true
 export const l = console.log.bind(window.console)
 export const rand = length => {
   let chars = 'M30Z1xA0Nu5Pn8Yo2pXqB5Rly9Gz3vWOj1Hm46IeCfgSrTs7Q9aJb8F6DcE7d2twkUhKiL4V'
@@ -9,4 +9,7 @@ export const rand = length => {
     randomStr+= chars[Math.floor(Math.random() * (charLength - 1))]
   }
   return randomStr
+}
+export const withIndex = arr => {
+  return arr.map((v,i) => ({value: v, index: i}))
 }

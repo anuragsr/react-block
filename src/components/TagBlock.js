@@ -323,6 +323,7 @@ export default class TagBlock extends Component {
                   placeholder: 'Add tag ..',
                 }}
                 type="tag"
+                parent="tag"
                 changeInput={this.inputChanged}
                 optionSelected={this.tagAdded}
               />

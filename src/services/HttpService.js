@@ -86,6 +86,24 @@ export default class HttpService {
     .reply(200, {
       "id": 1
     })
+    .onPost('/api/v1/get_attraction_for_place'/* , {
+      "tags_ids": [1, 2, 3],
+      "place_id": 1
+    } */)
+    .reply(200, {
+      "attraction": 73
+    })
+    .onPost('/api/v1/send_attraction_for_place'/* , {
+      "tags_ids": [1, 2, 3], 
+      "ML_attraction": 73 (or None), 
+      "editor_attraction": 65, 
+      "editor_id": 1,
+      "bot_id": 1,
+      "place_id": 1
+    } */)
+    .reply(200, {
+      "id": 1
+    })
   }
 
   get(url, params) {

@@ -51,18 +51,33 @@ export default class AutoCompleteComponent extends Component {
   }
   
   getSuggestions = value => {
-    let showAnim = true, showAttr = false, url
+    let showAnim = true, showAttr = false, url, params
     if(this.props.changeInput)
       this.props.changeInput(showAnim, showAttr)
 
     if(this.props.type === "tag"){
-      url = '/api/v1/tags'
+      if(this.props.parent === "place"){
+        url = '/api/v1/tags'
+        params = { 
+          query: value,
+          place_id: this.props.placeId
+        }
+      }else if(this.props.parent === "tag"){
+        url = '/api/v1/tags'
+        params = { 
+          query: value
+        }
+      }
     }else{
       url = '/api/v1/places'
+      params = { 
+        query: value,
+        approved: true
+      }
     }
 
     this.http
-    .get(url, { query: value })
+    .get(url, params)
     .then(res => {
       const currRes = res.data.results
       l("Total API Results:", currRes)
