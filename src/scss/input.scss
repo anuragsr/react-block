@@ -3,10 +3,11 @@
   @extend %j-f-e;
   // text-align: right;
   .pl-inp{
+    height: 50px;
     width: 250px;
     background: $plinpbg;
     font-family: $heebo-r;
-    padding: 1.25rem 1rem;
+    // padding: 1.25rem 1rem;
     &::-webkit-input-placeholder {
       font-size: 11px;
       font-family: $mont-m;

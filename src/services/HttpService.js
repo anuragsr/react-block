@@ -17,7 +17,7 @@ export default class HttpService {
   
   initMock(){
     new MockAdapter(axios, { delayResponse: 1000 })
-    .onGet('/api/v1/bots')
+    .onGet('/api/v1/bots', {})
     .reply(200, {
       "count": 2,
       "results": [
@@ -26,7 +26,7 @@ export default class HttpService {
         {"id": 3, "name": "Thomas Bot", "avatar": "assets/bot3.png"},
       ]
     })
-    .onGet('/api/v1/tags')
+    .onGet('/api/v1/tags', {})
     .reply(200, {
       "count": 2,
       "results": [
@@ -35,7 +35,7 @@ export default class HttpService {
         {"id": 3, "name": "tag3:tag4:tag5", "full_name": "tag3:tag4:tag5", "image": "assets/tag-plh.png"},
       ]
     })
-    .onGet('/api/v1/random_tags')
+    .onGet('/api/v1/random_tags', {})
     .reply(200, {
       "count": 2,
       "results": [
@@ -46,18 +46,18 @@ export default class HttpService {
     })
     .onGet('api/v1/undo')
     .reply(204)
-    .onGet('/api/v1/places')
+    .onGet('/api/v1/places', {})
     .reply(200, {
       "count": 2,
       "results": [
-        {"id": 1, "title": "Panama City Title", "subtitle": "Panama City Subtitle"},
-        {"id": 2, "title": "New Jersey Title", "subtitle": "New Jersey Subtitle"},
-        {"id": 3, "title": "Moscow Title", "subtitle": "Moscow Subtitle"},
-        {"id": 4, "title": "St. Petersburg Title", "subtitle": "St. Petersburg Subtitle"},
-        {"id": 5, "title": "Vladivostok Title", "subtitle": "Vladivostok Subtitle"},
+        {"id": 1, "full_name": "Panama City Title", "subtitle": "Panama City Subtitle"},
+        {"id": 2, "full_name": "New Jersey Title", "subtitle": "New Jersey Subtitle"},
+        {"id": 3, "full_name": "Moscow Title", "subtitle": "Moscow Subtitle"},
+        {"id": 4, "full_name": "St. Petersburg Title", "subtitle": "St. Petersburg Subtitle"},
+        {"id": 5, "full_name": "Vladivostok Title", "subtitle": "Vladivostok Subtitle"},
       ]
     })
-    .onGet('/api/v1/suggested_tags')
+    .onGet('/api/v1/suggested_tags', {})
     .reply(200, {
       "count": 2,
       "results": [

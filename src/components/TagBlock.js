@@ -198,6 +198,7 @@ export default class TagBlock extends Component {
           else
             return t.full_name + ", "
         }),
+        tags: [],
         // showTags: false,
         allowAdd: false,
       })
@@ -219,7 +220,6 @@ export default class TagBlock extends Component {
         this.getSuggTags()
         this.setState({ 
           showNotif: true, 
-          tags: [],
           lastTagId: res.data.id 
         })
         setTimeout(() => {
@@ -288,7 +288,7 @@ export default class TagBlock extends Component {
           }
         </div>
         <div className="body row">
-          <div className="col-lg-7">     
+          <div className="col-lg-7">
             {this.state.bots.length > 0 &&
             <div className="b-section">
               <div
@@ -315,7 +315,6 @@ export default class TagBlock extends Component {
                   type="default"
                   tags={this.state.tags}
                   removeTag={this.tagRemoved}
-                  clickedTag={() => {}}
                 />}
               </div>
               <AutoCompleteComponent 
@@ -323,6 +322,7 @@ export default class TagBlock extends Component {
                   className: 'tag-inp form-control',
                   placeholder: 'Add tag ..',
                 }}
+                type="tag"
                 changeInput={this.inputChanged}
                 optionSelected={this.tagAdded}
               />
@@ -351,7 +351,7 @@ export default class TagBlock extends Component {
             </div>
           </div>
           <div className="col-lg-12">
-            <div className="b-section">
+            <div className="b-section mt-0">
               {this.state.showSugTags && 
               <div>
                 <div className="sl-title">

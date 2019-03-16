@@ -51,10 +51,18 @@ export default class AutoCompleteComponent extends Component {
   }
   
   getSuggestions = value => {
-    let showAnim = true, showAttr = false
-    this.props.changeInput(showAnim, showAttr)
+    let showAnim = true, showAttr = false, url
+    if(this.props.changeInput)
+      this.props.changeInput(showAnim, showAttr)
+
+    if(this.props.type === "tag"){
+      url = '/api/v1/tags'
+    }else{
+      url = '/api/v1/places'
+    }
+
     this.http
-    .get('/api/v1/tags', { query: value })
+    .get(url, { query: value })
     .then(res => {
       const currRes = res.data.results
       l("Total API Results:", currRes)
@@ -68,8 +76,8 @@ export default class AutoCompleteComponent extends Component {
 
       // To set all options 
       this.setState({ suggestions: currRes })
-      
-      this.props.changeInput(showAnim, showAttr)
+      if(this.props.changeInput)
+        this.props.changeInput(showAnim, showAttr)
     })
     .catch(error => {
       // error callback
@@ -105,8 +113,8 @@ export default class AutoCompleteComponent extends Component {
 
   render() {
     const { value, suggestions } = this.state
-
     const inputProps = this.props.inputProps
+
     inputProps.value = value
     inputProps.onChange = this.onChange
 

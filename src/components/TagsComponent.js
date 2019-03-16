@@ -23,7 +23,8 @@ export default class TagsComponent extends Component {
 
   handleClick = item => {
     // l(item)
-    this.props.clickedTag(item)
+    if(this.props.clickedTag) 
+      this.props.clickedTag(item)
   }
 
   handleRemove = item => {
