@@ -104,6 +104,15 @@ export default class HttpService {
     .reply(200, {
       "id": 1
     })
+    .onGet('/api/v1/photos', {})
+    .reply(200, {
+      "count": 2,
+      "results": [
+        {"id": 1, "photo_name": "Photo1.jpg", "image": "assets/photo-plh.png", checked: true, city_id:""},
+        {"id": 2, "photo_name": "Photo2.jpg", "image": "assets/photo-plh.png", checked: true, city_id:""},
+        {"id": 3, "photo_name": "Photo3.jpg", "image": "assets/photo-plh.png", checked: true, city_id:""},
+      ]
+    })
   }
 
   get(url, params) {

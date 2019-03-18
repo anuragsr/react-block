@@ -266,7 +266,6 @@ export default class PlaceBlock extends Component {
                   // changeInput={this.placeInputChanged}
                   optionSelected={this.placeChanged}
                 />
-                <button onClick={this.nextPlace} className="ml-4 btn btn-accent-outline">Next Place</button>
               </div>
             </div>
           </div>
@@ -391,6 +390,7 @@ export default class PlaceBlock extends Component {
             </div>
             <div className="b-section">
               <button onClick={this.submit} className="btn btn-accent">Submit</button>
+              <button onClick={this.nextPlace} className="ml-2 btn btn-accent-outline">Next Place</button>
             </div>
           </div>
         </div>
