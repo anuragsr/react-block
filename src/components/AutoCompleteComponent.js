@@ -23,23 +23,6 @@ const getIndices = (str, searchStr, caseSensitive) => {
   return indices
 }
 
-const renderSuggestion = (suggestion, { query }) => {  
-  const suggestionText = `${suggestion.full_name}`
-  const parts = AutosuggestHighlightParse(suggestionText, getIndices(suggestionText, query))
-  return (
-    <div>
-      {
-        parts.map((part, index) => {
-          const className = part.highlight ? 'highlight' : null
-          return (
-            <span className={className} key={index}>{part.text}</span>
-          )
-        })
-      }
-    </div>
-  )
-}
-
 export default class AutoCompleteComponent extends Component {
   constructor(props) {
     super(props)
@@ -50,8 +33,31 @@ export default class AutoCompleteComponent extends Component {
     }
   }
   
+  renderSuggestion = (suggestion, { query }) => {
+    let suggestionText
+    if(this.props.type === "tag"){
+      suggestionText = `${suggestion.full_name}`
+    }else if(this.props.type === "place"){
+      suggestionText = `${suggestion.name}`
+    }
+
+    const parts = AutosuggestHighlightParse(suggestionText, getIndices(suggestionText, query))
+    return (
+      <div>
+        {
+          parts.map((part, index) => {
+            const className = part.highlight ? 'highlight' : null
+            return (
+              <span className={className} key={index}>{part.text}</span>
+            )
+          })
+        }
+      </div>
+    )
+  }
+
   getSuggestions = value => {
-    let showAnim = true, showAttr = false, url, params
+    let showAnim = true, showAttr = false, url, params, auth
     if(this.props.changeInput)
       this.props.changeInput(showAnim, showAttr)
 
@@ -68,21 +74,32 @@ export default class AutoCompleteComponent extends Component {
           query: value
         }
       }
-    }else{
+    }else if(this.props.type === "place"){
       url = '/api/v1/places'
       params = { 
         query: value,
         approved: true
       }
+      auth = {
+        username: 'ml_page',
+        password: '}XhE9p2/FQjx9.e'
+      }
     }
 
     this.http
-    .get(url, params)
+    .get(url, params, auth)
     .then(res => {
       const currRes = res.data.results
+      let suggestions      
       l("Total API Results:", currRes)
-      let suggestions = currRes.filter(x => x.full_name.toLowerCase().includes(value.toLowerCase()))      
+
+      if(this.props.type === "tag"){
+        suggestions = currRes.filter(x => x.full_name.toLowerCase().includes(value.toLowerCase()))      
+      }else if(this.props.type === "place"){
+        suggestions = currRes.filter(x => x.name.toLowerCase().includes(value.toLowerCase()))      
+      }  
       l("Results containing current query:", suggestions)
+      
       showAnim = false
       showAttr = true
 
@@ -141,7 +158,7 @@ export default class AutoCompleteComponent extends Component {
           onSuggestionsClearRequested={this.onSuggestionsClearRequested}
           onSuggestionSelected={this.onSuggestionSelected}
           getSuggestionValue={getSuggestionValue}
-          renderSuggestion={renderSuggestion}
+          renderSuggestion={this.renderSuggestion}
           highlightFirstSuggestion={true}
           inputProps={inputProps}
         />

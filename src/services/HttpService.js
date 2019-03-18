@@ -50,11 +50,11 @@ export default class HttpService {
     .reply(200, {
       "count": 2,
       "results": [
-        {"id": 1, "full_name": "Panama City Title", "subtitle": "Panama City Subtitle"},
-        {"id": 2, "full_name": "New Jersey Title", "subtitle": "New Jersey Subtitle"},
-        {"id": 3, "full_name": "Moscow Title", "subtitle": "Moscow Subtitle"},
-        {"id": 4, "full_name": "St. Petersburg Title", "subtitle": "St. Petersburg Subtitle"},
-        {"id": 5, "full_name": "Vladivostok Title", "subtitle": "Vladivostok Subtitle"},
+        {"id": 1, "name": "Panama City Title", "vicinity": "Panama City Subtitle"},
+        {"id": 2, "name": "New Jersey Title", "vicinity": "New Jersey Subtitle"},
+        {"id": 3, "name": "Moscow Title", "vicinity": "Moscow Subtitle"},
+        {"id": 4, "name": "St. Petersburg Title", "vicinity": "St. Petersburg Subtitle"},
+        {"id": 5, "name": "Vladivostok Title", "vicinity": "Vladivostok Subtitle"},
       ]
     })
     .onGet('/api/v1/suggested_tags', {})
@@ -108,18 +108,21 @@ export default class HttpService {
     .reply(200, {
       "count": 2,
       "results": [
-        {"id": 1, "photo_name": "Photo1.jpg", "image": "assets/photo-plh.png", checked: true, city_id:""},
-        {"id": 2, "photo_name": "Photo2.jpg", "image": "assets/photo-plh.png", checked: true, city_id:""},
-        {"id": 3, "photo_name": "Photo3.jpg", "image": "assets/photo-plh.png", checked: true, city_id:""},
+        {"id": 1, "photo_name": "Photo1.jpg", "image": "assets/photo-plh.png", checked: true, checkedTime: new Date(), city_id:""},
+        {"id": 2, "photo_name": "Photo2.jpg", "image": "assets/photo-plh.png", checked: true, checkedTime: new Date(), city_id:""},
+        {"id": 3, "photo_name": "Photo3.jpg", "image": "assets/photo-plh.png", checked: true, checkedTime: new Date(), city_id:""},
+        {"id": 4, "photo_name": "Photo4.jpg", "image": "assets/photo-plh.png", checked: false, city_id:""},
+        {"id": 5, "photo_name": "Photo5.jpg", "image": "assets/photo-plh.png", checked: false, city_id:""},
       ]
     })
   }
 
-  get(url, params) {
+  get(url, params, auth) {
     let config = {
       method: "get",
       url: apiHost + url,
-      params
+      params,
+      auth
     }
     if(call){
       call.cancel('One request at a time, fellas!')

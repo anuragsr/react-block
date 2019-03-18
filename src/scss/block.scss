@@ -28,6 +28,12 @@
         font-size: 16px;
         margin-right: 20px;
       }
+      .checkTime{
+        display: inline-flex;
+        vertical-align: top;
+        color: $chktime;
+        font-size: 13px;
+      }
     }
     .bot-img{        
       height: 50px;

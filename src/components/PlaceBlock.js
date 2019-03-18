@@ -47,9 +47,13 @@ export default class PlaceBlock extends Component {
       .get('/api/v1/places', {        
         query: "",
         approved: true
+      },{
+        username: 'ml_page',
+        password: '}XhE9p2/FQjx9.e'
       })
       .then(res => {
         let places = res.data.results
+        l(places)
         this.setState({ places })
         this.placeChanged(places[0])
       })
@@ -65,6 +69,7 @@ export default class PlaceBlock extends Component {
       let suggTags = res.data.results
       l(suggTags)
       this.setState({ 
+        allowAdd: true,
         showSugTags: true, 
         suggTags 
       })
@@ -75,12 +80,14 @@ export default class PlaceBlock extends Component {
   }
 
   nextPlace = () => {
-    let idx = withIndex(this.state.places).filter(x => x.value.id === this.state.currPlace.id)[0].index;
-    l(idx)
-    if(idx === this.state.places.length - 1){
-      idx = 0
-    }else{
-      idx++
+    let found = withIndex(this.state.places).filter(x => x.value.id === this.state.currPlace.id), idx = 0
+    if(found.length){
+      idx = found[0].index
+      if(idx === this.state.places.length - 1){
+        idx = 0
+      }else{
+        idx++
+      }
     }
     this.placeChanged(this.state.places[idx])
   }
@@ -251,8 +258,8 @@ export default class PlaceBlock extends Component {
           <div className="row">
             <div className="col-lg-7">
               <div className="title">
-                {this.state.currPlace.full_name}
-                <div className="sub-title">{this.state.currPlace.subtitle}</div>
+                {this.state.currPlace.name}
+                <div className="sub-title">{this.state.currPlace.vicinity}</div>
               </div>
             </div>
             <div className="col-lg-5">

@@ -1,14 +1,15 @@
 import React, { Component } from 'react'
 import AutoCompleteComponent from './AutoCompleteComponent'
-import TagsComponent from './TagsComponent'
-import SliderComponent from './SliderComponent'
+// import TagsComponent from './TagsComponent'
+// import SliderComponent from './SliderComponent'
 import HttpService from '../services/HttpService'
-import { l, rand, withIndex } from '../helpers/common'
+import { l, rand, withIndex, getFormattedTime } from '../helpers/common'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faPlusSquare, faMinusSquare } from '@fortawesome/free-regular-svg-icons'
+import { faCheck } from '@fortawesome/free-solid-svg-icons'
 
 const checkId = rand(5)
+const checkId_p = rand(5)
 
 export default class PlaceBlock extends Component {
   
@@ -18,22 +19,23 @@ export default class PlaceBlock extends Component {
     this.state = {
       showNotif: false, 
       notifType: "submit",
-      showAnim: false,
-      showAttr: false,
-      showSugTags: false,
-      toggleSugTags: true,
-      allowAdd: true,
-      places: [],
-      currPlace: {},
-      bots: [],
-      currBot: {},
-      tags: [],
-      suggTags: [],
+      // showAnim: false,
+      // showAttr: false,
+      // showSugTags: false,
+      // toggleSugTags: true,
+      // allowAdd: true,
+      // places: [],
+      // currPhoto: {},
+      photos: [],
+      currPhoto: {},
+      // tags: [],
       ml: false,
-      att: {
-        manual: 0,
-        auto: 0
-      },
+      uncheckedOnly: false,
+      // suggTags: [],
+      // att: {
+      //   manual: 0,
+      //   auto: 0
+      // },
     }
   }
 
@@ -43,7 +45,8 @@ export default class PlaceBlock extends Component {
     .then(res => {
       let photos = res.data.results, currPhoto = photos[0]
       l(photos)
-      // this.setState({ bots, currBot })
+      this.setState({ photos, currPhoto })
+      this.getObjects()
       // this.http
       // .get('/api/v1/places', {        
       //   query: "",
@@ -57,10 +60,20 @@ export default class PlaceBlock extends Component {
     })
   }
 
-  getSuggTags = (currPlace) => {
+  getObjects = () => {
+    if(this.state.ml){
+      l("Getting objects")
+    }else{      
+      l("Drawing objects")
+    }
+  }
+
+  nextPhoto = () => {}
+
+  getSuggTags = (currPhoto) => {
     this.http
     .get('/api/v1/suggested_tags', {
-      params: { place_id: currPlace.id }
+      params: { place_id: currPhoto.id }
     })
     .then(res => {
       let suggTags = res.data.results
@@ -75,94 +88,95 @@ export default class PlaceBlock extends Component {
     })
   }
 
-  nextPlace = () => {
-    let idx = withIndex(this.state.places).filter(x => x.value.id === this.state.currPlace.id)[0].index;
+  nextPhoto = () => {
+    let idx = withIndex(this.state.photos).filter(x => x.value.id === this.state.currPhoto.id)[0].index;
     l(idx)
-    if(idx === this.state.places.length - 1){
+    if(idx === this.state.photos.length - 1){
       idx = 0
     }else{
       idx++
     }
-    this.placeChanged(this.state.places[idx])
+    this.setState({ currPhoto: this.state.photos[idx] })
+    // this.photoChanged(this.state.photos[idx])
   }
 
-  placeChanged = currPlace => {
-    this.setState({ currPlace })
-    this.getSuggTags(currPlace)
+  placeSelected = currPlace => {
+    l(currPlace)
+    // this.getSuggTags(currPhoto)
   } 
   
-  placeInputChanged = (showAnim, showAttr) => this.setState({ showAnim, showAttr })
+  // placeInputChanged = (showAnim, showAttr) => this.setState({ showAnim, showAttr })
   
-  botChanged = e => {
-    let currBot = this.state.bots.filter(bot => { return bot.id === parseInt(e.target.value) })[0]
-    this.setState({ currBot })
+  addPhoto = () => {
+    l("Add Photo")
   }
   
   mlChanged = e => this.setState({ ml: e.target.checked })    
+  checkChanged = e => this.setState({ uncheckedOnly: e.target.checked })    
 
-  tagSuggested = tag => {
-    // l(tag)
-    if(this.state.allowAdd){
-      let tags = [...this.state.tags, tag]
-      , suggTags = this.state.suggTags.filter(curr => curr.id !== tag.id)
-      , showAttr = !!tags.length
-      , showTags = !!tags.length
+  // tagSuggested = tag => {
+  //   // l(tag)
+  //   if(this.state.allowAdd){
+  //     let tags = [...this.state.tags, tag]
+  //     , suggTags = this.state.suggTags.filter(curr => curr.id !== tag.id)
+  //     , showAttr = !!tags.length
+  //     , showTags = !!tags.length
   
-      this.setState({ tags, suggTags, showAttr, showTags })
-      this.tagsChanged()
-    }
-  }
+  //     this.setState({ tags, suggTags, showAttr, showTags })
+  //     this.tagsChanged()
+  //   }
+  // }
   
-  tagAdded = tag => {
-    let tags = [...this.state.tags, tag]
-    , showTags = !!tags.length
+  // tagAdded = tag => {
+  //   let tags = [...this.state.tags, tag]
+  //   , showTags = !!tags.length
 
-    this.setState({ tags, showTags })
-    this.tagsChanged()
-  }
+  //   this.setState({ tags, showTags })
+  //   this.tagsChanged()
+  // }
 
-  tagRemoved = tag => {
-    let tags = this.state.tags.filter(curr => curr.id !== tag.id)
-    , showAttr = !!tags.length
+  // tagRemoved = tag => {
+  //   let tags = this.state.tags.filter(curr => curr.id !== tag.id)
+  //   , showAttr = !!tags.length
 
-    this.setState({ showAttr, tags })
-    this.tagsChanged()
-  }
+  //   this.setState({ showAttr, tags })
+  //   this.tagsChanged()
+  // }
 
-  tagsChanged = () => {
-    if(this.state.tags.length && this.state.ml){
-      l("Call ML with list of tags if ML on")
-      this.http
-      .post('/api/v1/get_attraction_for_place', { 
-        tags_ids: this.state.tags.map(x => x.id),
-        place_id: this.state.currPlace.id
-      })
-      .then(res => {
-        l(res.data)
-        let attr = res.data.attraction?res.data.attraction:0
-        this.setState( state => ({
-          att: {
-            ...state.att,
-            manual: attr,
-            auto: attr
-          }
-        }))
-      })
-      .catch(error => {
-        // error callback
-        l(error)
-      }) 
-    }
-  }
+  // tagsChanged = () => {
+  //   if(this.state.tags.length && this.state.ml){
+  //     l("Call ML with list of tags if ML on")
+  //     this.http
+  //     .post('/api/v1/get_attraction_for_place', { 
+  //       tags_ids: this.state.tags.map(x => x.id),
+  //       place_id: this.state.currPhoto.id
+  //     })
+  //     .then(res => {
+  //       l(res.data)
+  //       let attr = res.data.attraction?res.data.attraction:0
+  //       this.setState( state => ({
+  //         att: {
+  //           ...state.att,
+  //           manual: attr,
+  //           auto: attr
+  //         }
+  //       }))
+  //     })
+  //     .catch(error => {
+  //       // error callback
+  //       l(error)
+  //     }) 
+  //   }
+  // }
   
-  attChanged = val => {
-    this.setState( state => ({
-      att: {
-        ...state.att,
-        manual: val
-      }
-    }))
-  }
+  // attChanged = val => {
+  //   this.setState( state => ({
+  //     att: {
+  //       ...state.att,
+  //       manual: val
+  //     }
+  //   }))
+  // }
 
   undo = () => {
     let params = { type: 'tag', id: this.state.lastTagId }
@@ -195,9 +209,9 @@ export default class PlaceBlock extends Component {
         showAttr: false,
         tagsText: this.state.tags.map((t, i) => {
           if(i === this.state.tags.length - 1)
-            return t.full_name
+            return t.photo_name
           else
-            return t.full_name + ", "
+            return t.photo_name + ", "
         }),
         tags: [],
         // showTags: false,
@@ -210,7 +224,7 @@ export default class PlaceBlock extends Component {
         editor_attraction: this.state.att.manual, 
         editor_id: 1,
         bot_id: this.state.currBot.id,
-        place_id: this.state.currPlace.id
+        place_id: this.state.currPhoto.id
       }
       l(request)
   
@@ -219,7 +233,7 @@ export default class PlaceBlock extends Component {
       .then(res => {
         l(res.data)
         //  Show notif, undo
-        this.getSuggTags(this.state.currPlace)
+        this.getSuggTags(this.state.currPhoto)
         this.setState({ 
           showNotif: true, 
           lastTagId: res.data.id 
@@ -248,16 +262,20 @@ export default class PlaceBlock extends Component {
     return (
       <div className="block-content">
         {
-          this.state.places.length > 0 &&
+          this.state.photos.length > 0 &&
           <div className="row">
             <div className="col-lg-7">
               <div className="title">
-                {this.state.currPlace.full_name}
-                <div className="sub-title">{this.state.currPlace.subtitle}</div>
+                <span>{this.state.currPhoto.photo_name}</span>
+                <span className="checkTime">
+                  <FontAwesomeIcon style={{ color: "green" }} icon={faCheck} />
+                  &nbsp;&nbsp;Checked: {getFormattedTime(this.state.currPhoto.checkedTime)}
+                </span>
               </div>
             </div>
-            <div className="col-lg-5">
-              <div className="search">
+            <div className="col-lg-5 text-right">
+              <button onClick={this.addPhoto} className="btn btn-accent-outline">Add Photo</button>
+              {/* <div className="search">
                 <AutoCompleteComponent
                   inputProps={{
                     className: 'pl-inp form-control',
@@ -267,12 +285,11 @@ export default class PlaceBlock extends Component {
                   // changeInput={this.placeInputChanged}
                   optionSelected={this.placeChanged}
                 />
-                <button onClick={this.nextPlace} className="ml-4 btn btn-accent-outline">Next Place</button>
-              </div>
+              </div> */}
             </div>
           </div>
         }
-        <div className={this.state.showNotif?"shown notif":"notif"}>
+        {/* <div className={this.state.showNotif?"shown notif":"notif"}>
           {
             this.state.notifType === "submit" &&
             <div>
@@ -291,111 +308,49 @@ export default class PlaceBlock extends Component {
               <div onClick={this.onUndo} className="undo float-left">Ok</div>    
             </div>
           }
-        </div>
-        <div className="body row">
-          <div className="col-lg-7">
-            {this.state.bots.length > 0 &&
-            <div className="b-section">
-              <div
-                className="bot-img"
-                style={{ backgroundImage: `url(${this.state.currBot.avatar})` }}
-              >
-              </div>
-              <select 
-                className="custom" 
-                value={this.state.currBot.id} 
-                onChange={this.botChanged}
-              >
-                {this.state.bots.map(function(bot, idx){
-                  return (
-                    <option key={bot.id} value={bot.id}>{bot.name}</option>
-                  )
-                })}
-              </select>
-            </div>}            
-            <div className="b-section">
-              <div className="mb-2">
-                {this.state.showTags && 
-                <TagsComponent
-                  type="default"
-                  tags={this.state.tags}
-                  removeTag={this.tagRemoved}
-                />}
-              </div>
+        </div> */}
+        <div className="body">
+          <div className="b-section">
+            <div className="custom-control custom-checkbox">
+              <input checked={this.state.uncheckedOnly?"checked":""} onChange={this.checkChanged} type="checkbox" className="custom-control-input" id={checkId_p} />
+              <label className="custom-control-label" htmlFor={checkId_p}>Show only unchecked photo</label>
+            </div>
+          </div>
+          <div className="row">
+            <div className="col-lg-6">
               <AutoCompleteComponent 
                 inputProps={{
                   className: 'tag-inp form-control',
-                  placeholder: 'Add tag ..',
+                  placeholder: 'Choose the city',
                 }}
-                type="tag"
-                parent="place"
-                placeId={this.state.currPlace.id}
-                changeInput={this.placeInputChanged}
-                optionSelected={this.tagAdded}
+                type="place"
+                // parent="place"
+                // placeId={this.state.currPlace.id}
+                // changeInput={this.placeInputChanged}
+                optionSelected={this.placeSelected}
               />
             </div>
-              {/* ShowAnim: <pre>{JSON.stringify(this.state.showAnim, null, 2)}</pre> */}
-              {/* ShowAttr: <pre>{JSON.stringify(this.state.showAttr, null, 2)}</pre> */}
-            <div className="b-section">
-              {
-                this.state.showAnim &&
-                <div className="ctn-anim">
-                  <div className="dot"></div>
-                  <div className="dot"></div>
-                  <div className="dot"></div>
-                  <div className="dot"></div>
-                </div>
-              }{
-                this.state.showAttr &&
-                <SliderComponent att={this.state.att} changeAtt={this.attChanged}/>
-              }
+          </div>
+          <div className="row">
+            <div className="b-section col-lg-6">
+              Photo
             </div>
-            <div className="b-section">
-              <div className="custom-control custom-checkbox">
-                <input checked={this.state.ml?"checked":""} onChange={this.mlChanged} type="checkbox" className="custom-control-input" id={checkId} />
-                <label className="custom-control-label" htmlFor={checkId}>Turn On ML</label>
-              </div>
+            <div className="b-section col-lg-6">
+              Photo Objects
             </div>
           </div>
-          <div className="col-lg-12">
-            <div className="b-section mt-0">
-              {this.state.showSugTags && 
-              <div>
-                <div className="sl-title">
-                  <div>
-                    Suggested Tags&nbsp;&nbsp;
-                    {!this.state.toggleSugTags && 
-                      <FontAwesomeIcon 
-                        style={{ cursor: "pointer", fontSize: 22 }}
-                        icon={faPlusSquare} 
-                        onClick={() => this.setState({ 
-                          toggleSugTags: !this.state.toggleSugTags
-                        })}
-                      />}
-                    {this.state.toggleSugTags && 
-                      <FontAwesomeIcon 
-                        style={{ cursor: "pointer", fontSize: 22 }}
-                        icon={faMinusSquare} 
-                        onClick={() => this.setState({ 
-                          toggleSugTags: !this.state.toggleSugTags
-                        })}
-                    />}
-                  </div>
-                </div>
-                {this.state.toggleSugTags &&
-                <TagsComponent
-                  type="suggested"
-                  tags={this.state.suggTags}
-                  clickedTag={this.tagSuggested}
-                />}
-              </div>}
+          <div className="b-section">
+            <div className="custom-control custom-checkbox">
+              <input checked={this.state.ml?"checked":""} onChange={this.mlChanged} type="checkbox" className="custom-control-input" id={checkId} />
+              <label className="custom-control-label" htmlFor={checkId}>Turn On ML</label>
             </div>
-            <div className="b-section">
-              <button onClick={this.submit} className="btn btn-accent">Submit</button>
-            </div>
+          </div>
+          <div className="b-section">
+            <button onClick={this.submit} className="btn btn-accent">Submit</button>
+            <button onClick={this.nextPhoto} className="ml-3 btn btn-accent-outline">Next Photo</button>
           </div>
         </div>
-      </div>      
+      </div>
     )
   }
 }
