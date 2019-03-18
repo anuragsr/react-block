@@ -396,7 +396,7 @@ export default class TagBlock extends Component {
             </div>
             <div className="b-section">
               <button onClick={this.submit} className="btn btn-accent">Submit</button>
-              <button onClick={this.nextBlock} className="ml-2 btn btn-accent-outline">Next Block</button>
+              <button onClick={this.nextBlock} className="ml-3 btn btn-accent-outline">Next Block</button>
             </div>
           </div>
         </div>            

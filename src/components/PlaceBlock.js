@@ -390,7 +390,7 @@ export default class PlaceBlock extends Component {
             </div>
             <div className="b-section">
               <button onClick={this.submit} className="btn btn-accent">Submit</button>
-              <button onClick={this.nextPlace} className="ml-2 btn btn-accent-outline">Next Place</button>
+              <button onClick={this.nextPlace} className="ml-3 btn btn-accent-outline">Next Place</button>
             </div>
           </div>
         </div>
