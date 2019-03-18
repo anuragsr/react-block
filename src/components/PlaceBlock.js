@@ -61,10 +61,9 @@ export default class PlaceBlock extends Component {
   }
 
   getSuggTags = (currPlace) => {
+    let params = { place_id: currPlace.id }
     this.http
-    .get('/api/v1/suggested_tags', {
-      params: { place_id: currPlace.id }
-    })
+    .get('/api/v1/suggested_tags', params)
     .then(res => {
       let suggTags = res.data.results
       l(suggTags)
