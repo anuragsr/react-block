@@ -113,8 +113,7 @@ export default class PlaceBlock extends Component {
       , showAttr = !!tags.length
       , showTags = !!tags.length
   
-      this.setState({ tags, suggTags, showAttr, showTags })
-      this.tagsChanged()
+      this.setState({ tags, suggTags, showAttr, showTags }, this.tagsChanged)
     }
   }
   
@@ -122,21 +121,21 @@ export default class PlaceBlock extends Component {
     let tags = [...this.state.tags, tag]
     , showTags = !!tags.length
 
-    this.setState({ tags, showTags })
-    this.tagsChanged()
+    this.setState({ tags, showTags }, this.tagsChanged)
+    // this.tagsChanged()
   }
 
   tagRemoved = tag => {
     let tags = this.state.tags.filter(curr => curr.id !== tag.id)
     , showAttr = !!tags.length
 
-    this.setState({ showAttr, tags })
-    this.tagsChanged()
+    this.setState({ showAttr, tags }, this.tagsChanged)
+    // ()
   }
 
   tagsChanged = () => {
     if(this.state.tags.length && this.state.ml){
-      l("Call ML with list of tags if ML on")
+      l("Call ML with list of tags and place if ML on")
       this.http
       .post('/api/v1/get_attraction_for_place', { 
         tags_ids: this.state.tags.map(x => x.id),

@@ -120,8 +120,7 @@ export default class TagBlock extends Component {
       , showAttr = !!tags.length
       , showTags = !!tags.length
   
-      this.setState({ tags, suggTags, showAttr, showTags })
-      this.tagsChanged()
+      this.setState({ tags, suggTags, showAttr, showTags }, this.tagsChanged)
     }
   }
   
@@ -129,23 +128,25 @@ export default class TagBlock extends Component {
     let tags = [...this.state.tags, tag]
     , showTags = !!tags.length
 
-    this.setState({ tags, showTags })
-    this.tagsChanged()
+    this.setState({ tags, showTags }, this.tagsChanged)
+    // this.tagsChanged()
   }
 
   tagRemoved = tag => {
     let tags = this.state.tags.filter(curr => curr.id !== tag.id)
     , showAttr = !!tags.length
 
-    this.setState({ showAttr, tags })
-    this.tagsChanged()
+    this.setState({ showAttr, tags }, this.tagsChanged)
+    // this.tagsChanged()
   }
 
   tagsChanged = () => {
     if(this.state.tags.length && this.state.ml){
       l("Call ML with list of tags if ML on")
       this.http
-      .post('/api/v1/get_attraction_for_tags', { tags_ids: this.state.tags.map(x => x.id) })
+      .post('/api/v1/get_attraction_for_tags', { 
+        tags_ids: this.state.tags.map(x => x.id) 
+      })
       .then(res => {
         l(res.data)
         let attr = res.data.attraction?res.data.attraction:0
