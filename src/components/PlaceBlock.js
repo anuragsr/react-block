@@ -92,7 +92,7 @@ export default class PlaceBlock extends Component {
   }
 
   placeChanged = currPlace => {
-    this.setState({ currPlace })
+    this.setState({ currPlace, tags:[], showAttr: false })
     this.getSuggTags(currPlace)
   } 
   
@@ -126,11 +126,14 @@ export default class PlaceBlock extends Component {
   }
 
   tagRemoved = tag => {
-    let tags = this.state.tags.filter(curr => curr.id !== tag.id)
-    , showAttr = !!tags.length
+    let tags = this.state.tags.filter(curr => curr.id !== tag.id), showAttr
+    if(tags.length === 0){
+      showAttr = false
+    }else{
+      showAttr = true
+    }
 
     this.setState({ showAttr, tags }, this.tagsChanged)
-    // ()
   }
 
   tagsChanged = () => {
@@ -256,7 +259,9 @@ export default class PlaceBlock extends Component {
           <div className="row">
             <div className="col-lg-7">
               <div className="title">
-                {this.state.currPlace.name}
+                <a href={"https://admin-staging.oyster.ai/places/edit/" + this.state.currPlace.id} rel="noopener noreferrer" target="_blank">
+                  {this.state.currPlace.name}
+                </a> 
                 <div className="sub-title">{this.state.currPlace.vicinity}</div>
               </div>
             </div>

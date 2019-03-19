@@ -133,8 +133,12 @@ export default class TagBlock extends Component {
   }
 
   tagRemoved = tag => {
-    let tags = this.state.tags.filter(curr => curr.id !== tag.id)
-    , showAttr = !!tags.length
+    let tags = this.state.tags.filter(curr => curr.id !== tag.id), showAttr
+    if(tags.length === 0){
+      showAttr = false
+    }else{
+      showAttr = true
+    }
 
     this.setState({ showAttr, tags }, this.tagsChanged)
     // this.tagsChanged()
