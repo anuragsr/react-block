@@ -172,7 +172,7 @@ export default class PlaceBlock extends Component {
   }
 
   undo = () => {
-    let params = { type: 'tag', id: this.state.lastTagId }
+    let params = { type: 'place', id: this.state.lastPlaceId }
     l(params)
     this.http
     .get('/api/v1/undo', params)
@@ -229,7 +229,7 @@ export default class PlaceBlock extends Component {
         this.getSuggTags(this.state.currPlace)
         this.setState({ 
           showNotif: true, 
-          lastTagId: res.data.id 
+          lastPlaceId: res.data.id 
         })
         setTimeout(() => {
           this.setState({ 

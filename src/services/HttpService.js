@@ -105,15 +105,65 @@ export default class HttpService {
       "id": 1
     })
     .onGet('/api/v1/photos', {})
-    .reply(200, {
-      "count": 2,
+    .reply(200, {      
+      "count": 4,
       "results": [
-        {"id": 1, "photo_name": "Photo1.jpg", "image": "assets/photo-plh.png", checked: true, checkedTime: new Date(), city_id:""},
-        {"id": 2, "photo_name": "Photo2.jpg", "image": "assets/photo-plh.png", checked: true, checkedTime: new Date(), city_id:""},
-        {"id": 3, "photo_name": "Photo3.jpg", "image": "assets/photo-plh.png", checked: true, checkedTime: new Date(), city_id:""},
-        {"id": 4, "photo_name": "Photo4.jpg", "image": "assets/photo-plh.png", checked: false, city_id:""},
-        {"id": 5, "photo_name": "Photo5.jpg", "image": "assets/photo-plh.png", checked: false, city_id:""},
+        {
+          "id": 600690,
+          "labels": [
+            {
+              "id": 459,
+              "object_rectangle": [
+                "0.36019423604011536",
+                "0.6705842614173889",
+                "0.9092695116996765",
+                "0.9804669618606567"
+              ],
+              "label": {
+                "id": 7793,
+                "name": "kitchen utensil"
+              }
+            }
+          ],
+          "category": {
+            "id": 23,
+            "name": "Food"
+          },
+          "image_url": "https://somewhere-data.s3.amazonaws.com/media/places/photos/006.jpgejlBjQEdYh.jpg",
+          "ml_check_date": "2019-03-14T16:19:34+0000"
+        },{
+          "id": 600691,
+          "labels": [
+            {
+              "id": 459,
+              "object_rectangle": [
+                "0.36019423604011536",
+                "0.6705842614173889",
+                "0.9092695116996765",
+                "0.9804669618606567"
+              ],
+              "label": {
+                "id": 7793,
+                "name": "kitchen utensil"
+              }
+            }
+          ],
+          "category": {
+            "id": 23,
+            "name": "Food"
+          },
+          "image_url": "assets/photo-plh.png",
+          "ml_check_date": "2019-03-15T16:19:34+0000"
+        }
       ]
+      // "count": 2,
+      // "results": [
+      //   {"id": 1, "photo_name": "Photo1.jpg", "image": "assets/photo-plh.png", checked: true, checkedTime: new Date(), city_id:""},
+      //   {"id": 2, "photo_name": "Photo2.jpg", "image": "assets/photo-plh.png", checked: true, checkedTime: new Date(), city_id:""},
+      //   {"id": 3, "photo_name": "Photo3.jpg", "image": "assets/photo-plh.png", checked: true, checkedTime: new Date(), city_id:""},
+      //   {"id": 4, "photo_name": "Photo4.jpg", "image": "assets/photo-plh.png", checked: false, city_id:""},
+      //   {"id": 5, "photo_name": "Photo5.jpg", "image": "assets/photo-plh.png", checked: false, city_id:""},
+      // ]
     })
   }
 
