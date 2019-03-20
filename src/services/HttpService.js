@@ -110,6 +110,7 @@ export default class HttpService {
       "results": [
         {
           "id": 600690,
+          "name": "Photo1.jpg", 
           "labels": [
             {
               "id": 459,
@@ -133,6 +134,7 @@ export default class HttpService {
           "ml_check_date": "2019-03-14T16:19:34+0000"
         },{
           "id": 600691,
+          "name": "Photo2.jpg", 
           "labels": [
             {
               "id": 459,

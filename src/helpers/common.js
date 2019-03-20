@@ -11,7 +11,6 @@ export const rand = length => {
   return randomStr
 }
 export const withIndex = arr => arr.map((v,i) => ({value: v, index: i}))
-
 export const getFormattedTime = date => {
   return date
   // if(date === null || date === '')

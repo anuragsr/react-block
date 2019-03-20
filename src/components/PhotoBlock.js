@@ -1,91 +1,70 @@
 import React, { Component } from 'react'
+
 import AutoCompleteComponent from './AutoCompleteComponent'
-// import TagsComponent from './TagsComponent'
-// import SliderComponent from './SliderComponent'
+import CanvasComponent from './CanvasComponent'
 import HttpService from '../services/HttpService'
 import { l, rand, withIndex, getFormattedTime } from '../helpers/common'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCheck } from '@fortawesome/free-solid-svg-icons'
+import { faCheck, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faEdit } from '@fortawesome/free-regular-svg-icons';
 
 const checkId = rand(5)
 const checkId_p = rand(5)
 
-export default class PlaceBlock extends Component {
+export default class PhotoBlock extends Component {
   
   constructor(props) {
     super(props)
     this.http = new HttpService()
     this.state = {
-      showNotif: false, 
-      notifType: "submit",
       // showAnim: false,
       // showAttr: false,
       // showSugTags: false,
       // toggleSugTags: true,
       // allowAdd: true,
       // places: [],
-      // currPhoto: {},
-      photos: [],
-      currPhoto: {},
       // tags: [],
-      ml: false,
-      uncheckedOnly: false,
       // suggTags: [],
       // att: {
       //   manual: 0,
       //   auto: 0
       // },
+      showNotif: false, 
+      notifType: "submit",
+      categories: [],
+      currCat: {},
+      photos: [],
+      currPhoto: {},
+      ml: false,
+      uncheckedOnly: false,
     }
   }
 
   componentDidMount(){
     this.http
-    .get('/api/v1/photos')
+    .get('/api/v1/photos', {
+      limit: 10
+    },{
+      username: 'ml_page',
+      password: '}XhE9p2/FQjx9.e'
+    })
     .then(res => {
-      let photos = res.data.results, currPhoto = photos[0]
+      let photos = res.data.results, currPhoto = photos[1]
       l(photos)
       this.setState({ photos, currPhoto })
-      this.getObjects()
-      // this.http
-      // .get('/api/v1/places', {        
-      //   query: "",
-      //   approved: true
-      // })
-      // .then(res => {
-      //   let places = res.data.results
-      //   this.setState({ places })
-      //   this.placeChanged(places[0])
-      // })
-    })
-  }
-
-  getObjects = () => {
-    if(this.state.ml){
-      l("Getting objects")
-    }else{      
-      l("Drawing objects")
-    }
-  }
-
-  nextPhoto = () => {}
-
-  getSuggTags = (currPhoto) => {
-    this.http
-    .get('/api/v1/suggested_tags', {
-      params: { place_id: currPhoto.id }
-    })
-    .then(res => {
-      let suggTags = res.data.results
-      l(suggTags)
-      this.setState({ 
-        showSugTags: true, 
-        suggTags 
+      this.http
+      .get('/api/v1/categories')
+      .then(res => {
+        let categories = res.data.results, currCat = categories[0]
+        this.setState({ categories, currCat })
       })
-      // if(this.state.randomMode){
-      //   this.getRandomTags()
-      // }
     })
+  }
+
+  catChanged = e => {
+    let currCat = this.state.categories.filter(cat => { return cat === e.target.value })[0]
+    this.setState({ currCat })
   }
 
   nextPhoto = () => {
@@ -97,198 +76,133 @@ export default class PlaceBlock extends Component {
       idx++
     }
     this.setState({ currPhoto: this.state.photos[idx] })
-    // this.photoChanged(this.state.photos[idx])
   }
 
   placeSelected = currPlace => {
     l(currPlace)
     // this.getSuggTags(currPhoto)
   } 
-  
-  // placeInputChanged = (showAnim, showAttr) => this.setState({ showAnim, showAttr })
-  
+    
   addPhoto = () => {
     l("Add Photo")
   }
+
+  editLabel = () => {
+    l("editLabel")
+  }
+
+  deleteLabel = () => {
+    l("deleteLabel")
+  }
   
-  mlChanged = e => this.setState({ ml: e.target.checked })    
-  checkChanged = e => this.setState({ uncheckedOnly: e.target.checked })    
-
-  // tagSuggested = tag => {
-  //   // l(tag)
-  //   if(this.state.allowAdd){
-  //     let tags = [...this.state.tags, tag]
-  //     , suggTags = this.state.suggTags.filter(curr => curr.id !== tag.id)
-  //     , showAttr = !!tags.length
-  //     , showTags = !!tags.length
+  mlChanged = e => this.setState({ ml: e.target.checked })
   
-  //     this.setState({ tags, suggTags, showAttr, showTags })
-  //     this.tagsChanged()
-  //   }
-  // }
-  
-  // tagAdded = tag => {
-  //   let tags = [...this.state.tags, tag]
-  //   , showTags = !!tags.length
-
-  //   this.setState({ tags, showTags })
-  //   this.tagsChanged()
-  // }
-
-  // tagRemoved = tag => {
-  //   let tags = this.state.tags.filter(curr => curr.id !== tag.id)
-  //   , showAttr = !!tags.length
-
-  //   this.setState({ showAttr, tags })
-  //   this.tagsChanged()
-  // }
-
-  // tagsChanged = () => {
-  //   if(this.state.tags.length && this.state.ml){
-  //     l("Call ML with list of tags if ML on")
-  //     this.http
-  //     .post('/api/v1/get_attraction_for_place', { 
-  //       tags_ids: this.state.tags.map(x => x.id),
-  //       place_id: this.state.currPhoto.id
-  //     })
-  //     .then(res => {
-  //       l(res.data)
-  //       let attr = res.data.attraction?res.data.attraction:0
-  //       this.setState( state => ({
-  //         att: {
-  //           ...state.att,
-  //           manual: attr,
-  //           auto: attr
-  //         }
-  //       }))
-  //     })
-  //     .catch(error => {
-  //       // error callback
-  //       l(error)
-  //     }) 
-  //   }
-  // }
-  
-  // attChanged = val => {
-  //   this.setState( state => ({
-  //     att: {
-  //       ...state.att,
-  //       manual: val
-  //     }
-  //   }))
-  // }
+  checkChanged = e => this.setState({ uncheckedOnly: e.target.checked })
 
   undo = () => {
-    let params = { type: 'tag', id: this.state.lastTagId }
-    l(params)
-    this.http
-    .get('/api/v1/undo', params)
-    .then(res => {
-      l(res)
-      this.setState({
-        showNotif: true, 
-        notifType: "undo"
-      })
-      setTimeout(() => {
-        this.setState({
-          allowAdd: true,
-          showNotif: false,
-          notifType: "submit"
-        })
-        // this.getSuggTags()
-      }, 5000)
-    })
+    // let params = { type: 'photo', id: this.state.lastTagId }
+    // l(params)
+    // this.http
+    // .get('/api/v1/undo', params)
+    // .then(res => {
+    //   l(res)
+    //   this.setState({
+    //     showNotif: true, 
+    //     notifType: "undo"
+    //   })
+    //   setTimeout(() => {
+    //     this.setState({
+    //       allowAdd: true,
+    //       showNotif: false,
+    //       notifType: "submit"
+    //     })
+    //     // this.getSuggTags()
+    //   }, 5000)
+    // })
   }
 
   onUndo = () => this.setState({ showNotif: false, notifType: "submit" })
 
   submit = () => {
     // l(this.state)
-    if(this.state.tags.length){
-      this.setState({
-        showAttr: false,
-        tagsText: this.state.tags.map((t, i) => {
-          if(i === this.state.tags.length - 1)
-            return t.photo_name
-          else
-            return t.photo_name + ", "
-        }),
-        tags: [],
-        // showTags: false,
-        allowAdd: false,
-      })
+    // if(this.state.tags.length){
+    //   this.setState({
+    //     showAttr: false,
+    //     tagsText: this.state.tags.map((t, i) => {
+    //       if(i === this.state.tags.length - 1)
+    //         return t.photo_name
+    //       else
+    //         return t.photo_name + ", "
+    //     }),
+    //     tags: [],
+    //     // showTags: false,
+    //     allowAdd: false,
+    //   })
 
-      const request = {
-        tags_ids: this.state.tags.map(x => x.id),
-        ML_attraction: this.state.ml?this.state.att.auto:"None",
-        editor_attraction: this.state.att.manual, 
-        editor_id: 1,
-        bot_id: this.state.currBot.id,
-        place_id: this.state.currPhoto.id
-      }
-      l(request)
+    //   const request = {
+    //     tags_ids: this.state.tags.map(x => x.id),
+    //     ML_attraction: this.state.ml?this.state.att.auto:"None",
+    //     editor_attraction: this.state.att.manual, 
+    //     editor_id: 1,
+    //     bot_id: this.state.currBot.id,
+    //     place_id: this.state.currPhoto.id
+    //   }
+    //   l(request)
   
-      this.http
-      .post('/api/v1/send_attraction_for_place', request)
-      .then(res => {
-        l(res.data)
-        //  Show notif, undo
-        this.getSuggTags(this.state.currPhoto)
-        this.setState({ 
-          showNotif: true, 
-          lastTagId: res.data.id 
-        })
-        setTimeout(() => {
-          this.setState({ 
-            showAttr: false,
-            att: {
-              manual: 0,
-              auto: 0
-            }
-          })
+    //   this.http
+    //   .post('/api/v1/send_attraction_for_place', request)
+    //   .then(res => {
+    //     l(res.data)
+    //     //  Show notif, undo
+    //     this.getSuggTags(this.state.currPhoto)
+    //     this.setState({ 
+    //       showNotif: true, 
+    //       lastTagId: res.data.id 
+    //     })
+    //     setTimeout(() => {
+    //       this.setState({ 
+    //         showAttr: false,
+    //         att: {
+    //           manual: 0,
+    //           auto: 0
+    //         }
+    //       })
           
-          if(this.state.notifType === "submit"){
-            this.setState({ 
-              allowAdd: true,
-              showNotif: false 
-            })
-          }
-        }, 5000)
-      })    
-    }
+    //       if(this.state.notifType === "submit"){
+    //         this.setState({ 
+    //           allowAdd: true,
+    //           showNotif: false 
+    //         })
+    //       }
+    //     }, 5000)
+    //   })    
+    // }
   }
 
   render() {
+
+    const photo = this.state.currPhoto
+    , photos = this.state.photos
+    , labels = this.state.currPhoto.labels
+    l(labels)
+
     return (
       <div className="block-content">
-        {
-          this.state.photos.length > 0 &&
-          <div className="row">
-            <div className="col-lg-7">
-              <div className="title">
-                <span>{this.state.currPhoto.photo_name}</span>
-                <span className="checkTime">
-                  <FontAwesomeIcon style={{ color: "green" }} icon={faCheck} />
-                  &nbsp;&nbsp;Checked: {getFormattedTime(this.state.currPhoto.checkedTime)}
-                </span>
-              </div>
-            </div>
-            <div className="col-lg-5 text-right">
-              <button onClick={this.addPhoto} className="btn btn-accent-outline">Add Photo</button>
-              {/* <div className="search">
-                <AutoCompleteComponent
-                  inputProps={{
-                    className: 'pl-inp form-control',
-                    placeholder: 'FIND THE PLACE'
-                  }}
-                  type="place"
-                  // changeInput={this.placeInputChanged}
-                  optionSelected={this.placeChanged}
-                />
-              </div> */}
+        {photos.length > 0 &&
+        <div className="row">
+          <div className="col-lg-9">
+            <div className="title">
+              <span>{photo.name}</span>
+              <span className="checkTime">
+                <FontAwesomeIcon style={{ color: "green" }} icon={faCheck} />
+                &nbsp;&nbsp;Checked: {getFormattedTime(photo.checkedTime)}
+              </span>
             </div>
           </div>
-        }
+          <div className="col-lg-3 text-right">
+            <button onClick={this.addPhoto} className="btn btn-accent-outline">Add Photo</button>
+          </div>
+        </div>}
         {/* <div className={this.state.showNotif?"shown notif":"notif"}>
           {
             this.state.notifType === "submit" &&
@@ -332,11 +246,49 @@ export default class PlaceBlock extends Component {
             </div>
           </div>
           <div className="row">
-            <div className="b-section col-lg-6">
-              Photo
+            <div className="b-section col-lg-1">
+              <div className="obj-sel">
+                <img src="assets/icon-random.png" alt=""/>
+              </div>
+              <div className="obj-sel">
+                <img src="assets/icon-square.png" alt=""/>
+              </div>
+              <div className="obj-sel">
+                <img src="assets/icon-circle.png" alt=""/>
+              </div>
             </div>
-            <div className="b-section col-lg-6">
-              Photo Objects
+            <div className="b-section col-lg-7">
+              <CanvasComponent
+                image={photo}
+              />              
+            </div>
+            <div className="b-section col-lg-4 ctn-cat">
+              <div>Photo category</div>
+              {this.state.categories.length > 0 &&
+              <select 
+                className="custom form-control" 
+                value={this.state.currCat.id} 
+                onChange={this.catChanged}
+              >
+                {this.state.categories.map(function(cat, idx){
+                  return (
+                    <option key={idx} value={cat}>{cat}</option>
+                  )
+                })}
+              </select>}
+              <div className="ctn-lbl">
+                {photos.length > 0 && labels.length && labels.map((lbl, idx) => {
+                  return (
+                    <div className="lbl-item" key={idx}>
+                      <div>{idx + 1}</div>
+                      <span>{lbl.label.name}</span>
+                      <span onClick={this.editLabel}><FontAwesomeIcon style={{ color: "#a8c6df" }} icon={faEdit} /></span>
+                      <span onClick={this.deleteLabel}><FontAwesomeIcon style={{ color: "#a8c6df" }} icon={faTrash} /></span>
+                    </div>
+                  )
+                })}
+              {/* Labels: <pre>{JSON.stringify(labels, null, 2)}</pre> */}
+              </div>
             </div>
           </div>
           <div className="b-section">
