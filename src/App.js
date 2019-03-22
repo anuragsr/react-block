@@ -8,8 +8,8 @@ export default class App extends Component {
   render() {
     return (
       <div className="container">
-        <Block show={false} type="Photo" />
-        <Block show={!false} type="Place" />
+        <Block show={!false} type="Photo" />
+        <Block show={false} type="Place" />
         <Block show={!true} type="Tag" />
       </div>
     )

@@ -2,15 +2,17 @@ import React, { Component } from 'react'
 
 import AutoCompleteComponent from './AutoCompleteComponent'
 import CanvasComponent from './CanvasComponent'
+import FileInputComponent from './FileInputComponent'
 import HttpService from '../services/HttpService'
 import { l, rand, withIndex, getFormattedTime } from '../helpers/common'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCheck, faTrash } from '@fortawesome/free-solid-svg-icons'
-import { faEdit } from '@fortawesome/free-regular-svg-icons';
+import { faCheck } from '@fortawesome/free-solid-svg-icons'
+import PreviewComponent from './FilePreviewComponent';
 
 const checkId = rand(5)
 const checkId_p = rand(5)
+let loadUrl  = ""
 
 export default class PhotoBlock extends Component {
   
@@ -30,14 +32,17 @@ export default class PhotoBlock extends Component {
       //   manual: 0,
       //   auto: 0
       // },
-      showNotif: false, 
+      // currCat: {},
+      showNotif: false,
       notifType: "submit",
       categories: [],
-      currCat: {},
       photos: [],
       currPhoto: {},
       ml: false,
       uncheckedOnly: false,
+      showUpload: false,
+      uploadedFiles: [],
+      loadUrl: "",
     }
   }
 
@@ -50,21 +55,21 @@ export default class PhotoBlock extends Component {
       password: '}XhE9p2/FQjx9.e'
     })
     .then(res => {
-      let photos = res.data.results, currPhoto = photos[1]
+      let photos = res.data.results
+      , currPhoto = photos[1]
+      // currPhoto.labels.push(JSON.parse(JSON.stringify(currPhoto.labels[0])))
+      currPhoto.labels.forEach(lbl => lbl.edit = false)
+
       l(photos)
       this.setState({ photos, currPhoto })
+
       this.http
       .get('/api/v1/categories')
       .then(res => {
-        let categories = res.data.results, currCat = categories[0]
-        this.setState({ categories, currCat })
+        let categories = res.data.results//, currCat = categories[0]
+        this.setState({ categories })
       })
     })
-  }
-
-  catChanged = e => {
-    let currCat = this.state.categories.filter(cat => { return cat === e.target.value })[0]
-    this.setState({ currCat })
   }
 
   nextPhoto = () => {
@@ -84,20 +89,42 @@ export default class PhotoBlock extends Component {
   } 
     
   addPhoto = () => {
-    l("Add Photo")
-  }
-
-  editLabel = () => {
-    l("editLabel")
-  }
-
-  deleteLabel = () => {
-    l("deleteLabel")
+    // l("Add Photo")
+    this.setState({ showUpload: true })
   }
   
   mlChanged = e => this.setState({ ml: e.target.checked })
   
   checkChanged = e => this.setState({ uncheckedOnly: e.target.checked })
+
+  doUpload = () => {
+    l("Do upload")
+  }
+
+  cancelUpload = () => {
+    // l(this.state.currPhoto)
+    this.setState({ showUpload: false })
+    // this.forceUpdate()
+  }
+
+  loadUrlChanged = e => {
+    loadUrl = e.target.value
+    // this.setState({ loadUrl: e.target.value })
+  }
+
+  doLoadUrl = () => {
+    l(this.state.loadUrl)
+    let uploadedFiles = this.state.uploadedFiles
+    uploadedFiles.push({ url: loadUrl, type: "url" })
+    this.setState({ uploadedFiles, loadUrl: "" })
+  }
+
+  filesUploaded = files => {
+    l(files)
+    this.setState( state => ({
+      uploadedFiles: state.uploadedFiles.concat(...files)    
+    }))
+  }
 
   undo = () => {
     // let params = { type: 'photo', id: this.state.lastTagId }
@@ -180,128 +207,117 @@ export default class PhotoBlock extends Component {
   }
 
   render() {
-
     const photo = this.state.currPhoto
     , photos = this.state.photos
-    , labels = this.state.currPhoto.labels
-    l(labels)
+    , categories = this.state.categories
 
     return (
-      <div className="block-content">
-        {photos.length > 0 &&
-        <div className="row">
-          <div className="col-lg-9">
-            <div className="title">
-              <span>{photo.name}</span>
-              <span className="checkTime">
-                <FontAwesomeIcon style={{ color: "green" }} icon={faCheck} />
-                &nbsp;&nbsp;Checked: {getFormattedTime(photo.checkedTime)}
-              </span>
-            </div>
-          </div>
-          <div className="col-lg-3 text-right">
-            <button onClick={this.addPhoto} className="btn btn-accent-outline">Add Photo</button>
-          </div>
-        </div>}
-        {/* <div className={this.state.showNotif?"shown notif":"notif"}>
-          {
-            this.state.notifType === "submit" &&
-            <div>
-              <div className="n-title">New tag block created!</div>
-              <div onClick={this.undo} className="undo float-right">Undo</div>
-              <div className="n-body">
-                Tags: {this.state.tagsText}
-                <br/>
-                Attraction: {this.state.att.manual}
+      <div className="block-content">        
+        {
+          photos.length > 0 && <>
+          <div style={{display: !this.state.showUpload?"block":"none" }}>
+            <div className="row">
+              <div className="col-lg-9">
+                <div className="title">
+                  <span>{photo.name}</span>
+                  {photo.ml_check_date !== null &&
+                  <span className="checkTime">
+                    <FontAwesomeIcon style={{ color: "green" }} icon={faCheck} />
+                    &nbsp;&nbsp;Checked: {getFormattedTime(photo.ml_check_date)}
+                  </span>}
+                </div>
+              </div>
+              <div className="col-lg-3 text-right">
+                <button onClick={this.addPhoto} className="btn btn-accent-outline">Add Photo</button>
               </div>
             </div>
-          }{
-            this.state.notifType === "undo" &&
-            <div>
-              <div className="n-title">Tag block deleted successfully!</div>
-              <div onClick={this.onUndo} className="undo float-left">Ok</div>    
-            </div>
-          }
-        </div> */}
-        <div className="body">
-          <div className="b-section">
-            <div className="custom-control custom-checkbox">
-              <input checked={this.state.uncheckedOnly?"checked":""} onChange={this.checkChanged} type="checkbox" className="custom-control-input" id={checkId_p} />
-              <label className="custom-control-label" htmlFor={checkId_p}>Show only unchecked photo</label>
-            </div>
-          </div>
-          <div className="row">
-            <div className="col-lg-6">
-              <AutoCompleteComponent 
-                inputProps={{
-                  className: 'tag-inp form-control',
-                  placeholder: 'Choose the city',
-                }}
-                type="place"
-                // parent="place"
-                // placeId={this.state.currPlace.id}
-                // changeInput={this.placeInputChanged}
-                optionSelected={this.placeSelected}
-              />
-            </div>
-          </div>
-          <div className="row">
-            <div className="b-section col-lg-1">
-              <div className="obj-sel">
-                <img src="assets/icon-random.png" alt=""/>
+            {/* <div className={this.state.showNotif?"shown notif":"notif"}>
+              {
+                this.state.notifType === "submit" &&
+                <div>
+                  <div className="n-title">New tag block created!</div>
+                  <div onClick={this.undo} className="undo float-right">Undo</div>
+                  <div className="n-body">
+                    Tags: {this.state.tagsText}
+                    <br/>
+                    Attraction: {this.state.att.manual}
+                  </div>
+                </div>
+              }{
+                this.state.notifType === "undo" &&
+                <div>
+                  <div className="n-title">Tag block deleted successfully!</div>
+                  <div onClick={this.onUndo} className="undo float-left">Ok</div>    
+                </div>
+              }
+            </div> */}
+            <div className="body">
+              <div className="b-section">
+                <div className="custom-control custom-checkbox">
+                  <input checked={this.state.uncheckedOnly?"checked":""} onChange={this.checkChanged} type="checkbox" className="custom-control-input" id={checkId_p} />
+                  <label className="custom-control-label" htmlFor={checkId_p}>Show only unchecked photo</label>
+                </div>
               </div>
-              <div className="obj-sel">
-                <img src="assets/icon-square.png" alt=""/>
+              <div className="row">
+                <div className="col-lg-6">
+                  <AutoCompleteComponent 
+                    inputProps={{
+                      className: 'tag-inp form-control',
+                      placeholder: 'Choose the city',
+                    }}
+                    type="place"
+                    // parent="place"
+                    // placeId={this.state.currPlace.id}
+                    // changeInput={this.placeInputChanged}
+                    optionSelected={this.placeSelected}
+                  />
+                </div>
               </div>
-              <div className="obj-sel">
-                <img src="assets/icon-circle.png" alt=""/>
-              </div>
-            </div>
-            <div className="b-section col-lg-7">
               <CanvasComponent
                 image={photo}
-              />              
-            </div>
-            <div className="b-section col-lg-4 ctn-cat">
-              <div>Photo category</div>
-              {this.state.categories.length > 0 &&
-              <select 
-                className="custom form-control" 
-                value={this.state.currCat.id} 
-                onChange={this.catChanged}
-              >
-                {this.state.categories.map(function(cat, idx){
-                  return (
-                    <option key={idx} value={cat}>{cat}</option>
-                  )
-                })}
-              </select>}
-              <div className="ctn-lbl">
-                {photos.length > 0 && labels.length && labels.map((lbl, idx) => {
-                  return (
-                    <div className="lbl-item" key={idx}>
-                      <div>{idx + 1}</div>
-                      <span>{lbl.label.name}</span>
-                      <span onClick={this.editLabel}><FontAwesomeIcon style={{ color: "#a8c6df" }} icon={faEdit} /></span>
-                      <span onClick={this.deleteLabel}><FontAwesomeIcon style={{ color: "#a8c6df" }} icon={faTrash} /></span>
-                    </div>
-                  )
-                })}
-              {/* Labels: <pre>{JSON.stringify(labels, null, 2)}</pre> */}
+                categories={categories}
+              />
+              <div className="b-section">
+                <div className="custom-control custom-checkbox">
+                  <input checked={this.state.ml?"checked":""} onChange={this.mlChanged} type="checkbox" className="custom-control-input" id={checkId} />
+                  <label className="custom-control-label" htmlFor={checkId}>Turn On ML</label>
+                </div>
+              </div>
+              <div className="b-section">
+                <button onClick={this.submit} className="btn btn-accent">Submit</button>
+                <button onClick={this.nextPhoto} className="ml-3 btn btn-accent-outline">Next Photo</button>
               </div>
             </div>
           </div>
-          <div className="b-section">
-            <div className="custom-control custom-checkbox">
-              <input checked={this.state.ml?"checked":""} onChange={this.mlChanged} type="checkbox" className="custom-control-input" id={checkId} />
-              <label className="custom-control-label" htmlFor={checkId}>Turn On ML</label>
+
+          <div style={{display: this.state.showUpload?"block":"none" }}>
+            <div className="title">Upload Photos</div>
+            <div className="body">
+              <div className="row">
+                <div className="col-lg-6 b-section">                
+                  <FileInputComponent
+                    handleFiles={this.filesUploaded}
+                  />
+                  <div className="url-inp">
+                    or enter remote photo URL<br/>
+                    <input onChange={this.loadUrlChanged} type="text" className="form-control tag-inp" placeholder="Place URL here .."/>
+                    <img onClick={this.doLoadUrl} src="assets/btn-remote.png" alt=""/>
+                  </div>
+                </div>
+                <div className="col-lg-12 up-files">
+                  <PreviewComponent 
+                    images={this.state.uploadedFiles}
+                  />
+                </div>
+              </div>
+              <div className="b-section">
+                <button onClick={this.doUpload} className="btn btn-accent">Upload</button>
+                <button onClick={this.cancelUpload} className="ml-3 btn btn-accent-outline">Cancel</button>
+              </div>
             </div>
           </div>
-          <div className="b-section">
-            <button onClick={this.submit} className="btn btn-accent">Submit</button>
-            <button onClick={this.nextPhoto} className="ml-3 btn btn-accent-outline">Next Photo</button>
-          </div>
-        </div>
+          </>
+        }
       </div>
     )
   }

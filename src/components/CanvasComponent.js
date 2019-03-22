@@ -1,6 +1,11 @@
 import React, { Component } from 'react'
 import * as PIXI from 'pixi.js'
 
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faTrash, faTimes } from '@fortawesome/free-solid-svg-icons'
+import { faEdit, faSave } from '@fortawesome/free-regular-svg-icons'
+
+import HttpService from '../services/HttpService'
 import { l } from '../helpers/common'
 
 class Polygon extends PIXI.Graphics {
@@ -16,8 +21,7 @@ class Polygon extends PIXI.Graphics {
   }
 
   draw = () => {   
-    let points = [], i = 0
-    
+    let points = [], i = 0    
     this.sq.forEach(s => {
       points[i] = s.position.x + s.s/2
       points[i+1] = s.position.y + s.s/2
@@ -60,32 +64,20 @@ const randHex = () => {
 export default class CanvasComponent extends Component {
   constructor(props) {
     super(props)
+    this.http = new HttpService()
     this.imgRef = React.createRef()
     this.state = {
-      image: this.props.image
+      // image: {},
+      // categories: [],
+      currCat: "",
+      tempLblName: ""
     }
   }
 
-  componentDidMount = () => {
-    // l("Image Loaded")
-  }
-
   imageLoaded = () => {
-    l("Image Loaded")
+    // l("Image loaded")
     this.createCanvas()
     this.drawObjects()
-  }
-    
-  componentWillUnmount = () => {
-    // l("Unmount")
-    // this.app.destroy()
-  }
-  
-  componentWillReceiveProps = nextProps => {
-    // this.destroyCanvas()
-    this.setState({
-      image: nextProps.image
-    })
   }
 
   destroyCanvas = () => {
@@ -97,7 +89,6 @@ export default class CanvasComponent extends Component {
   }
 
   createCanvas = () => {
-    // l("Received Image")
     this.destroyCanvas()
     const current = this.imgRef.current
     
@@ -117,10 +108,37 @@ export default class CanvasComponent extends Component {
     current.appendChild(view)
   }
 
-  drawObjects = () => {
-    const labels = this.state.image.labels
+  addObject = type => {
+    switch(type){
+      case 'rectangle':
+        // const height = this.imgRef.current.clientHeight
+        // , width = this.imgRef.current.clientWidth
+        
+        // let point1 = [coords[0]*width, coords[1]*height]
+        //   , point2 = [coords[2]*width, coords[1]*height]
+        //   , point3 = [coords[2]*width, coords[3]*height]
+        //   , point4 = [coords[0]*width, coords[3]*height]
+        //   , pointsArr = [point1, point2, point3, point4]
+  
+        // this.drawPolygon([].concat(...pointsArr), 15, 2, randHex(), .7, form)
+      break
+      
+      case 'polygon':
+        // Draw polygon with n points
+        // this.drawPolygon([].concat(...pointsArr), 10, 2, randHex(), .7, form)
+      break
+      
+      default: 
+        // Draw circle
+        // this.drawCircle(x, y, r, color, edgeWidth, fill)
+      break
+    }
+  }
 
-    labels.length &&
+  drawObjects = () => {
+    const labels = this.props.image.labels
+
+    // labels.length &&
     labels.forEach(lbl => {
       const form = lbl.form.toLowerCase()
       , coords = lbl.object_rectangle
@@ -145,12 +163,10 @@ export default class CanvasComponent extends Component {
           // this.drawPolygon([].concat(...pointsArr), 10, 2, randHex(), .7, form)
         break
         
-        case 'circle':
+        default: 
           // Draw circle
           // this.drawCircle(x, y, r, color, edgeWidth, fill)
         break
-  
-        default: break
       }
     })
     // if(this.state.ml){
@@ -289,15 +305,143 @@ export default class CanvasComponent extends Component {
     this.ctn.addChild(poly)
   }
 
+  catChanged = e => {
+    let currCat = this.props.categories.filter(cat => { return cat === e.target.value })[0]
+    this.setState({ currCat })
+  }
+
+  editLabel = lbl => {
+    l(lbl)
+    lbl.edit = true
+    this.setState({ tempLblName: lbl.label.name })
+    // this.forceUpdate()
+  }
+
+  tempLblNameChanged = e => {    
+    this.setState({ tempLblName: e.target.value })
+  }
+
+  deleteLabel = lbl => {
+    l(lbl)
+  }
+  
+  doEditLabel = lbl => {
+    l(lbl, this.state.tempLblName)
+
+    this.http
+    .put('/api/v1/keywords/'+ lbl.id, {
+      name: this.state.tempLblName
+    },{
+      username: 'ml_page',
+      password: '}XhE9p2/FQjx9.e'
+    })
+    .then(res => {
+      l(res.data)
+      //  Show notif, undo
+      // this.getSuggTags(this.state.currPhoto)
+      // this.setState({ 
+      //   showNotif: true, 
+      //   lastTagId: res.data.id 
+      // })
+      // setTimeout(() => {
+      //   this.setState({ 
+      //     showAttr: false,
+      //     att: {
+      //       manual: 0,
+      //       auto: 0
+      //     }
+      //   })
+        
+      //   if(this.state.notifType === "submit"){
+      //     this.setState({ 
+      //       allowAdd: true,
+      //       showNotif: false 
+      //     })
+      //   }
+      // }, 5000)
+    })   
+  }
+  
+  cancelEdit = lbl => {
+    lbl.edit = false
+    this.setState({ tempLblName: lbl.label.name })
+  }
+
   render(){
-    return (      
-      <div ref={this.imgRef} className="ctn-photo">
-        <img 
-          src={this.state.image.image_url} 
-          onLoad={this.imageLoaded}
-          width="100%"
-          alt=""
-        />
+    const image = this.props.image
+    , labels = this.props.image.labels
+    , categories = this.props.categories
+        
+    return (
+      <div className="row">
+        <div className="b-section col-lg-1">
+          <div className="obj-sel" onClick={() => this.addObject('polygon')}>
+            <img src="assets/icon-random.png" alt=""/>
+          </div>
+          <div className="obj-sel" onClick={() => this.addObject('rectangle')}>
+            <img src="assets/icon-square.png" alt=""/>
+          </div>
+          <div className="obj-sel" onClick={() => this.addObject('circle')}>
+            <img src="assets/icon-circle.png" alt=""/>
+          </div>
+        </div>
+        <div className="b-section col-lg-7">
+          <div ref={this.imgRef} className="ctn-photo">
+            <img 
+              src={image.image_url} 
+              onLoad={this.imageLoaded}
+              width="100%"
+              alt=""
+            />
+          </div>
+        </div>        
+        <div className="b-section col-lg-4 ctn-cat">
+          <div>Photo category</div>
+          {categories.length > 0 &&
+          <select 
+            className="custom form-control" 
+            value={this.state.currCat.id}
+            onChange={this.catChanged}
+          >
+            {categories.map(function(cat, idx){
+              return (
+                <option key={idx} value={cat}>{cat}</option>
+              )
+            })}
+          </select>}
+          <div className="ctn-lbl">
+            {/* Object.keys(image).length && labels.length &&  */}
+            {labels.map((lbl, idx) => {
+              return (
+                <div className="lbl-item" key={idx}>
+                  <div>{idx + 1}</div>
+                  {lbl.edit && <>
+                    <input 
+                      className="form-control" 
+                      value={this.state.tempLblName} 
+                      onChange={this.tempLblNameChanged}                        
+                    />
+                    <span onClick={() => this.doEditLabel(lbl)}>
+                      <FontAwesomeIcon icon={faSave} />
+                    </span>
+                    <span onClick={() => this.cancelEdit(lbl)}>
+                      <FontAwesomeIcon icon={faTimes} />
+                    </span>
+                  </>}
+                  {!lbl.edit && <>
+                    <span style={{ color: "#2c405a" }}>{lbl.label.name}</span>
+                    <span onClick={() => this.editLabel(lbl)}>
+                      <FontAwesomeIcon icon={faEdit} />
+                    </span>
+                    <span onClick={() => this.deleteLabel(lbl)}>
+                      <FontAwesomeIcon icon={faTrash} />
+                    </span>
+                  </>}
+                </div>
+              )
+            })}
+          </div>
+        </div>
       </div>
     )
   }

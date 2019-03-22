@@ -176,12 +176,7 @@ export default class HttpService {
       params,
       auth
     }
-    if(call){
-      call.cancel('One request at a time, fellas!')
-    }
-    call = axios.CancelToken.source()
-    config.cancelToken = call.token
-    return axios(config)
+    return this.doRequest(config)
   }
   
   post(url, data) {
@@ -190,11 +185,25 @@ export default class HttpService {
       url: apiHost + url,
       data
     }
+    return this.doRequest(config)
+  }
+
+  put(url, data, auth) {
+    let config = {
+      method: "put",
+      url: apiHost + url,
+      data,
+      auth
+    }
+    return this.doRequest(config)
+  }
+  
+  doRequest = config => {
     if(call){
       call.cancel('One request at a time, fellas!')
     }
     call = axios.CancelToken.source()
     config.cancelToken = call.token
     return axios(config)
-  }  
+  }
 }

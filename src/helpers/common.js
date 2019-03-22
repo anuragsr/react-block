@@ -11,10 +11,7 @@ export const rand = length => {
   return randomStr
 }
 export const withIndex = arr => arr.map((v,i) => ({value: v, index: i}))
-export const getFormattedTime = date => {
-  return date
-  // if(date === null || date === '')
-  //   return null;
-  // else
-  //   return date.toISOString().slice(0, 19).replace('T', ' ');
+export const getFormattedTime = date => {  
+  let arr = date.split('T')  
+  return [arr[0], arr[1].split("+")[0]].join(" ")  
 }
