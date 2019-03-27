@@ -8,16 +8,16 @@ import { l, rand, withIndex, getFormattedTime } from '../helpers/common'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCheck } from '@fortawesome/free-solid-svg-icons'
-import PreviewComponent from './FilePreviewComponent';
+import FilePreviewComponent from './FilePreviewComponent';
 
 const checkId = rand(5)
-const checkId_p = rand(5)
+// const checkId_p = rand(5)
 let loadUrl  = ""
 
 export default class PhotoBlock extends Component {
   
   constructor(props) {
-    super(props)
+    super(props)    
     this.http = new HttpService()
     this.state = {
       // showAnim: false,
@@ -32,12 +32,12 @@ export default class PhotoBlock extends Component {
       //   manual: 0,
       //   auto: 0
       // },
-      // currCat: {},
       showNotif: false,
       notifType: "submit",
       categories: [],
       photos: [],
       currPhoto: {},
+      currPlace: {},
       ml: false,
       uncheckedOnly: false,
       showUpload: false,
@@ -56,7 +56,7 @@ export default class PhotoBlock extends Component {
     })
     .then(res => {
       let photos = res.data.results
-      , currPhoto = photos[1]
+      , currPhoto = photos[0]
       // currPhoto.labels.push(JSON.parse(JSON.stringify(currPhoto.labels[0])))
       currPhoto.labels.forEach(lbl => lbl.edit = false)
 
@@ -84,8 +84,8 @@ export default class PhotoBlock extends Component {
   }
 
   placeSelected = currPlace => {
-    l(currPlace)
-    // this.getSuggTags(currPhoto)
+    // l(currPlace)
+    this.setState({ currPlace })
   } 
     
   addPhoto = () => {
@@ -126,6 +126,10 @@ export default class PhotoBlock extends Component {
     }))
   }
 
+  handleImageUpdate = labels => {
+    l(labels)
+  }
+
   undo = () => {
     // let params = { type: 'photo', id: this.state.lastTagId }
     // l(params)
@@ -151,7 +155,7 @@ export default class PhotoBlock extends Component {
   onUndo = () => this.setState({ showNotif: false, notifType: "submit" })
 
   submit = () => {
-    // l(this.state)
+    l(this.state)
     // if(this.state.tags.length){
     //   this.setState({
     //     showAttr: false,
@@ -219,13 +223,13 @@ export default class PhotoBlock extends Component {
             <div className="row">
               <div className="col-lg-9">
                 <div className="title">
-                  <span>{photo.name}</span>
-                  {photo.ml_check_date !== null &&
-                  <span className="checkTime">
-                    <FontAwesomeIcon style={{ color: "green" }} icon={faCheck} />
-                    &nbsp;&nbsp;Checked: {getFormattedTime(photo.ml_check_date)}
-                  </span>}
+                  <span title={photo.name}>{photo.name}</span>
                 </div>
+                {photo.ml_check_date !== null &&
+                <div className="checkTime">
+                  <FontAwesomeIcon style={{ color: "green" }} icon={faCheck} />
+                  &nbsp;&nbsp;Checked: {getFormattedTime(photo.ml_check_date)}
+                </div>}
               </div>
               <div className="col-lg-3 text-right">
                 <button onClick={this.addPhoto} className="btn btn-accent-outline">Add Photo</button>
@@ -252,30 +256,33 @@ export default class PhotoBlock extends Component {
               }
             </div> */}
             <div className="body">
-              <div className="b-section">
+              {/* <div className="b-section">
                 <div className="custom-control custom-checkbox">
                   <input checked={this.state.uncheckedOnly?"checked":""} onChange={this.checkChanged} type="checkbox" className="custom-control-input" id={checkId_p} />
                   <label className="custom-control-label" htmlFor={checkId_p}>Show only unchecked photo</label>
                 </div>
-              </div>
-              <div className="row">
+              </div> */}
+              <div className="row b-section">
                 <div className="col-lg-6">
+                  {/* WithPlace: <pre>{JSON.stringify(this.props.withPlace, null, 2)}</pre> */}
+                  {!this.props.withPlace &&
                   <AutoCompleteComponent 
                     inputProps={{
                       className: 'tag-inp form-control',
                       placeholder: 'Choose the city',
                     }}
-                    type="place"
+                    type="city"
                     // parent="place"
                     // placeId={this.state.currPlace.id}
                     // changeInput={this.placeInputChanged}
                     optionSelected={this.placeSelected}
-                  />
+                  />}
                 </div>
               </div>
               <CanvasComponent
                 image={photo}
                 categories={categories}
+                imageUpdated={this.handleImageUpdate}
               />
               <div className="b-section">
                 <div className="custom-control custom-checkbox">
@@ -305,7 +312,7 @@ export default class PhotoBlock extends Component {
                   </div>
                 </div>
                 <div className="col-lg-12 up-files">
-                  <PreviewComponent 
+                  <FilePreviewComponent 
                     images={this.state.uploadedFiles}
                   />
                 </div>

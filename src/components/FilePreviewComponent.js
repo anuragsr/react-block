@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import { l } from '../helpers/common'
 
-export default class PreviewComponent extends Component {
+export default class FilePreviewComponent extends Component {
   constructor(props) {
     super(props)
     this.state = {
@@ -10,7 +10,7 @@ export default class PreviewComponent extends Component {
   }
 
   componentWillReceiveProps(nextProps){
-    // l(nextProps)
+    // l("nextProps")
     let arr = [], count = 0
     nextProps.images.forEach(file => {
       //Only pics
@@ -21,7 +21,8 @@ export default class PreviewComponent extends Component {
           // l(event.target.result)
           count++
           arr.push(event.target.result)
-          if(count === nextProps.images.length - 1)
+          // l(count === nextProps.images.length)
+          if(count === nextProps.images.length)
             this.setState({ arr })
         }
         //Read the image
@@ -29,7 +30,7 @@ export default class PreviewComponent extends Component {
       }else if(file.type === 'url'){
         count++
         arr.push(file.url)
-        if(count === nextProps.images.length - 1)
+        if(count === nextProps.images.length)
           this.setState({ arr })
       }
     })

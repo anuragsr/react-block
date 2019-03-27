@@ -3,6 +3,7 @@ import Switch from 'react-switch'
 import TagBlock from './TagBlock'
 import PlaceBlock from './PlaceBlock'
 import PhotoBlock from './PhotoBlock'
+import { l } from '../helpers/common';
 
 export default class Block extends Component {
   
@@ -11,7 +12,10 @@ export default class Block extends Component {
     this.state = { show: this.props.show }
   }
   
-  toggled = show => this.setState({ show })
+  toggled = show => {
+    this.setState({ show })
+    this.props.handleToggle(show, this.props.idx)
+  }
 
   render() {
     return (
@@ -38,7 +42,7 @@ export default class Block extends Component {
           (
             this.props.type === "Place"?<PlaceBlock/>
             :this.props.type === "Tag"?<TagBlock/>
-            :<PhotoBlock/>
+            :<PhotoBlock withPlace={this.props.withPlace}/>
           )
         }
       </div>      

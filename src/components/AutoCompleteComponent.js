@@ -4,8 +4,6 @@ import AutosuggestHighlightParse from 'autosuggest-highlight/parse'
 import HttpService from '../services/HttpService'
 import { l } from '../helpers/common'
 
-const getSuggestionValue = suggestion => suggestion.full_name
-
 const getIndices = (str, searchStr, caseSensitive) => {
   let searchStrLen = searchStr.length
   if (searchStrLen === 0) {
@@ -33,11 +31,23 @@ export default class AutoCompleteComponent extends Component {
     }
   }
   
+  getSuggestionValue = suggestion => {
+    if(this.props.type === "tag"){
+      return suggestion.full_name
+    }else if(this.props.type === "place"){
+      return suggestion.name
+    }else if(this.props.type === "city"){
+      return suggestion.name
+    } 
+  }
+  
   renderSuggestion = (suggestion, { query }) => {
     let suggestionText
     if(this.props.type === "tag"){
       suggestionText = `${suggestion.full_name}`
     }else if(this.props.type === "place"){
+      suggestionText = `${suggestion.name}`    
+    }else if(this.props.type === "city"){
       suggestionText = `${suggestion.name}`
     }
 
@@ -84,6 +94,15 @@ export default class AutoCompleteComponent extends Component {
         username: 'ml_page',
         password: '}XhE9p2/FQjx9.e'
       }
+    }else if(this.props.type === "city"){
+      url = '/api/v1/cities'
+      params = { 
+        query: value
+      }
+      auth = {
+        username: 'ml_page',
+        password: '}XhE9p2/FQjx9.e'
+      }
     }
 
     this.http
@@ -96,6 +115,8 @@ export default class AutoCompleteComponent extends Component {
       if(this.props.type === "tag"){
         suggestions = currRes.filter(x => x.full_name.toLowerCase().includes(value.toLowerCase()))      
       }else if(this.props.type === "place"){
+        suggestions = currRes.filter(x => x.name.toLowerCase().includes(value.toLowerCase()))      
+      }else if(this.props.type === "city"){
         suggestions = currRes.filter(x => x.name.toLowerCase().includes(value.toLowerCase()))      
       }  
       l("Results containing current query:", suggestions)
@@ -143,6 +164,8 @@ export default class AutoCompleteComponent extends Component {
     })
   }
 
+  shouldRenderSuggestions = value => typeof value !== "undefined" && value.trim().length > 0
+  
   render() {
     const { value, suggestions } = this.state
     const inputProps = this.props.inputProps
@@ -157,8 +180,9 @@ export default class AutoCompleteComponent extends Component {
           onSuggestionsFetchRequested={this.onSuggestionsFetchRequested}
           onSuggestionsClearRequested={this.onSuggestionsClearRequested}
           onSuggestionSelected={this.onSuggestionSelected}
-          getSuggestionValue={getSuggestionValue}
+          getSuggestionValue={this.getSuggestionValue}
           renderSuggestion={this.renderSuggestion}
+          // shouldRenderSuggestions={this.shouldRenderSuggestions}
           highlightFirstSuggestion={true}
           inputProps={inputProps}
         />
