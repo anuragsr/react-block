@@ -8,6 +8,11 @@ import { faEdit, faSave } from '@fortawesome/free-regular-svg-icons'
 import HttpService from '../services/HttpService'
 import { l } from '../helpers/common'
 
+const auth = {
+  username: 'ml_page',
+  password: '}XhE9p2/FQjx9.e'
+}
+
 class Polygon extends PIXI.Graphics {
   constructor(sq, fo, fc, lw, lc) {
     super()
@@ -56,11 +61,11 @@ class Square extends PIXI.Graphics {
 }
 
 class Circle extends PIXI.Graphics {
-  constructor(c, r, lw, co, fo) {
-    // center, radius, edgeSize, color, opacity
+  constructor(sq, data, lw, co, fo) {
     super()
-    this.c = c
-    this.r = r || 1
+    this.sq = sq || []
+    this.c = data.c
+    this.r = data.r || 1
     this.lw = lw || 1
     this.co = co || 0x000000
     this.fo = fo || 1
@@ -78,40 +83,64 @@ class Circle extends PIXI.Graphics {
   }
 }
 
-const randHex = () => {
-  return "0x" + "000000".replace(/0/g,() => {
+let randHex = () => {
+  return "0x" + "000000".replace(/0/g, () => {
     return (~~(Math.random()*16)).toString(16)
   })
 }
-
-const getRectangleCoords = (data, type) => {
+, distance = (x1, y1, x2, y2) => Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2))
+, getCoords = (data, type, subtype) => {
   let height = imgRef.current.clientHeight
   , width = imgRef.current.clientWidth
-  , point1, point2, point3, point4
+  , coords
+  , returnVar
 
   switch(type){
-    case 'percent':
-      let coords = data.object_rectangle.map(c => parseFloat(parseFloat(c).toFixed(2)))  
-      point1 = [coords[0]*width, coords[1]*height]
-      point2 = [coords[2]*width, coords[1]*height]
-      point3 = [coords[2]*width, coords[3]*height]
-      point4 = [coords[0]*width, coords[3]*height]      
+    case 'rectangle':
+      let point1, point2, point3, point4
+      switch(subtype){
+        case 'percent':
+          coords = data.object_rectangle.map(c => parseFloat(parseFloat(c).toFixed(2)))  
+          point1 = [coords[0]*width, coords[1]*height]
+          point2 = [coords[2]*width, coords[1]*height]
+          point3 = [coords[2]*width, coords[3]*height]
+          point4 = [coords[0]*width, coords[3]*height]      
+        break
+    
+        default:
+          point1 = [data.tl.x, data.tl.y]
+          point2 = [data.br.x, data.tl.y]
+          point3 = [data.br.x, data.br.y]
+          point4 = [data.tl.x, data.br.y]
+        break
+      }  
+      returnVar = [].concat(...[point1, point2, point3, point4])
     break
+    
+    case 'polygon':
+      coords = data.object_polygon.map(c => parseFloat(parseFloat(c).toFixed(2)))
+      returnVar = []
 
+      for(let i = 0; i < coords.length - 1; i+=2){
+        returnVar.push({
+          x: coords[i]*width,
+          y: coords[i+1]*height
+        })
+      }
+    break
+    
     default:
-      point1 = [data.tl.x, data.tl.y]
-      point2 = [data.br.x, data.tl.y]
-      point3 = [data.br.x, data.br.y]
-      point4 = [data.tl.x, data.br.y]
+      coords = data.object_circle.map(c => parseFloat(parseFloat(c).toFixed(2)))      
+      returnVar = {
+        c: { x: coords[0]*width, y: coords[1]*height },
+        r: coords[2]*width
+      }
     break
   }
-  
-  return [].concat(...[point1, point2, point3, point4])
+
+  return returnVar
 }
-
-const distance = (x1, y1, x2, y2) => Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2))
-
-let polyArr = []
+, polyArr = []
 , imgRef, bg
 , tempPointArr = []
 , tempColor
@@ -133,6 +162,11 @@ export default class CanvasComponent extends Component {
 
   componentDidMount(){
     window.addEventListener('resize', this.resizeObjects)
+  }
+
+  componentWillReceiveProps = nextProps => {
+    let currCat = nextProps.image.category.name
+    this.setState({ currCat })
   }
 
   imageLoaded = () => {
@@ -197,7 +231,17 @@ export default class CanvasComponent extends Component {
         
         case 'polygon':
           tempPointArr.push(c)
-          tempPoly = this.drawPolygon(tempPointArr, 15, 2, tempColor, .7, 'polygon')
+          let params = {
+            type: 'polygon',
+            color: tempColor,
+            opacity: .7,
+            edgeSize: 2,
+            pointSize: 15,
+            points: tempPointArr,
+          }
+          tempPoly = this.drawShape(params)
+
+          // tempPoly = this.drawPolygon(tempPointArr, 15, 2, tempColor, .7, )
           this.setState({ tempPoly })
         break
         
@@ -209,8 +253,8 @@ export default class CanvasComponent extends Component {
       }
     })
 
-    bg.on('pointerup', e => {      
-      l("Done Creating")
+    bg.on('pointerup', e => {
+      // l("Done Creating")
       this.data = null
       this.drawingRect = false
       this.drawingCirc = false      
@@ -218,12 +262,10 @@ export default class CanvasComponent extends Component {
     
     bg.on('pointermove', () => {
       if(this.data){
-        // l("Dragging")
-        // l(rectangleCoords)
-
         let p = this.data.global
         , tempPoly = this.state.tempPoly
-        
+        , params
+
         if(tempPoly){
           tempPoly.sq && tempPoly.sq.forEach(s => this.ctn.removeChild(s))
           this.ctn.removeChild(tempPoly)
@@ -232,12 +274,27 @@ export default class CanvasComponent extends Component {
 
         if(this.drawingRect){
           rectangleCoords.br = { x: p.x, y: p.y }
-          tempPoly = this.drawPolygon(getRectangleCoords(rectangleCoords, ''), 15, 2, tempColor, .7, 'rectangle')
+          params = {
+            color: tempColor,
+            opacity: .7,
+            edgeSize: 2,
+            pointSize: 15,
+            type: 'rectangle',
+            points: getCoords(rectangleCoords, 'rectangle', ''),
+          }
         }else if(this.drawingCirc){
           circleData.r = distance(circleData.c.x, circleData.c.y, p.x, p.y)
-          tempPoly = this.drawCircle(circleData, 2, tempColor, .7)          
+          params = {
+            color: tempColor,
+            opacity: .7,
+            edgeSize: 2,
+            pointSize: 15,
+            type: 'circle',
+            circleData: circleData,
+          }
         }
 
+        tempPoly = this.drawShape(params)
         this.setState({ tempPoly })
       }
     })
@@ -255,12 +312,17 @@ export default class CanvasComponent extends Component {
 
   startAdding = type => {
     // l(bg)
+    let tempPoly = this.state.tempPoly
     bg.visible = true
     tempColor = randHex()
     polyArr.forEach(p => {
       p.visible = false
       p.sq && p.sq.forEach(s => s.visible = false)
     })
+    if(tempPoly){
+      tempPoly.sq.forEach(s => this.ctn.removeChild(s))
+      this.ctn.removeChild(tempPoly)
+    }
     this.setState({ adding: type, tempPoly: "" })
   }
 
@@ -269,10 +331,21 @@ export default class CanvasComponent extends Component {
     let height = imgRef.current.clientHeight
     , width = imgRef.current.clientWidth
     , tempPoly = this.state.tempPoly
+    , labelData
 
     switch(type){
       case 'rectangle':
-        tempPoly.labelData = {
+        let tmp = []
+        tempPoly.sq.forEach((s, idx) => {
+          if(idx%2 === 0){
+            tmp.push(
+              ((s.x + s.s/2)/width).toString(), 
+              ((s.y + s.s/2)/height).toString()
+            )
+          }            
+        })
+        
+        labelData = {
           edit: false,
           form: "Rectangle",
           id: 0,
@@ -281,17 +354,12 @@ export default class CanvasComponent extends Component {
             name: "new label", 
             tag: null
           },
-          object_rectangle: tempPoly.sq.map(s => {
-            return { x: s.x, y: s.y }
-          }).reduce((a, b) => {
-            return a.concat(...[(b.x/width).toString(), (b.y/height).toString()])
-          }, [])
+          object_rectangle: tmp
         }
-
       break
       
       case 'polygon':
-        tempPoly.labelData = {
+        labelData = {
           edit: false,
           form: "Polygon",
           id: 0,
@@ -306,34 +374,30 @@ export default class CanvasComponent extends Component {
             return a.concat(...[(b.x/width).toString(), (b.y/height).toString()])
           }, [])
         }
+      break
         
-        // Add new label based on the above data
-
-        break
-        
-        default: 
-          tempPoly.labelData = {
-            edit: false,
-            form: "Circle",
-            id: 0,
-            label: {
-              id: 0, 
-              name: "new label", 
-              tag: null
-            },
-            object_circle: [
-              (tempPoly.x/width).toString(), 
-              (tempPoly.y/height).toString(),
-              tempPoly.r.toString()
-            ]
-          }
-
-          l(tempPoly.getBounds())
-        break
+      default: 
+        labelData = {
+          edit: false,
+          form: "Circle",
+          id: 0,
+          label: {
+            id: 0, 
+            name: "new label", 
+            tag: null
+          },
+          object_circle: [
+            (tempPoly.c.x/width).toString(), 
+            (tempPoly.c.y/height).toString(),
+            (tempPoly.r/width).toString()
+          ]
+        }
+      break
     }
-      
-    polyArr.push(tempPoly)
-    this.resetForAdding()
+
+    // Add new label based on the above data
+    tempPoly.labelData = labelData
+    this.addLabel(tempPoly)
   }
   
   cancelAdd = e => {
@@ -346,11 +410,19 @@ export default class CanvasComponent extends Component {
 
   drawObjects = () => {
     this.props.image.labels.forEach(lbl => {
-      const form = lbl.form.toLowerCase()      
+      let form = lbl.form.toLowerCase()      
       switch(form){
         case 'rectangle':    
           // Draw rectangle
-          let poly = this.drawPolygon(getRectangleCoords(lbl, 'percent'), 15, 2, randHex(), .7, form)
+          let params = {
+            type: form,
+            color: randHex(),
+            opacity: .7,
+            edgeSize: 2,
+            points: getCoords(lbl, 'rectangle', 'percent'),
+            pointSize: 15,
+          }
+          , poly = this.drawShape(params)          
           poly.labelData = lbl
           polyArr.push(poly)
         break
@@ -375,79 +447,109 @@ export default class CanvasComponent extends Component {
     // Redraw shapes based on new canvas size
     // Maintain the positions of coordinates
     let tempPolyArr = []
+    , tempPoly
+    
     polyArr.forEach(poly => {
-      const lbl = poly.labelData
+      let lbl = poly.labelData
       , form = lbl.form.toLowerCase()
+      , params = {
+        type: form,
+        color: poly.graphicsData[0].fillColor,
+        opacity: .7,
+        edgeSize: 2,
+        pointSize: 15,
+      }
       
       switch(form){
         case 'rectangle':
-          let tempPoly = this.drawPolygon(getRectangleCoords(lbl, 'percent'), 15, 2, poly.graphicsData[0].fillColor, .7, form)
-          tempPoly.labelData = lbl
-          tempPolyArr.push(tempPoly)
+          // params.points = getRectangleCoords(lbl, 'percent')
+          params.points = getCoords(lbl, form, 'percent')
         break
         
         case 'polygon':
-          // Resize polygon with n points
-          // this.drawPolygon([].concat(...pointsArr), 10, 2, randHex(), .7, form)
+          params.points = getCoords(lbl, form)
         break
         
         default: 
-          // Resize circle
-          // this.drawCircle(x, y, r, color, edgeWidth, fill)
+          params.circleData = getCoords(lbl, form)     
         break
       }
+
+      // l(params)
+      tempPoly = this.drawShape(params)
+      tempPoly.labelData = lbl
+      tempPolyArr.push(tempPoly)
     })
 
     polyArr = tempPolyArr
   }
-  
-  drawPoints = (points, pointSize, color, type) => {
-    let arr = []
-    if(type === 'rectangle'){
-      for(let i = 0, idx = 0; i < points.length - 1; i+=2){
-        let sq = new Square(pointSize, color)
-        sq.idx = idx
-        sq.position.x = points[i] - pointSize/2
-        sq.position.y = points[i+1] - pointSize/2
-        arr.push(sq)
-        idx++
-      }
-    }else if(type === 'polygon'){
-      for(let i = 0; i < points.length; i++){
-        let sq = new Square(pointSize, color)
-        sq.position.x = points[i].x - pointSize/2
-        sq.position.y = points[i].y - pointSize/2
-        arr.push(sq)
-      }
+
+  drawShape = params => {
+    let type = params.type
+    , sqArr = []
+    , poly
+
+    switch(type){
+      case 'rectangle':
+        // Points as squares
+        for(let i = 0, idx = 0; i < params.points.length - 1; i+=2){
+          let sq = new Square(params.pointSize, params.color)
+          sq.idx = idx
+          sq.position.x = params.points[i] - params.pointSize/2
+          sq.position.y = params.points[i+1] - params.pointSize/2
+          sqArr.push(sq)
+          idx++
+        }
+
+        sqArr.forEach((s, idx) => {
+          s.type = type
+          this.attachEvents(s, 'point', idx)
+          this.ctn.addChild(s)
+        })
+        
+        // Rectangle from created squares
+        poly = new Polygon(sqArr, params.opacity, params.color, params.edgeSize, params.color)
+      break
+      
+      case 'polygon':
+        // Points as squares
+        for(let i = 0; i < params.points.length; i++){
+          let sq = new Square(params.pointSize, params.color)
+          sq.position.x = params.points[i].x - params.pointSize/2
+          sq.position.y = params.points[i].y - params.pointSize/2
+          sqArr.push(sq)
+        }
+
+        sqArr.forEach((s, idx) => {
+          s.type = type
+          this.attachEvents(s, 'point', idx)
+          this.ctn.addChild(s)
+        })
+        
+        // Polygon from created squares
+        poly = new Polygon(sqArr, params.opacity, params.color, params.edgeSize, params.color)
+      break
+
+      default:
+        // Single control square
+        let sq = new Square(params.pointSize, params.color)
+        sq.position.x = params.circleData.c.x + params.circleData.r - params.pointSize/2
+        sq.position.y = params.circleData.c.y - params.pointSize/2
+        
+        sq.type = type
+        this.attachEvents(sq, 'point')
+        this.ctn.addChild(sq)
+        
+        // Circle containing one square for resize
+        poly = new Circle([sq], params.circleData, params.edgeSize, params.color, params.opacity)
+        sq.parent = poly
+      break
     }
-    return arr
-  }
 
-  drawPolygon = (points, pointSize, edgeSize, color, opacity, type) => {
-    // Points as squares
-    let sqArr = this.drawPoints(points, pointSize, color, type)
-    sqArr.forEach((s, idx) => {
-      s.type = type
-      this.attachEvents(s, 'point', idx)
-      this.ctn.addChild(s)
-    })
-
-    // Polygon from created squares
-    let poly = new Polygon(sqArr, opacity, color, edgeSize, color)
-    poly.type = type
-
-    // Event listeners for polygon
     this.attachEvents(poly, 'shape')
     this.ctn.addChild(poly)
+    poly.type = type
     return poly
-  }
-
-  drawCircle = (circleData, edgeSize, color, opacity) => {
-    let circ = new Circle(circleData.c, circleData.r, edgeSize, color, opacity)
-    circ.type = 'circle'
-    this.attachEvents(circ, 'shape')
-    this.ctn.addChild(circ)
-    return circ
   }
 
   attachEvents = (graphic, eventType, pointIdx) => {
@@ -501,14 +603,27 @@ export default class CanvasComponent extends Component {
                 (newPos[2].x + 15/2)/width,
                 (newPos[2].y + 15/2)/height,
               ].map(x => x.toString()))
-
-                // l(this.labelData.object_rectangle)
+              // l(this.labelData.object_rectangle)
             break
             
-            case 'polygon': 
+            case 'polygon':               
+              this.labelData &&
+              (this.labelData.object_polygon = this.sq.map(s => {
+                return { x: s.x, y: s.y }
+              }).reduce((a, b) => {
+                return a.concat(...[(b.x/width).toString(), (b.y/height).toString()])
+              }, []))
+              // l(this.labelData.object_polygon)
             break
 
-            default: 
+            default:   
+              // l(this)            
+              this.labelData &&
+              (this.labelData.object_circle = [
+                (this.c.x/width).toString(), 
+                (this.c.y/height).toString(),
+                (this.r/width).toString()
+              ])
             break
           }
 
@@ -529,14 +644,26 @@ export default class CanvasComponent extends Component {
                 (newPos[2].x + 15/2)/width,
                 (newPos[2].y + 15/2)/height,
               ].map(x => x.toString()))
-
               // l(this.parent.labelData.object_rectangle)
             break
             
             case 'polygon': 
+              this.parent.labelData &&
+              (this.parent.labelData.object_polygon = this.parent.sq.map(s => {
+                return { x: s.x, y: s.y }
+              }).reduce((a, b) => {
+                return a.concat(...[(b.x/width).toString(), (b.y/height).toString()])
+              }, []))
+              // l(this.parent.labelData.object_polygon)
             break
 
             default: 
+              this.parent.labelData &&
+              (this.parent.labelData.object_circle = [
+                (this.parent.c.x/width).toString(), 
+                (this.parent.c.y/height).toString(),
+                (this.parent.r/width).toString()
+              ])
             break
           }
           
@@ -553,25 +680,15 @@ export default class CanvasComponent extends Component {
       if(this.dragging){
         switch(eventType){
           case 'shape':
-            if(this.type !== "circle"){
-              this.sq.forEach(s => {
-                // Would add checks here to prevent out of bounds
-                // let tempX, tempY
-                // tempX = s.position.x + this.data.originalEvent.movementX
-                // if(tempX > 0) 
-                //   s.position.x = tempX
-                
-                // tempY = s.position.y + this.data.originalEvent.movementY
-                // if(tempY > 0) 
-                //   s.position.y = tempY
-      
-                s.position.x+= this.data.originalEvent.movementX
-                s.position.y+= this.data.originalEvent.movementY
-              })
-            }else{
+            if(this.type === "circle"){
               this.c.x+= this.data.originalEvent.movementX
               this.c.y+= this.data.originalEvent.movementY
             }
+            this.sq.forEach(s => {
+              // Would add checks here to prevent out of bounds
+              s.position.x+= this.data.originalEvent.movementX
+              s.position.y+= this.data.originalEvent.movementY
+            })
             this.draw()
           break
 
@@ -602,11 +719,18 @@ export default class CanvasComponent extends Component {
                   this.parent.sq[0].position.x = this.position.x
                 break              
               }
-              this.parent.draw()
-            }else if(this.parent.type === 'polygon'){
+            }else if(this.parent.type === 'circle'){
+              // Change circle radius
+              this.parent.r = distance(
+                this.parent.c.x, 
+                this.parent.c.y,
+                newPos.x,
+                newPos.y
+              )
+            }else{
               // Free movement - move only single point
-              this.parent.draw()
             }
+            this.parent.draw()
           break
         }        
       }
@@ -616,12 +740,28 @@ export default class CanvasComponent extends Component {
   catChanged = e => {
     let currCat = this.props.categories.filter(cat => { return cat === e.target.value })[0]
     this.setState({ currCat })
+    this.props.catUpdated(currCat)
   }
 
   tempLblNameChanged = e => this.setState({ tempLblName: e.target.value })
 
+  addLabel = tempPoly => {
+    // l(tempPoly.labelData)    
+    this.http
+    .post('/api/v1/keywords', { 
+      name: tempPoly.labelData.label.name 
+    }, auth)
+    .then(res => {
+      // l(res.data)
+      // l(tempPoly.labelData)
+      tempPoly.labelData.label = res.data
+      this.props.imageUpdated(tempPoly.labelData, "add")
+      polyArr.push(tempPoly)
+      this.resetForAdding()
+    })
+  }
+  
   editLabel = lbl => {
-    l(lbl)
     lbl.edit = true
     this.setState({ tempLblName: lbl.label.name })
   }
@@ -631,40 +771,19 @@ export default class CanvasComponent extends Component {
   }
   
   doEditLabel = lbl => {
-    l(lbl, this.state.tempLblName)
-
     this.http
-    .put('/api/v1/keywords/'+ lbl.id, {
+    .put('/api/v1/keywords/'+ lbl.label.id, {
       name: this.state.tempLblName
-    },{
-      username: 'ml_page',
-      password: '}XhE9p2/FQjx9.e'
-    })
+    }, auth)
     .then(res => {
-      l(res.data)
-      //  Show notif, undo
-      // this.getSuggTags(this.state.currPhoto)
-      // this.setState({ 
-      //   showNotif: true, 
-      //   lastTagId: res.data.id 
-      // })
-      // setTimeout(() => {
-      //   this.setState({ 
-      //     showAttr: false,
-      //     att: {
-      //       manual: 0,
-      //       auto: 0
-      //     }
-      //   })
-        
-      //   if(this.state.notifType === "submit"){
-      //     this.setState({ 
-      //       allowAdd: true,
-      //       showNotif: false 
-      //     })
-      //   }
-      // }, 5000)
-    })   
+      lbl.label = res.data
+      lbl.edit = false
+      this.props.imageUpdated(lbl, "update")
+    })
+    .catch(res => {
+      // l(res)
+      alert('There is another label with this name. Please use a different name.')
+    })
   }
   
   cancelEdit = lbl => {
@@ -717,7 +836,7 @@ export default class CanvasComponent extends Component {
           {categories.length > 0 &&
           <select 
             className="custom form-control" 
-            value={this.state.currCat.id}
+            value={this.state.currCat}
             onChange={this.catChanged}
           >
             {categories.map(function(cat, idx){

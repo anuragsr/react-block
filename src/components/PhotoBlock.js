@@ -10,6 +10,10 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCheck } from '@fortawesome/free-solid-svg-icons'
 import FilePreviewComponent from './FilePreviewComponent';
 
+const auth = {
+  username: 'ml_page',
+  password: '}XhE9p2/FQjx9.e'
+}
 const checkId = rand(5)
 // const checkId_p = rand(5)
 let loadUrl  = ""
@@ -50,10 +54,7 @@ export default class PhotoBlock extends Component {
     this.http
     .get('/api/v1/photos', {
       limit: 10
-    },{
-      username: 'ml_page',
-      password: '}XhE9p2/FQjx9.e'
-    })
+    }, auth)
     .then(res => {
       let photos = res.data.results
       , currPhoto = photos[0]
@@ -126,88 +127,40 @@ export default class PhotoBlock extends Component {
     }))
   }
 
-  handleImageUpdate = labels => {
-    l(labels)
+  handleCatUpdate = cat => {
+    let currPhoto = this.state.currPhoto
+    currPhoto.category = { name: cat }
+    this.setState({ currPhoto }, () => l(this.state.currPhoto))
   }
 
-  undo = () => {
-    // let params = { type: 'photo', id: this.state.lastTagId }
-    // l(params)
-    // this.http
-    // .get('/api/v1/undo', params)
-    // .then(res => {
-    //   l(res)
-    //   this.setState({
-    //     showNotif: true, 
-    //     notifType: "undo"
-    //   })
-    //   setTimeout(() => {
-    //     this.setState({
-    //       allowAdd: true,
-    //       showNotif: false,
-    //       notifType: "submit"
-    //     })
-    //     // this.getSuggTags()
-    //   }, 5000)
-    // })
+  handleImageUpdate = (label, type) => {
+    let currPhoto = this.state.currPhoto
+    if(type === "add"){
+      currPhoto.labels.push(label)
+    }
+    this.setState({ currPhoto }, () => l(this.state.currPhoto))
   }
-
-  onUndo = () => this.setState({ showNotif: false, notifType: "submit" })
 
   submit = () => {
-    l(this.state)
-    // if(this.state.tags.length){
-    //   this.setState({
-    //     showAttr: false,
-    //     tagsText: this.state.tags.map((t, i) => {
-    //       if(i === this.state.tags.length - 1)
-    //         return t.photo_name
-    //       else
-    //         return t.photo_name + ", "
-    //     }),
-    //     tags: [],
-    //     // showTags: false,
-    //     allowAdd: false,
-    //   })
+    const im = this.state.currPhoto
+    , request = {
+      id: im.id,
+      labels: im.labels.map(l => {
+        delete l.edit
+        l.type = [...l.form].join("")
+        delete l.form
+        return l
+      }),
+      category: im.category
+    }
+    l(request)
 
-    //   const request = {
-    //     tags_ids: this.state.tags.map(x => x.id),
-    //     ML_attraction: this.state.ml?this.state.att.auto:"None",
-    //     editor_attraction: this.state.att.manual, 
-    //     editor_id: 1,
-    //     bot_id: this.state.currBot.id,
-    //     place_id: this.state.currPhoto.id
-    //   }
-    //   l(request)
-  
-    //   this.http
-    //   .post('/api/v1/send_attraction_for_place', request)
-    //   .then(res => {
-    //     l(res.data)
-    //     //  Show notif, undo
-    //     this.getSuggTags(this.state.currPhoto)
-    //     this.setState({ 
-    //       showNotif: true, 
-    //       lastTagId: res.data.id 
-    //     })
-    //     setTimeout(() => {
-    //       this.setState({ 
-    //         showAttr: false,
-    //         att: {
-    //           manual: 0,
-    //           auto: 0
-    //         }
-    //       })
-          
-    //       if(this.state.notifType === "submit"){
-    //         this.setState({ 
-    //           allowAdd: true,
-    //           showNotif: false 
-    //         })
-    //       }
-    //     }, 5000)
-    //   })    
-    // }
+    this.http
+    .post('/api/v1/submit_photo', request, auth)
+    // .put('/api/v1/submit_photo/' + im.id, request)
+    .then(res => {
+      l(res)
+    })
   }
 
   render() {
@@ -283,6 +236,7 @@ export default class PhotoBlock extends Component {
                 image={photo}
                 categories={categories}
                 imageUpdated={this.handleImageUpdate}
+                catUpdated={this.handleCatUpdate}
               />
               <div className="b-section">
                 <div className="custom-control custom-checkbox">

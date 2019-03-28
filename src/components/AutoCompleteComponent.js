@@ -71,6 +71,11 @@ export default class AutoCompleteComponent extends Component {
     if(this.props.changeInput)
       this.props.changeInput(showAnim, showAttr)
 
+    auth = {
+      username: 'ml_page',
+      password: '}XhE9p2/FQjx9.e'
+    }
+
     if(this.props.type === "tag"){
       if(this.props.parent === "place"){
         url = '/api/v1/tags'
@@ -90,18 +95,10 @@ export default class AutoCompleteComponent extends Component {
         query: value,
         approved: true
       }
-      auth = {
-        username: 'ml_page',
-        password: '}XhE9p2/FQjx9.e'
-      }
     }else if(this.props.type === "city"){
       url = '/api/v1/cities'
       params = { 
         query: value
-      }
-      auth = {
-        username: 'ml_page',
-        password: '}XhE9p2/FQjx9.e'
       }
     }
 

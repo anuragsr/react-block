@@ -179,11 +179,12 @@ export default class HttpService {
     return this.doRequest(config)
   }
   
-  post(url, data) {
+  post(url, data, auth) {
     let config = {
       method: "post",
       url: apiHost + url,
-      data
+      data,
+      auth
     }
     return this.doRequest(config)
   }
