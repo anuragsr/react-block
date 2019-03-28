@@ -157,7 +157,7 @@ export default class PhotoBlock extends Component {
 
     this.http
     .post('/api/v1/submit_photo', request, auth)
-    // .put('/api/v1/submit_photo/' + im.id, request)
+    // .put('/api/v1/submit_photo/' + im.id, request )
     .then(res => {
       l(res)
     })
