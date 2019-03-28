@@ -93,7 +93,8 @@ export default class AutoCompleteComponent extends Component {
       url = '/api/v1/places'
       params = { 
         query: value,
-        approved: true
+        from_ml_page: true
+        // approved: true
       }
     }else if(this.props.type === "city"){
       url = '/api/v1/cities'
