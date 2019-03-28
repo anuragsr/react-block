@@ -145,12 +145,13 @@ export default class PhotoBlock extends Component {
     const im = this.state.currPhoto
     , request = {
       id: im.id,
-      labels: im.labels.map(l => {
-        delete l.edit
-        l.type = [...l.form].join("")
-        delete l.form
-        return l
-      }),
+      // labels: im.labels.map(l => {
+      //   delete l.edit
+      //   l.type = [...l.form].join("")
+      //   delete l.form
+      //   return l
+      // }),
+      labels: im.labels,
       category: im.category
     }
     l(request)
