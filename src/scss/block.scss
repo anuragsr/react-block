@@ -42,6 +42,10 @@
         margin-right: 20px;
       }
     }
+    .counter{
+      color: $chktime;
+      font-family: $mont-m;
+    }
     .checkTime{
       // display: inline-flex;
       // vertical-align: top;
@@ -49,6 +53,14 @@
       font-family: $mont-m;
       color: $chktime;
       font-size: 13px;
+    }
+    .up-link{
+      color: $c-idx;
+      text-decoration: underline;
+    }
+    .title-city{
+      font-family: $mont-m;
+      font-size: 15px;
     }
     .bot-img{        
       height: 50px;

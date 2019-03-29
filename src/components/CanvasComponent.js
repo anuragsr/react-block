@@ -165,12 +165,16 @@ export default class CanvasComponent extends Component {
   }
 
   componentWillReceiveProps = nextProps => {
-    let currCat = nextProps.image.category.name
-    this.setState({ currCat })
+    // l("Again")
+    if(nextProps.image.category){
+      let currCat = nextProps.image.category.name
+      this.setState({ currCat })
+    }
   }
 
   imageLoaded = () => {
-    // l("Image loaded")
+    l("New Image loaded")
+    polyArr.length = 0
     this.createCanvas()
     this.drawObjects()
   }
@@ -410,11 +414,14 @@ export default class CanvasComponent extends Component {
 
   drawObjects = () => {
     this.props.image.labels.forEach(lbl => {
-      let form = lbl.form.toLowerCase()      
+      let form = lbl.form.toLowerCase()
+      , params
+      , poly
+
       switch(form){
         case 'rectangle':    
           // Draw rectangle
-          let params = {
+          params = {
             type: form,
             color: randHex(),
             opacity: .7,
@@ -422,21 +429,21 @@ export default class CanvasComponent extends Component {
             points: getCoords(lbl, 'rectangle', 'percent'),
             pointSize: 15,
           }
-          , poly = this.drawShape(params)          
-          poly.labelData = lbl
-          polyArr.push(poly)
+          
         break
         
         case 'polygon':
-          // Draw polygon with n points - For now blank
-          // this.drawPolygon([].concat(...pointsArr), 10, 2, randHex(), .7, form)
+          // Draw polygon with n points - For now blank          
         break
         
         default: 
-          // Draw circle - For now blank
-          // this.drawCircle(x, y, r, color, edgeWidth, fill)
+          // Draw circle - For now blank          
         break
       }
+
+      poly = this.drawShape(params)          
+      poly.labelData = lbl
+      polyArr.push(poly)
     })
   }
 
@@ -502,9 +509,7 @@ export default class CanvasComponent extends Component {
         }
 
         sqArr.forEach((s, idx) => {
-          s.type = type
-          this.attachEvents(s, 'point', idx)
-          this.ctn.addChild(s)
+          this.addToStage(type, s, 'point', idx)
         })
         
         // Rectangle from created squares
@@ -520,10 +525,8 @@ export default class CanvasComponent extends Component {
           sqArr.push(sq)
         }
 
-        sqArr.forEach((s, idx) => {
-          s.type = type
-          this.attachEvents(s, 'point', idx)
-          this.ctn.addChild(s)
+        sqArr.forEach(s => {
+          this.addToStage(type, s, 'point')
         })
         
         // Polygon from created squares
@@ -536,9 +539,7 @@ export default class CanvasComponent extends Component {
         sq.position.x = params.circleData.c.x + params.circleData.r - params.pointSize/2
         sq.position.y = params.circleData.c.y - params.pointSize/2
         
-        sq.type = type
-        this.attachEvents(sq, 'point')
-        this.ctn.addChild(sq)
+        this.addToStage(type, sq, 'point')
         
         // Circle containing one square for resize
         poly = new Circle([sq], params.circleData, params.edgeSize, params.color, params.opacity)
@@ -546,13 +547,13 @@ export default class CanvasComponent extends Component {
       break
     }
 
-    this.attachEvents(poly, 'shape')
-    this.ctn.addChild(poly)
-    poly.type = type
+    this.addToStage(type, poly, 'shape')
     return poly
   }
 
-  attachEvents = (graphic, eventType, pointIdx) => {
+  addToStage = (graphicType, graphic, eventType, pointIdx) => {
+    this.ctn.addChild(graphic)
+    graphic.type = graphicType
     graphic.interactive = true
     graphic
     .on('pointerdown', onDragStart)
@@ -798,39 +799,43 @@ export default class CanvasComponent extends Component {
         
     return (
       <div className="row">
-        <div className="b-section col-lg-1">
-          <div className={"obj-sel " + (this.state.adding === "polygon"?"active":"")} onClick={() => this.startAdding('polygon')}>
-            <img src="assets/icon-random.png" alt=""/>
-            {this.state.adding === 'polygon' && <div className="ctn-add-action">
-              <FontAwesomeIcon onClick={e => this.doneAdding(e, 'polygon')} icon={faCheck} style={{ color: 'green' }} />
-              <FontAwesomeIcon onClick={e => this.cancelAdd(e)} icon={faTimes} style={{ color: 'red' }} />
-            </div>}
-          </div>
-          <div className={"obj-sel " + (this.state.adding === "rectangle"?"active":"")} onClick={() => this.startAdding('rectangle')}>
-            <img src="assets/icon-square.png" alt=""/>
-            {this.state.adding === 'rectangle' && <div className="ctn-add-action">
-              <FontAwesomeIcon onClick={e => this.doneAdding(e, 'rectangle')} icon={faCheck} style={{ color: 'green' }} />
-              <FontAwesomeIcon onClick={e => this.cancelAdd(e)} icon={faTimes} style={{ color: 'red' }} />
-            </div>}
-          </div>
-          <div className={"obj-sel " + (this.state.adding === "circle"?"active":"")} onClick={() => this.startAdding('circle')}>
-            <img src="assets/icon-circle.png" alt=""/>
-            {this.state.adding === 'circle' && <div className="ctn-add-action">
-              <FontAwesomeIcon onClick={e => this.doneAdding(e, 'circle')} icon={faCheck} style={{ color: 'green' }} />
-              <FontAwesomeIcon onClick={e => this.cancelAdd(e)} icon={faTimes} style={{ color: 'red' }} />
-            </div>}
+        <div className="b-section col-lg-8">
+          <div className="row">            
+            <div className="col-2 pl-0">
+              <div className={"obj-sel " + (this.state.adding === "polygon"?"active":"")} onClick={() => this.startAdding('polygon')}>
+                <img src="assets/icon-random.png" alt=""/>
+                {this.state.adding === 'polygon' && <div className="ctn-add-action">
+                  <FontAwesomeIcon onClick={e => this.doneAdding(e, 'polygon')} icon={faCheck} style={{ color: 'green' }} />
+                  <FontAwesomeIcon onClick={e => this.cancelAdd(e)} icon={faTimes} style={{ color: 'red' }} />
+                </div>}
+              </div>
+              <div className={"obj-sel " + (this.state.adding === "rectangle"?"active":"")} onClick={() => this.startAdding('rectangle')}>
+                <img src="assets/icon-square.png" alt=""/>
+                {this.state.adding === 'rectangle' && <div className="ctn-add-action">
+                  <FontAwesomeIcon onClick={e => this.doneAdding(e, 'rectangle')} icon={faCheck} style={{ color: 'green' }} />
+                  <FontAwesomeIcon onClick={e => this.cancelAdd(e)} icon={faTimes} style={{ color: 'red' }} />
+                </div>}
+              </div>
+              <div className={"obj-sel " + (this.state.adding === "circle"?"active":"")} onClick={() => this.startAdding('circle')}>
+                <img src="assets/icon-circle.png" alt=""/>
+                {this.state.adding === 'circle' && <div className="ctn-add-action">
+                  <FontAwesomeIcon onClick={e => this.doneAdding(e, 'circle')} icon={faCheck} style={{ color: 'green' }} />
+                  <FontAwesomeIcon onClick={e => this.cancelAdd(e)} icon={faTimes} style={{ color: 'red' }} />
+                </div>}
+              </div>
+            </div>
+            <div className="col-10 pl-0">
+              <div ref={imgRef} className={"ctn-photo " + (this.state.adding !== ""?"adding":"")}>
+                <img 
+                  src={image.image_url} 
+                  onLoad={this.imageLoaded}
+                  width="100%"
+                  alt=""
+                />
+              </div>
+            </div>        
           </div>
         </div>
-        <div className="b-section col-lg-7">
-          <div ref={imgRef} className={"ctn-photo " + (this.state.adding !== ""?"adding":"")}>
-            <img 
-              src={image.image_url} 
-              onLoad={this.imageLoaded}
-              width="100%"
-              alt=""
-            />
-          </div>
-        </div>        
         <div className="b-section col-lg-4 ctn-cat">
           <div>Photo category</div>
           {categories.length > 0 &&

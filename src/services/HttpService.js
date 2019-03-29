@@ -200,11 +200,14 @@ export default class HttpService {
   }
   
   doRequest = config => {
-    if(call){
-      call.cancel('One request at a time, fellas!')
+    // l(config)
+    if(config.params && !config.params.parallel){
+      if(call){
+        call.cancel('One request at a time, fellas!')
+      }
+      call = axios.CancelToken.source()
+      config.cancelToken = call.token
     }
-    call = axios.CancelToken.source()
-    config.cancelToken = call.token
     return axios(config)
   }
 }

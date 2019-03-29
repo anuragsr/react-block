@@ -16,7 +16,6 @@ const auth = {
 }
 const checkId = rand(5)
 // const checkId_p = rand(5)
-let loadUrl  = ""
 
 export default class PhotoBlock extends Component {
   
@@ -24,23 +23,12 @@ export default class PhotoBlock extends Component {
     super(props)    
     this.http = new HttpService()
     this.state = {
-      // showAnim: false,
-      // showAttr: false,
-      // showSugTags: false,
-      // toggleSugTags: true,
-      // allowAdd: true,
-      // places: [],
-      // tags: [],
-      // suggTags: [],
-      // att: {
-      //   manual: 0,
-      //   auto: 0
-      // },
       showNotif: false,
       notifType: "submit",
       categories: [],
       photos: [],
       currPhoto: {},
+      currPhotoIdx: null,
       currPlace: {},
       ml: false,
       uncheckedOnly: false,
@@ -58,7 +46,6 @@ export default class PhotoBlock extends Component {
     .then(res => {
       let photos = res.data.results
       , currPhoto = photos[0]
-      // currPhoto.labels.push(JSON.parse(JSON.stringify(currPhoto.labels[0])))
       currPhoto.labels.forEach(lbl => lbl.edit = false)
 
       l(photos)
@@ -75,53 +62,42 @@ export default class PhotoBlock extends Component {
 
   nextPhoto = () => {
     let idx = withIndex(this.state.photos).filter(x => x.value.id === this.state.currPhoto.id)[0].index;
-    l(idx)
+    // l(idx)
     if(idx === this.state.photos.length - 1){
       idx = 0
     }else{
       idx++
     }
-    this.setState({ currPhoto: this.state.photos[idx] })
+    this.setState({ currPhotoIdx: idx, currPhoto: this.state.photos[idx] })
   }
 
-  placeSelected = currPlace => {
-    // l(currPlace)
-    this.setState({ currPlace })
-  } 
-    
-  addPhoto = () => {
-    // l("Add Photo")
-    this.setState({ showUpload: true })
-  }
+  placeSelected = currPlace => this.setState({ currPlace })
   
   mlChanged = e => this.setState({ ml: e.target.checked })
   
   checkChanged = e => this.setState({ uncheckedOnly: e.target.checked })
+  
+  addPhoto = () => this.setState({ showUpload: true })
 
   doUpload = () => {
-    l("Do upload")
+    let photos = this.state.uploadedFiles
+    , currPhoto
+
+    if(photos.length){
+      currPhoto = photos[0]
+      // currPhoto.labels.forEach(lbl => lbl.edit = false)
+      this.setState({ currPhotoIdx: 0, photos, currPhoto })      
+    }
+
+    // Here we call ML and process the photos in the background
+
+    this.setState({ uploadedFiles: [], showUpload: false })
   }
 
-  cancelUpload = () => {
-    // l(this.state.currPhoto)
-    this.setState({ showUpload: false })
-    // this.forceUpdate()
-  }
-
-  loadUrlChanged = e => {
-    loadUrl = e.target.value
-    // this.setState({ loadUrl: e.target.value })
-  }
-
-  doLoadUrl = () => {
-    l(this.state.loadUrl)
-    let uploadedFiles = this.state.uploadedFiles
-    uploadedFiles.push({ url: loadUrl, type: "url" })
-    this.setState({ uploadedFiles, loadUrl: "" })
-  }
+  cancelUpload = () => this.setState({ uploadedFiles: [], showUpload: false })
 
   filesUploaded = files => {
-    l(files)
+    // l(files)
     this.setState( state => ({
       uploadedFiles: state.uploadedFiles.concat(...files)    
     }))
@@ -157,7 +133,7 @@ export default class PhotoBlock extends Component {
     l(request)
 
     this.http
-    .post('/api/v1/submit_photo', request, auth)
+    .put('/api/v1/submit_photo', request, auth)
     // .put('/api/v1/submit_photo/' + im.id, request )
     .then(res => {
       l(res)
@@ -168,14 +144,18 @@ export default class PhotoBlock extends Component {
     const photo = this.state.currPhoto
     , photos = this.state.photos
     , categories = this.state.categories
+    , currPhotoIdx = this.state.currPhotoIdx
 
     return (
       <div className="block-content">        
         {
           photos.length > 0 && <>
           <div style={{display: !this.state.showUpload?"block":"none" }}>
-            <div className="row">
-              <div className="col-lg-9">
+            <div className="row px-4">
+              <div className="col-lg-8">
+                {currPhotoIdx !== null && <div className="counter">
+                  {currPhotoIdx + 1} of {photos.length}
+                </div>}
                 <div className="title">
                   <span title={photo.name}>{photo.name}</span>
                 </div>
@@ -185,40 +165,26 @@ export default class PhotoBlock extends Component {
                   &nbsp;&nbsp;Checked: {getFormattedTime(photo.ml_check_date)}
                 </div>}
               </div>
-              <div className="col-lg-3 text-right">
-                <button onClick={this.addPhoto} className="btn btn-accent-outline">Add Photo</button>
+              <div className="col-lg-4 text-right">
+                <button onClick={this.nextPhoto} className="btn btn-accent-outline">Next Photo</button>
+                <button onClick={this.submit} className="ml-3 btn btn-accent">Submit</button>
               </div>
             </div>
-            {/* <div className={this.state.showNotif?"shown notif":"notif"}>
-              {
-                this.state.notifType === "submit" &&
-                <div>
-                  <div className="n-title">New tag block created!</div>
-                  <div onClick={this.undo} className="undo float-right">Undo</div>
-                  <div className="n-body">
-                    Tags: {this.state.tagsText}
-                    <br/>
-                    Attraction: {this.state.att.manual}
-                  </div>
+            <div className="body">           
+              <div className="row b-section">
+                <div className="col-lg-6">
+                  <img src="assets/up-icon.png" alt=""/>
+                  <a className="up-link" href="javascript:void(0)" onClick={this.addPhoto}>Upload Photos</a>
                 </div>
-              }{
-                this.state.notifType === "undo" &&
-                <div>
-                  <div className="n-title">Tag block deleted successfully!</div>
-                  <div onClick={this.onUndo} className="undo float-left">Ok</div>    
-                </div>
-              }
-            </div> */}
-            <div className="body">
-              {/* <div className="b-section">
-                <div className="custom-control custom-checkbox">
-                  <input checked={this.state.uncheckedOnly?"checked":""} onChange={this.checkChanged} type="checkbox" className="custom-control-input" id={checkId_p} />
-                  <label className="custom-control-label" htmlFor={checkId_p}>Show only unchecked photo</label>
-                </div>
-              </div> */}
+              </div>
               <div className="row b-section">
                 <div className="col-lg-6">
                   {/* WithPlace: <pre>{JSON.stringify(this.props.withPlace, null, 2)}</pre> */}
+                  {/* Place: <pre>{JSON.stringify(this.state.currPlace, null, 2)}</pre> */}
+                  {Boolean(Object.keys(this.state.currPlace).length) && 
+                    <div className="mb-4 title-city">
+                      Current City: {this.state.currPlace.name}
+                    </div>}
                   {!this.props.withPlace &&
                   <AutoCompleteComponent 
                     inputProps={{
@@ -245,10 +211,6 @@ export default class PhotoBlock extends Component {
                   <label className="custom-control-label" htmlFor={checkId}>Turn On ML</label>
                 </div>
               </div>
-              <div className="b-section">
-                <button onClick={this.submit} className="btn btn-accent">Submit</button>
-                <button onClick={this.nextPhoto} className="ml-3 btn btn-accent-outline">Next Photo</button>
-              </div>
             </div>
           </div>
 
@@ -256,21 +218,12 @@ export default class PhotoBlock extends Component {
             <div className="title">Upload Photos</div>
             <div className="body">
               <div className="row">
-                <div className="col-lg-6 b-section">                
-                  <FileInputComponent
-                    handleFiles={this.filesUploaded}
-                  />
-                  <div className="url-inp">
-                    or enter remote photo URL<br/>
-                    <input onChange={this.loadUrlChanged} type="text" className="form-control tag-inp" placeholder="Place URL here .."/>
-                    <img onClick={this.doLoadUrl} src="assets/btn-remote.png" alt=""/>
-                  </div>
-                </div>
-                <div className="col-lg-12 up-files">
-                  <FilePreviewComponent 
-                    images={this.state.uploadedFiles}
-                  />
-                </div>
+                <FileInputComponent
+                  handleFiles={this.filesUploaded}
+                />
+                <FilePreviewComponent 
+                  images={this.state.uploadedFiles}
+                />
               </div>
               <div className="b-section">
                 <button onClick={this.doUpload} className="btn btn-accent">Upload</button>
