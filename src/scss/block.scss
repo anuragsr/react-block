@@ -169,7 +169,11 @@
           margin-top: 25px;
           font-family: $heebo-r;
           .lbl-item{
+            padding: 10px;
             margin-bottom: 10px;
+            margin-right: 10px;
+            border-radius: 5px;
+            display: inline-block;
             span{
               color: $c-bdr;
               margin-left: 5px;
@@ -177,16 +181,21 @@
               cursor: pointer;
             }
             input{
+              border: none;
               display: inline-block;
               width: 50%;
-              margin-right: 10px;
+              // margin-right: 10px;
+              &:focus{       
+                box-shadow: none;
+              }
             }
             div{
               @extend %j-c;
               display: inline-flex;
               margin-right: 5px;
-              color: $c-idx;
-              border: 1px solid $c-idx;
+              color: $w;
+              // color: $c-idx;
+              // border: 1px solid $c-idx;
               border-radius: 25px;
               width: 25px;
               height: 25px;

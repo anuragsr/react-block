@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 
 import AutoCompleteComponent from './AutoCompleteComponent'
-import CanvasComponent from './CanvasComponent'
+import ImageComponent from './ImageComponent'
 import FileInputComponent from './FileInputComponent'
 import HttpService from '../services/HttpService'
 import { l, rand, withIndex, getFormattedTime } from '../helpers/common'
@@ -90,6 +90,8 @@ export default class PhotoBlock extends Component {
     }
 
     // Here we call ML and process the photos in the background
+    // if(this.state.ml)
+      this.processUploads()
 
     this.setState({ uploadedFiles: [], showUpload: false })
   }
@@ -101,6 +103,27 @@ export default class PhotoBlock extends Component {
     this.setState( state => ({
       uploadedFiles: state.uploadedFiles.concat(...files)    
     }))
+  }
+
+  processUploads = () => {
+    // axios.get(...)
+    // .then((response) => {
+    //   return axios.get(...); // using response.data
+    // })
+    // .then((response) => {
+    //   console.log('Response', response);
+    // });
+
+    this.http
+    .post('http://18.202.217.216:5000/detect', {
+      files: {
+        file: this.state.currPhoto
+      },
+      newBaseUrl: true
+    })
+    .then(res => {
+      l(res)
+    })
   }
 
   handleCatUpdate = cat => {
@@ -199,7 +222,7 @@ export default class PhotoBlock extends Component {
                   />}
                 </div>
               </div>
-              <CanvasComponent
+              <ImageComponent
                 image={photo}
                 categories={categories}
                 imageUpdated={this.handleImageUpdate}

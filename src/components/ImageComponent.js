@@ -13,19 +13,57 @@ const auth = {
   password: '}XhE9p2/FQjx9.e'
 }
 
+PIXI.Graphics.prototype.drawDashedBorder = function(points, dash, gap){
+  let p1, p2, dashLeft = 0, gapLeft = 0, x = 0, y = 0
+  for(let i = 0; i < points.length; i++){
+    p1 = points[i]
+    if(i === points.length-1) p2 = points[0]
+    else p2 = points[i+1]
+
+    let dx = p2.x - p1.x
+    , dy = p2.y - p1.y
+    , len = Math.sqrt(dx*dx+dy*dy)
+    , normal = { x:dx/len, y:dy/len }
+    , progressOnLine = 0
+
+    this.moveTo(x+p1.x+gapLeft*normal.x, y+p1.y+gapLeft*normal.y)
+
+    while(progressOnLine <= len){
+      progressOnLine+= gapLeft
+      if(dashLeft > 0) progressOnLine += dashLeft
+      else progressOnLine+= dash
+      if(progressOnLine > len){
+        dashLeft = progressOnLine - len
+        progressOnLine = len
+      }else{
+        dashLeft = 0
+      }
+      this.lineTo(x + p1.x + progressOnLine*normal.x, y + p1.y + progressOnLine*normal.y)
+      progressOnLine+= gap
+      if(progressOnLine > len && dashLeft === 0){
+        gapLeft = progressOnLine-len
+        // l(progressOnLine, len, gap)
+      }else{
+        gapLeft = 0
+        this.moveTo(x + p1.x + progressOnLine*normal.x, y + p1.y + progressOnLine*normal.y)
+      }
+    }
+  }
+}
+
 class Polygon extends PIXI.Graphics {
-  constructor(sq, fo, fc, lw, lc) {
+  constructor(sq, params) {
     super()
     this.sq = sq || []
-    this.fo = fo || 0
-    this.fc = fc || 0x000000
-    this.lw = lw || 1
-    this.lc = lc || 0x000000
+    this.dashed = params.dashed
+    this.fo = params.opacity || 0
+    this.co = params.color || 0x000000
+    this.lw = params.edgeSize || 1
     this.sq.forEach(s => s.parent = this)
     this.draw()
   }
 
-  draw = () => {   
+  draw = () => {
     let points = [], i = 0    
     this.sq.forEach(s => {
       points[i] = s.position.x + s.s/2
@@ -35,11 +73,23 @@ class Polygon extends PIXI.Graphics {
 
     this
     .clear()
-    .lineStyle(this.lw, this.lc)    
-    .beginFill(this.fc, this.fo)
+    .lineStyle(this.lw, this.co, this.dashed.enabled?0:1)
+    .beginFill(this.co, this.fo)
     .drawPolygon(points)
     .endFill()
     .closePath()
+
+    if(this.dashed.enabled){
+      points = this.sq.map(s => {
+        return {
+          x: s.position.x + s.s/2,
+          y: s.position.y + s.s/2
+        }
+      })
+      this
+      .lineStyle(this.lw, this.co, 1)
+      .drawDashedBorder(points, 8, 7)
+    }
   }
 }
 
@@ -61,25 +111,45 @@ class Square extends PIXI.Graphics {
 }
 
 class Circle extends PIXI.Graphics {
-  constructor(sq, data, lw, co, fo) {
+  constructor(sq, params) {
     super()
     this.sq = sq || []
-    this.c = data.c
-    this.r = data.r || 1
-    this.lw = lw || 1
-    this.co = co || 0x000000
-    this.fo = fo || 1
+    this.dashed = params.dashed
+    this.c = params.circleData.c
+    this.r = params.circleData.r || 1
+    this.lw = params.edgeSize || 1
+    this.co = params.color || 0x000000
+    this.fo = params.opacity || 1
+    this.sq.forEach(s => s.parent = this)
     this.draw()
   }  
 
   draw = () => {
     this
     .clear()
-    .lineStyle(this.lw, this.co)
+    .lineStyle(this.lw, this.co, this.dashed.enabled?0:1)
     .beginFill(this.co, this.fo)
     .drawCircle(this.c.x, this.c.y, this.r)
     .endFill()
     .closePath()
+
+    if(this.dashed.enabled){
+      let points = []
+      , noPoints = this.r/2
+      , angle = 2*Math.PI/noPoints
+
+      for(let i = 0; i < noPoints; i++){
+        let x = angle*i - Math.PI/2;
+        points.push({
+          x: this.c.x + this.r*Math.cos(x),
+          y: this.c.y + this.r*Math.sin(x)
+        })
+      }
+      
+      this
+      .lineStyle(this.lw, this.co, 1)
+      .drawDashedBorder(points, 8, 7)
+    }
   }
 }
 
@@ -88,6 +158,7 @@ let randHex = () => {
     return (~~(Math.random()*16)).toString(16)
   })
 }
+, hexJStoCSS = str => '#' + str.substring(2, str.length)
 , distance = (x1, y1, x2, y2) => Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2))
 , getCoords = (data, type, subtype) => {
   let height = imgRef.current.clientHeight
@@ -146,8 +217,20 @@ let randHex = () => {
 , tempColor
 , rectangleCoords = {}
 , circleData = {}
+, polyParams = {  
+  // opacity: .7,
+  // edgeSize: 2,
+  opacity: .4,
+  edgeSize: 5,
+  pointSize: 15,
+  dashed: {
+    enabled: true,
+    dash: 8,
+    gap: 7,
+  }
+}
 
-export default class CanvasComponent extends Component {
+export default class ImageComponent extends Component {
   constructor(props) {
     super(props)
     imgRef = React.createRef()
@@ -173,7 +256,7 @@ export default class CanvasComponent extends Component {
   }
 
   imageLoaded = () => {
-    l("New Image loaded")
+    // l("New Image loaded")
     polyArr.length = 0
     this.createCanvas()
     this.drawObjects()
@@ -236,11 +319,9 @@ export default class CanvasComponent extends Component {
         case 'polygon':
           tempPointArr.push(c)
           let params = {
+            ...polyParams,
             type: 'polygon',
-            color: tempColor,
-            opacity: .7,
-            edgeSize: 2,
-            pointSize: 15,
+            color: tempColor,            
             points: tempPointArr,
           }
           tempPoly = this.drawShape(params)
@@ -279,21 +360,17 @@ export default class CanvasComponent extends Component {
         if(this.drawingRect){
           rectangleCoords.br = { x: p.x, y: p.y }
           params = {
-            color: tempColor,
-            opacity: .7,
-            edgeSize: 2,
-            pointSize: 15,
+            ...polyParams,
             type: 'rectangle',
+            color: tempColor,
             points: getCoords(rectangleCoords, 'rectangle', ''),
           }
         }else if(this.drawingCirc){
           circleData.r = distance(circleData.c.x, circleData.c.y, p.x, p.y)
           params = {
-            color: tempColor,
-            opacity: .7,
-            edgeSize: 2,
-            pointSize: 15,
+            ...polyParams,
             type: 'circle',
+            color: tempColor,
             circleData: circleData,
           }
         }
@@ -417,17 +494,16 @@ export default class CanvasComponent extends Component {
       let form = lbl.form.toLowerCase()
       , params
       , poly
+      , color = randHex()  
 
       switch(form){
         case 'rectangle':    
           // Draw rectangle
           params = {
+            ...polyParams,
             type: form,
-            color: randHex(),
-            opacity: .7,
-            edgeSize: 2,
+            color: color,
             points: getCoords(lbl, 'rectangle', 'percent'),
-            pointSize: 15,
           }
           
         break
@@ -441,10 +517,13 @@ export default class CanvasComponent extends Component {
         break
       }
 
+      lbl.color = hexJStoCSS(color)
       poly = this.drawShape(params)          
       poly.labelData = lbl
       polyArr.push(poly)
     })
+
+    this.props.imageUpdated()
   }
 
   resizeObjects = () => {
@@ -460,11 +539,9 @@ export default class CanvasComponent extends Component {
       let lbl = poly.labelData
       , form = lbl.form.toLowerCase()
       , params = {
+        ...polyParams,
         type: form,
         color: poly.graphicsData[0].fillColor,
-        opacity: .7,
-        edgeSize: 2,
-        pointSize: 15,
       }
       
       switch(form){
@@ -513,7 +590,7 @@ export default class CanvasComponent extends Component {
         })
         
         // Rectangle from created squares
-        poly = new Polygon(sqArr, params.opacity, params.color, params.edgeSize, params.color)
+        poly = new Polygon(sqArr, params)
       break
       
       case 'polygon':
@@ -530,7 +607,7 @@ export default class CanvasComponent extends Component {
         })
         
         // Polygon from created squares
-        poly = new Polygon(sqArr, params.opacity, params.color, params.edgeSize, params.color)
+        poly = new Polygon(sqArr, params)
       break
 
       default:
@@ -542,8 +619,7 @@ export default class CanvasComponent extends Component {
         this.addToStage(type, sq, 'point')
         
         // Circle containing one square for resize
-        poly = new Circle([sq], params.circleData, params.edgeSize, params.color, params.opacity)
-        sq.parent = poly
+        poly = new Circle([sq], params)
       break
     }
 
@@ -586,6 +662,7 @@ export default class CanvasComponent extends Component {
 
       let height = imgRef.current.clientHeight
       , width = imgRef.current.clientWidth
+      , size = polyParams.edgeSize
       , newPos
 
       switch(eventType){
@@ -596,13 +673,12 @@ export default class CanvasComponent extends Component {
               newPos = this.sq.map(s => {
                 return { x: s.x, y: s.y }
               })
-              
               this.labelData &&
               (this.labelData.object_rectangle = [
-                (newPos[0].x + 15/2)/width,
-                (newPos[0].y + 15/2)/height,
-                (newPos[2].x + 15/2)/width,
-                (newPos[2].y + 15/2)/height,
+                (newPos[0].x + size/2)/width,
+                (newPos[0].y + size/2)/height,
+                (newPos[2].x + size/2)/width,
+                (newPos[2].y + size/2)/height,
               ].map(x => x.toString()))
               // l(this.labelData.object_rectangle)
             break
@@ -640,10 +716,10 @@ export default class CanvasComponent extends Component {
 
               this.parent.labelData &&
               (this.parent.labelData.object_rectangle = [
-                (newPos[0].x + 15/2)/width,
-                (newPos[0].y + 15/2)/height,
-                (newPos[2].x + 15/2)/width,
-                (newPos[2].y + 15/2)/height,
+                (newPos[0].x + size/2)/width,
+                (newPos[0].y + size/2)/height,
+                (newPos[2].x + size/2)/width,
+                (newPos[2].y + size/2)/height,
               ].map(x => x.toString()))
               // l(this.parent.labelData.object_rectangle)
             break
@@ -755,7 +831,9 @@ export default class CanvasComponent extends Component {
     .then(res => {
       // l(res.data)
       // l(tempPoly.labelData)
+      tempPoly.labelData.color = hexJStoCSS(tempColor)
       tempPoly.labelData.label = res.data
+
       this.props.imageUpdated(tempPoly.labelData, "add")
       polyArr.push(tempPoly)
       this.resetForAdding()
@@ -779,7 +857,7 @@ export default class CanvasComponent extends Component {
     .then(res => {
       lbl.label = res.data
       lbl.edit = false
-      this.props.imageUpdated(lbl, "update")
+      this.props.imageUpdated()
     })
     .catch(res => {
       // l(res)
@@ -854,8 +932,15 @@ export default class CanvasComponent extends Component {
             {/* Object.keys(image).length && labels.length &&  */}
             {labels.map((lbl, idx) => {
               return (
-                <div className="lbl-item" key={idx}>
-                  <div>{idx + 1}</div>
+                <div 
+                  className="lbl-item" 
+                  key={idx} 
+                  style={{ 
+                    border: "5px dashed " + lbl.color,
+                    boxShadow: lbl.edit?"0 10px 20px 0 rgba(0, 0, 0, .1)":"none"
+                  }}
+                  >
+                  <div style={{ background: lbl.color }}>{idx + 1}</div>                  
                   {lbl.edit && <>
                     <input 
                       className="form-control" 

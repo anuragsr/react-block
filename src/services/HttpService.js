@@ -182,7 +182,7 @@ export default class HttpService {
   post(url, data, auth) {
     let config = {
       method: "post",
-      url: apiHost + url,
+      url: data.newBaseUrl?url:apiHost + url,
       data,
       auth
     }
