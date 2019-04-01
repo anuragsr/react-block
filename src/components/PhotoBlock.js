@@ -23,8 +23,8 @@ export default class PhotoBlock extends Component {
     super(props)    
     this.http = new HttpService()
     this.state = {
-      showNotif: false,
-      notifType: "submit",
+      // showNotif: false,
+      // notifType: "submit",
       categories: [],
       photos: [],
       currPhoto: {},
