@@ -29,6 +29,7 @@ export default class PhotoBlock extends Component {
       photos: [],
       currPhoto: {},
       currPhotoIdx: null,
+      showingUploaded: false,
       currPlace: {},
       ml: false,
       uncheckedOnly: false,
@@ -86,13 +87,13 @@ export default class PhotoBlock extends Component {
     if(photos.length){
       currPhoto = photos[0]
       // currPhoto.labels.forEach(lbl => lbl.edit = false)
-      this.setState({ currPhotoIdx: 0, photos, currPhoto })      
+      this.setState({ showingUploaded: true, currPhotoIdx: 0, photos, currPhoto })      
     }
 
     // Here we call ML and process the photos in the background
     // if(this.state.ml)
       this.processUploads()
-
+    
     this.setState({ uploadedFiles: [], showUpload: false })
   }
 
@@ -129,37 +130,44 @@ export default class PhotoBlock extends Component {
   handleCatUpdate = cat => {
     let currPhoto = this.state.currPhoto
     currPhoto.category = { name: cat }
-    this.setState({ currPhoto }, () => l(this.state.currPhoto))
+    this.setState({ currPhoto }/* , () => l(this.state.currPhoto) */)
   }
 
   handleImageUpdate = (label, type) => {
     let currPhoto = this.state.currPhoto
     if(type === "add"){
       currPhoto.labels.push(label)
+    } else if (type === "delete"){
+      currPhoto.labels = currPhoto.labels.filter(l => l.id !== label.id)
     }
-    this.setState({ currPhoto }, () => l(this.state.currPhoto))
+    this.setState({ currPhoto }/* , () => l(this.state.currPhoto) */)
   }
 
   submit = () => {
-    const im = this.state.currPhoto
+    let im = this.state.currPhoto
     , request = {
       id: im.id,
-      // labels: im.labels.map(l => {
-      //   delete l.edit
-      //   l.type = [...l.form].join("")
-      //   delete l.form
-      //   return l
-      // }),
       labels: im.labels,
       category: im.category
     }
+    
+    if(im.fromURL){
+      request.image_url = im.image_url
+    } else{
+      request.files = {
+        file: im
+      }
+    }
+
     l(request)
 
     this.http
-    .put('/api/v1/submit_photo', request, auth)
-    // .put('/api/v1/submit_photo/' + im.id, request )
+    .put('/api/v1/submit_photo', request, auth)    
     .then(res => {
       l(res)
+      if(res.status === 200){
+        this.nextPhoto()
+      }
     })
   }
 
@@ -168,6 +176,7 @@ export default class PhotoBlock extends Component {
     , photos = this.state.photos
     , categories = this.state.categories
     , currPhotoIdx = this.state.currPhotoIdx
+    , showingUploaded = this.state.showingUploaded
 
     return (
       <div className="block-content">        
@@ -176,7 +185,7 @@ export default class PhotoBlock extends Component {
           <div style={{display: !this.state.showUpload?"block":"none" }}>
             <div className="row px-4">
               <div className="col-lg-8">
-                {currPhotoIdx !== null && <div className="counter">
+                {showingUploaded && <div className="counter">
                   {currPhotoIdx + 1} of {photos.length}
                 </div>}
                 <div className="title">

@@ -22,11 +22,11 @@ PIXI.Graphics.prototype.drawDashedBorder = function(points, dash, gap){
 
     let dx = p2.x - p1.x
     , dy = p2.y - p1.y
-    , len = Math.sqrt(dx*dx+dy*dy)
+    , len = Math.sqrt(dx*dx + dy*dy)
     , normal = { x:dx/len, y:dy/len }
     , progressOnLine = 0
 
-    this.moveTo(x+p1.x+gapLeft*normal.x, y+p1.y+gapLeft*normal.y)
+    this.moveTo(x + p1.x + gapLeft*normal.x, y + p1.y + gapLeft*normal.y)
 
     while(progressOnLine <= len){
       progressOnLine+= gapLeft
@@ -139,10 +139,10 @@ class Circle extends PIXI.Graphics {
       , angle = 2*Math.PI/noPoints
 
       for(let i = 0; i < noPoints; i++){
-        let x = angle*i - Math.PI/2;
+        // let x = angle*i - Math.PI/2
         points.push({
-          x: this.c.x + this.r*Math.cos(x),
-          y: this.c.y + this.r*Math.sin(x)
+          x: this.c.x + this.r*Math.cos(angle*i),
+          y: this.c.y + this.r*Math.sin(angle*i)
         })
       }
       
@@ -171,7 +171,7 @@ let randHex = () => {
       let point1, point2, point3, point4
       switch(subtype){
         case 'percent':
-          coords = data.object_rectangle.map(c => parseFloat(parseFloat(c).toFixed(2)))  
+          coords = data.object_coords.map(c => parseFloat(parseFloat(c).toFixed(2)))  
           point1 = [coords[0]*width, coords[1]*height]
           point2 = [coords[2]*width, coords[1]*height]
           point3 = [coords[2]*width, coords[3]*height]
@@ -189,7 +189,7 @@ let randHex = () => {
     break
     
     case 'polygon':
-      coords = data.object_polygon.map(c => parseFloat(parseFloat(c).toFixed(2)))
+      coords = data.object_coords.map(c => parseFloat(parseFloat(c).toFixed(2)))
       returnVar = []
 
       for(let i = 0; i < coords.length - 1; i+=2){
@@ -201,7 +201,7 @@ let randHex = () => {
     break
     
     default:
-      coords = data.object_circle.map(c => parseFloat(parseFloat(c).toFixed(2)))      
+      coords = data.object_coords.map(c => parseFloat(parseFloat(c).toFixed(2)))      
       returnVar = {
         c: { x: coords[0]*width, y: coords[1]*height },
         r: coords[2]*width
@@ -435,7 +435,7 @@ export default class ImageComponent extends Component {
             name: "new label", 
             tag: null
           },
-          object_rectangle: tmp
+          object_coords: tmp
         }
       break
       
@@ -449,7 +449,7 @@ export default class ImageComponent extends Component {
             name: "new label", 
             tag: null
           },
-          object_polygon: tempPoly.sq.map(s => {
+          object_coords: tempPoly.sq.map(s => {
             return { x: s.x, y: s.y }
           }).reduce((a, b) => {
             return a.concat(...[(b.x/width).toString(), (b.y/height).toString()])
@@ -467,7 +467,7 @@ export default class ImageComponent extends Component {
             name: "new label", 
             tag: null
           },
-          object_circle: [
+          object_coords: [
             (tempPoly.c.x/width).toString(), 
             (tempPoly.c.y/height).toString(),
             (tempPoly.r/width).toString()
@@ -498,22 +498,30 @@ export default class ImageComponent extends Component {
 
       switch(form){
         case 'rectangle':    
-          // Draw rectangle
           params = {
             ...polyParams,
             type: form,
             color: color,
             points: getCoords(lbl, 'rectangle', 'percent'),
           }
-          
         break
         
         case 'polygon':
-          // Draw polygon with n points - For now blank          
+          params = {
+            ...polyParams,
+            type: form,
+            color: color,
+            points: getCoords(lbl, 'polygon'),
+          }
         break
         
-        default: 
-          // Draw circle - For now blank          
+        default:           
+          params = {
+            ...polyParams,
+            type: form,
+            color: color,
+            circleData: getCoords(lbl, 'circle'),
+          }
         break
       }
 
@@ -674,29 +682,29 @@ export default class ImageComponent extends Component {
                 return { x: s.x, y: s.y }
               })
               this.labelData &&
-              (this.labelData.object_rectangle = [
+              (this.labelData.object_coords = [
                 (newPos[0].x + size/2)/width,
                 (newPos[0].y + size/2)/height,
                 (newPos[2].x + size/2)/width,
                 (newPos[2].y + size/2)/height,
               ].map(x => x.toString()))
-              // l(this.labelData.object_rectangle)
+              // l(this.labelData.object_coords)
             break
             
             case 'polygon':               
               this.labelData &&
-              (this.labelData.object_polygon = this.sq.map(s => {
+              (this.labelData.object_coords = this.sq.map(s => {
                 return { x: s.x, y: s.y }
               }).reduce((a, b) => {
                 return a.concat(...[(b.x/width).toString(), (b.y/height).toString()])
               }, []))
-              // l(this.labelData.object_polygon)
+              // l(this.labelData.object_coords)
             break
 
             default:   
               // l(this)            
               this.labelData &&
-              (this.labelData.object_circle = [
+              (this.labelData.object_coords = [
                 (this.c.x/width).toString(), 
                 (this.c.y/height).toString(),
                 (this.r/width).toString()
@@ -715,28 +723,28 @@ export default class ImageComponent extends Component {
               })
 
               this.parent.labelData &&
-              (this.parent.labelData.object_rectangle = [
+              (this.parent.labelData.object_coords = [
                 (newPos[0].x + size/2)/width,
                 (newPos[0].y + size/2)/height,
                 (newPos[2].x + size/2)/width,
                 (newPos[2].y + size/2)/height,
               ].map(x => x.toString()))
-              // l(this.parent.labelData.object_rectangle)
+              // l(this.parent.labelData.object_coords)
             break
             
             case 'polygon': 
               this.parent.labelData &&
-              (this.parent.labelData.object_polygon = this.parent.sq.map(s => {
+              (this.parent.labelData.object_coords = this.parent.sq.map(s => {
                 return { x: s.x, y: s.y }
               }).reduce((a, b) => {
                 return a.concat(...[(b.x/width).toString(), (b.y/height).toString()])
               }, []))
-              // l(this.parent.labelData.object_polygon)
+              // l(this.parent.labelData.object_coords)
             break
 
             default: 
               this.parent.labelData &&
-              (this.parent.labelData.object_circle = [
+              (this.parent.labelData.object_coords = [
                 (this.parent.c.x/width).toString(), 
                 (this.parent.c.y/height).toString(),
                 (this.parent.r/width).toString()
@@ -809,7 +817,7 @@ export default class ImageComponent extends Component {
             }
             this.parent.draw()
           break
-        }        
+        }
       }
     }
   }
@@ -829,7 +837,7 @@ export default class ImageComponent extends Component {
       name: tempPoly.labelData.label.name 
     }, auth)
     .then(res => {
-      // l(res.data)
+      l(res.data)
       // l(tempPoly.labelData)
       tempPoly.labelData.color = hexJStoCSS(tempColor)
       tempPoly.labelData.label = res.data
@@ -845,8 +853,18 @@ export default class ImageComponent extends Component {
     this.setState({ tempLblName: lbl.label.name })
   }
 
-  deleteLabel = lbl => {
-    l(lbl)
+  deleteLabel = lbl => {  
+    let tmpPolyArr = []
+    polyArr.forEach(p => {
+      if (p.labelData.id === lbl.id){
+        p.sq.forEach(s => this.ctn.removeChild(s))
+        this.ctn.removeChild(p)
+      } else{
+        tmpPolyArr.push(p)
+      }
+    })
+    polyArr = tmpPolyArr
+    this.props.imageUpdated(lbl, "delete")
   }
   
   doEditLabel = lbl => {

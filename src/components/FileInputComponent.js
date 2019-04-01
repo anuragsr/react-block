@@ -76,7 +76,7 @@ export default class FileInputComponent extends Component {
           file.image_url = event.target.result
           file.ml_check_date = null
           file.labels = []
-          file.id = rand(5)
+          // file.id = rand(5)
           if(count === files.length)
             this.props.handleFiles(files)
         }
@@ -94,11 +94,12 @@ export default class FileInputComponent extends Component {
     , split = url.split("/")
 
     this.props.handleFiles([{ 
-      id: rand(5),
+      // id: rand(5),
       name: split[split.length - 1],
       image_url: url, 
       ml_check_date: null,
-      labels: []
+      labels: [],
+      fromURL: true
     }])
     this.setState({ loadUrl: "" })
   }
