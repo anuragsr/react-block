@@ -1,5 +1,4 @@
 import React, { Component } from 'react'
-import Switch from 'react-switch'
 
 import AutoCompleteComponent from './AutoCompleteComponent'
 import TagsComponent from './TagsComponent'
@@ -10,6 +9,7 @@ import { l, rand } from '../helpers/common'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlusSquare, faMinusSquare } from '@fortawesome/free-regular-svg-icons'
 const checkId = rand(5)
+const checkId_r = rand(5)
 
 export default class TagBlock extends Component {
   
@@ -53,7 +53,8 @@ export default class TagBlock extends Component {
     })
   }
   
-  toggleRandom = randomMode => {
+  toggleRandom = e => {
+    let randomMode = e.target.checked
     if(randomMode){
       this.getRandomTags()
     }
@@ -265,22 +266,9 @@ export default class TagBlock extends Component {
             Create new tag block   
           </div>
           <div className="col-lg-6 text-right">
-            <span className="random-txt">Random Mode</span>
-            <Switch
-              checked={this.state.randomMode}
-              onChange={this.toggleRandom}
-              onColor="#54b6b8"
-              onHandleColor="#fff"
-              handleDiameter={20}
-              uncheckedIcon={false}
-              checkedIcon={false}
-              boxShadow="0px 1px 5px rgba(0, 0, 0, 0.6)"
-              activeBoxShadow="0px 0px 1px 10px rgba(0, 0, 0, 0.2)"
-              height={20}
-              width={40}
-              className="react-switch"
-            />
-          </div>    
+            <button onClick={this.nextBlock} disabled={!this.state.tags.length} className="btn btn-accent-outline">Next Block</button>
+            <button onClick={this.submit} disabled={!this.state.tags.length} className="ml-3 btn btn-accent">Submit</button>
+          </div>
         </div>
         <div className={this.state.showNotif?"shown notif":"notif"}>
           {
@@ -302,37 +290,38 @@ export default class TagBlock extends Component {
             </div>
           }
         </div>
-        <div className="body row">
-          <div className="col-lg-7">
-            {this.state.bots.length > 0 &&
-            <div className="b-section">
-              <div
-                className="bot-img"
-                style={{ backgroundImage: `url(${this.state.currBot.avatar})` }}
-              >
+        <div className="body">
+          <div className="row align-items-center">
+            <div className="col-lg-7">
+              {this.state.bots.length > 0 && <>
+                <div
+                  className="bot-img"
+                  style={{ backgroundImage: `url(${this.state.currBot.avatar})` }}
+                >
+                </div>
+                <select
+                  className="custom"
+                  value={this.state.currBot.id}
+                  onChange={this.botChanged}
+                >
+                  {this.state.bots.map(function (bot, idx) {
+                    return (
+                      <option key={bot.id} value={bot.id}>{bot.name}</option>
+                    )
+                  })}
+                </select>
+              </>}
+            </div>
+            <div className="col-lg-5 text-right">
+              <div className="custom-control custom-checkbox">
+                <input checked={this.state.randomMode ? "checked" : ""} onChange={this.toggleRandom} type="checkbox" className="custom-control-input" id={checkId_r} />
+                <label className="custom-control-label" htmlFor={checkId_r}>Random Mode</label>
               </div>
-              <select 
-                className="custom" 
-                value={this.state.currBot.id} 
-                onChange={this.botChanged}
-              >
-                {this.state.bots.map(function(bot, idx){
-                  return (
-                    <option key={bot.id} value={bot.id}>{bot.name}</option>
-                  )
-                })}
-              </select>
-            </div>}            
-            <div className="b-section">
-              <div className="mb-2">
-                {this.state.showTags && 
-                <TagsComponent
-                  type="default"
-                  tags={this.state.tags}
-                  removeTag={this.tagRemoved}
-                />}
-              </div>
-              <AutoCompleteComponent 
+            </div>
+          </div>
+          <div className="row">
+            <div className="col-lg-12">
+              <AutoCompleteComponent
                 inputProps={{
                   className: 'tag-inp form-control',
                   placeholder: 'Add tag ..',
@@ -343,53 +332,69 @@ export default class TagBlock extends Component {
                 optionSelected={this.tagAdded}
               />
             </div>
+          </div>
+          <div className="row">
+            <div className="col-lg-12">
+              <div className="tag-outer">
+                {(this.state.tags.length === 0) &&
+                  <div className="no-tags-plh">
+                    <img src="assets/start-add-plh.png" alt=""/>
+                  </div>
+                }
+                {this.state.showTags &&
+                  <TagsComponent
+                    type="default"
+                    tags={this.state.tags}
+                    removeTag={this.tagRemoved}
+                  />}
+              </div>
+            </div>          
+          </div>
+          <div className="row">
+            <div className="col-lg-7">
               {/* ShowAnim: <pre>{JSON.stringify(this.state.showAnim, null, 2)}</pre> */}
               {/* ShowAttr: <pre>{JSON.stringify(this.state.showAttr, null, 2)}</pre> */}
-            <div className="b-section">
-              {
-                this.state.showAnim &&
+              {this.state.showAnim &&
                 <div className="ctn-anim">
                   <div className="dot"></div>
                   <div className="dot"></div>
                   <div className="dot"></div>
                   <div className="dot"></div>
-                </div>
-              }{
-                this.state.showAttr &&
-                <SliderComponent att={this.state.att} changeAtt={this.attChanged}/>
-              }
+              </div>}
+              {this.state.showAttr &&
+                <SliderComponent att={this.state.att} changeAtt={this.attChanged}
+              />}
             </div>
-            <div className="b-section">
+          </div>
+          <div className="row">
+            <div className="col-lg-6">
               <div className="custom-control custom-checkbox">
                 <input checked={this.state.ml?"checked":""} onChange={this.mlChanged} type="checkbox" className="custom-control-input" id={checkId} />
                 <label className="custom-control-label" htmlFor={checkId}>Turn On ML</label>
               </div>
             </div>
-          </div>
-          <div className="col-lg-12">
-            <div className="b-section mt-0">
-              {this.state.showSugTags && 
-              <div>
-                <div className="sl-title">
-                  <div>
-                    Suggested Tags&nbsp;&nbsp;
-                    {!this.state.toggleSugTags && 
-                      <FontAwesomeIcon 
-                        style={{ cursor: "pointer", fontSize: 22 }}
-                        icon={faPlusSquare} 
-                        onClick={() => this.setState({ 
-                          toggleSugTags: !this.state.toggleSugTags
-                        })}
-                      />}
-                    {this.state.toggleSugTags && 
-                      <FontAwesomeIcon 
-                        style={{ cursor: "pointer", fontSize: 22 }}
-                        icon={faMinusSquare} 
-                        onClick={() => this.setState({ 
-                          toggleSugTags: !this.state.toggleSugTags
-                        })}
+          </div>                
+          <div className="row">
+            <div className="col-lg-12">
+              {this.state.showSugTags && <>
+                <div className="tags-title">
+                  Suggested Tags&nbsp;&nbsp;
+                  {!this.state.toggleSugTags && 
+                    <FontAwesomeIcon 
+                      style={{ cursor: "pointer", fontSize: 22 }}
+                      icon={faPlusSquare} 
+                      onClick={() => this.setState({ 
+                        toggleSugTags: !this.state.toggleSugTags
+                      })}
                     />}
-                  </div>
+                  {this.state.toggleSugTags && 
+                    <FontAwesomeIcon 
+                      style={{ cursor: "pointer", fontSize: 22 }}
+                      icon={faMinusSquare} 
+                      onClick={() => this.setState({ 
+                        toggleSugTags: !this.state.toggleSugTags
+                      })}
+                  />}
                 </div>
                 {this.state.toggleSugTags &&
                 <TagsComponent
@@ -397,14 +402,10 @@ export default class TagBlock extends Component {
                   tags={this.state.suggTags}
                   clickedTag={this.tagSuggested}
                 />}
-              </div>}
-            </div>
-            <div className="b-section">
-              <button onClick={this.submit} className="btn btn-accent">Submit</button>
-              <button onClick={this.nextBlock} className="ml-3 btn btn-accent-outline">Next Block</button>
+              </>}
             </div>
           </div>
-        </div>            
+        </div>
       </div>
     )
   }

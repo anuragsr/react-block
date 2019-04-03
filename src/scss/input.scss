@@ -45,6 +45,18 @@ input.tag-inp{
 // }
 
 // For tags
+.tag-outer{
+  background: $dz-bg;
+  padding: 10px;
+  border: 5px dashed $dz-bdr;
+  border-radius: 10px;
+  color: $chktime;
+  .no-tags-plh{
+    text-align: center;
+    padding: 10px 0;
+  }
+}
+
 ul.tag-ctn{
   padding: 5px;
   padding-left: 0;
@@ -180,12 +192,15 @@ ul.tag-ctn li{
 }
 
 //  For the slider
-.sl-title{ // For both slider and tags title
-  @extend %j-s-b;
+.sl-title, .tags-title{ // For both slider and tags title
   font-family: $mont-m;
   font-size: 18px;
   color: $sc;
   margin-bottom: 15px;
+}
+
+.sl-title{
+  @extend %j-s-b;
 }
 
 .att-inp{

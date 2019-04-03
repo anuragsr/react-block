@@ -20,15 +20,17 @@
     position: relative;
     padding: 20px 30px;
     .title{
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      overflow: hidden;
-      // display: inline-block;
-      // display: block;
-      word-break: break-all;
       font-family: $mont-m;
       font-size: 30px;
       color: $pr;
+      &.photo{
+        // word-break: break-all;
+        // display: inline-block;
+        // display: block;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+      }
       a{
         text-decoration: none;
       }
@@ -40,6 +42,9 @@
         vertical-align: middle;
         font-size: 16px;
         margin-right: 20px;
+      }
+      button{
+        font-family: $heebo-r;
       }
     }
     .counter{
@@ -62,7 +67,7 @@
       font-family: $mont-m;
       font-size: 15px;
     }
-    .bot-img{        
+    .bot-img{
       height: 50px;
       width: 50px;
       display: inline-block;
@@ -87,7 +92,7 @@
       border-radius: 5px;
       &.shown{
         // visibility: visible;
-        z-index: 0;
+        z-index: 1;
         opacity: 1;
       }
       .n-title{
@@ -109,11 +114,14 @@
         font-family: $heebo-r;
       }
     }
+    .row{
+      padding-bottom: 25px;
+    }
     .body{
       font-family: $heebo-r;
-      .b-section{
-        margin: 25px 0;
-      }
+      // .b-section{
+      //   margin: 25px 0;
+      // }
       select.custom{
         background: $w;
         color: $pr;
@@ -130,7 +138,7 @@
         @extend %j-c;
         position: relative;
         cursor: pointer;
-        margin: 0 auto;
+        // margin: 0 auto;
         margin-bottom: 10px;
         width: 42px;
         height: 42px;
@@ -250,8 +258,17 @@
     }
     .ctn-photo{
       position: relative;
-      &.adding{
-        // cursor: crosshair;
+      min-height: 100%;
+      .img-loader{
+        @extend %j-c;
+        z-index: 0;
+        path, rect{
+          fill: $c-idx;
+        }
+      }
+      img{
+        position: relative;
+        background: $w;
       }
     }
   }

@@ -9,6 +9,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlusSquare, faMinusSquare } from '@fortawesome/free-regular-svg-icons'
 
 const checkId = rand(5)
+const checkId_r = rand(5)
 
 export default class PlaceBlock extends Component {
   
@@ -34,6 +35,7 @@ export default class PlaceBlock extends Component {
         manual: 0,
         auto: 0
       },
+      randomMode: false,
     }
   }
 
@@ -44,7 +46,7 @@ export default class PlaceBlock extends Component {
       let bots = res.data.results, currBot = bots[0]
       this.setState({ bots, currBot })
       this.http
-      .get('/api/v1/places', {        
+      .get('/api/v1/places', {
         query: "",
         approved: true
       },{
@@ -60,6 +62,33 @@ export default class PlaceBlock extends Component {
     })
   }
 
+  toggleRandom = e => {
+    let randomMode = e.target.checked
+    if (randomMode) {
+      this.getRandomTags()
+    }
+    this.setState({ randomMode })
+  }
+
+  getRandomTags = () => {
+    this.http
+    .get('/api/v1/random_tags', {
+      place_id: this.state.currPlace.id
+    })
+    .then(res => {
+      let tags = res.data.results
+      this.setState({
+        tags,
+        showTags: true,
+        showAttr: true,
+      })
+    })
+    .catch(error => {
+      // error callback
+      l(error)
+    })
+  }
+
   getSuggTags = (currPlace) => {
     let params = { place_id: currPlace.id }
     this.http
@@ -72,9 +101,9 @@ export default class PlaceBlock extends Component {
         showSugTags: true, 
         suggTags 
       })
-      // if(this.state.randomMode){
-      //   this.getRandomTags()
-      // }
+      if(this.state.randomMode){
+        this.getRandomTags()
+      }
     })
   }
 
@@ -254,32 +283,33 @@ export default class PlaceBlock extends Component {
   render() {
     return (
       <div className="block-content">
-        {
-          this.state.places.length > 0 &&
-          <div className="row">
-            <div className="col-lg-7">
-              <div className="title">
-                <a href={"https://admin-staging.oyster.ai/places/edit/" + this.state.currPlace.id} rel="noopener noreferrer" target="_blank">
-                  {this.state.currPlace.name}
-                </a> 
-                <div className="sub-title">{this.state.currPlace.vicinity}</div>
-              </div>
-            </div>
-            <div className="col-lg-5">
-              <div className="search">
-                <AutoCompleteComponent
-                  inputProps={{
-                    className: 'pl-inp form-control',
-                    placeholder: 'FIND THE PLACE'
-                  }}
-                  type="place"
-                  // changeInput={this.placeInputChanged}
-                  optionSelected={this.placeChanged}
-                />
-              </div>
+        {this.state.places.length > 0 &&
+        <div className="title row">
+          <div className="col-lg-5">
+            <a href={"https://admin-staging.oyster.ai/places/edit/" + this.state.currPlace.id} 
+              rel="noopener noreferrer" 
+              target="_blank"
+            >
+              {this.state.currPlace.name}
+            </a> 
+            <div className="sub-title">{this.state.currPlace.vicinity}</div>
+          </div>
+          <div className="col-lg-7">
+            <div className="search">
+              <AutoCompleteComponent
+                inputProps={{
+                  className: 'pl-inp form-control',
+                  placeholder: 'FIND THE PLACE'
+                }}
+                type="place"
+                // changeInput={this.placeInputChanged}
+                optionSelected={this.placeChanged}
+              />
+              <button onClick={this.nextPlace} disabled={!this.state.tags.length} className="ml-3 btn btn-accent-outline">Next Place</button>
+              <button onClick={this.submit} disabled={!this.state.tags.length} className="ml-3 btn btn-accent">Submit</button>
             </div>
           </div>
-        }
+        </div>}
         <div className={this.state.showNotif?"shown notif":"notif"}>
           {
             this.state.notifType === "submit" &&
@@ -300,37 +330,38 @@ export default class PlaceBlock extends Component {
             </div>
           }
         </div>
-        <div className="body row">
-          <div className="col-lg-7">
-            {this.state.bots.length > 0 &&
-            <div className="b-section">
-              <div
-                className="bot-img"
-                style={{ backgroundImage: `url(${this.state.currBot.avatar})` }}
-              >
+        <div className="body">
+          <div className="row align-items-center">
+            <div className="col-lg-7">
+              {this.state.bots.length > 0 && <>
+                <div
+                  className="bot-img"
+                  style={{ backgroundImage: `url(${this.state.currBot.avatar})` }}
+                >
+                </div>
+                <select
+                  className="custom"
+                  value={this.state.currBot.id}
+                  onChange={this.botChanged}
+                >
+                  {this.state.bots.map(function (bot, idx) {
+                    return (
+                      <option key={bot.id} value={bot.id}>{bot.name}</option>
+                    )
+                  })}
+                </select>
+              </>}
+            </div>
+            <div className="col-lg-5 text-right">
+              <div className="custom-control custom-checkbox">
+                <input checked={this.state.randomMode ? "checked" : ""} onChange={this.toggleRandom} type="checkbox" className="custom-control-input" id={checkId_r} />
+                <label className="custom-control-label" htmlFor={checkId_r}>Random Mode</label>
               </div>
-              <select 
-                className="custom" 
-                value={this.state.currBot.id} 
-                onChange={this.botChanged}
-              >
-                {this.state.bots.map(function(bot, idx){
-                  return (
-                    <option key={bot.id} value={bot.id}>{bot.name}</option>
-                  )
-                })}
-              </select>
-            </div>}            
-            <div className="b-section">
-              <div className="mb-2">
-                {this.state.showTags && 
-                <TagsComponent
-                  type="default"
-                  tags={this.state.tags}
-                  removeTag={this.tagRemoved}
-                />}
-              </div>
-              <AutoCompleteComponent 
+            </div>
+          </div>
+          <div className="row">
+            <div className="col-lg-12">
+              <AutoCompleteComponent
                 inputProps={{
                   className: 'tag-inp form-control',
                   placeholder: 'Add tag ..',
@@ -342,69 +373,81 @@ export default class PlaceBlock extends Component {
                 optionSelected={this.tagAdded}
               />
             </div>
+          </div>
+          <div className="row">
+            <div className="col-lg-12">
+              <div className="tag-outer">
+                {(this.state.tags.length === 0) &&
+                  <div className="no-tags-plh">
+                    <img src="assets/start-add-plh.png" alt="" />
+                  </div>
+                }
+                {this.state.showTags &&
+                  <TagsComponent
+                    type="default"
+                    tags={this.state.tags}
+                    removeTag={this.tagRemoved}
+                  />}
+              </div>
+            </div>
+          </div>
+          <div className="row">
+            <div className="col-lg-7">
               {/* ShowAnim: <pre>{JSON.stringify(this.state.showAnim, null, 2)}</pre> */}
               {/* ShowAttr: <pre>{JSON.stringify(this.state.showAttr, null, 2)}</pre> */}
-            <div className="b-section">
-              {
-                this.state.showAnim &&
+              {this.state.showAnim &&
                 <div className="ctn-anim">
                   <div className="dot"></div>
                   <div className="dot"></div>
                   <div className="dot"></div>
                   <div className="dot"></div>
-                </div>
-              }{
-                this.state.showAttr &&
-                <SliderComponent att={this.state.att} changeAtt={this.attChanged}/>
-              }
+                </div>}
+              {this.state.showAttr &&
+                <SliderComponent att={this.state.att} changeAtt={this.attChanged}
+                />}
             </div>
-            <div className="b-section">
+          </div>
+          <div className="row">
+            <div className="col-lg-6">
               <div className="custom-control custom-checkbox">
-                <input checked={this.state.ml?"checked":""} onChange={this.mlChanged} type="checkbox" className="custom-control-input" id={checkId} />
+                <input checked={this.state.ml ? "checked" : ""} onChange={this.mlChanged} type="checkbox" className="custom-control-input" id={checkId} />
                 <label className="custom-control-label" htmlFor={checkId}>Turn On ML</label>
               </div>
             </div>
           </div>
-          <div className="col-lg-12">
-            <div className="b-section mt-0">
-              {this.state.showSugTags && 
-              <div>
-                <div className="sl-title">
-                  <div>
-                    Suggested Tags&nbsp;&nbsp;
-                    {!this.state.toggleSugTags && 
-                      <FontAwesomeIcon 
-                        style={{ cursor: "pointer", fontSize: 22 }}
-                        icon={faPlusSquare} 
-                        onClick={() => this.setState({ 
-                          toggleSugTags: !this.state.toggleSugTags
-                        })}
-                      />}
-                    {this.state.toggleSugTags && 
-                      <FontAwesomeIcon 
-                        style={{ cursor: "pointer", fontSize: 22 }}
-                        icon={faMinusSquare} 
-                        onClick={() => this.setState({ 
-                          toggleSugTags: !this.state.toggleSugTags
-                        })}
+          <div className="row">
+            <div className="col-lg-12">
+              {this.state.showSugTags && <>
+                <div className="tags-title">
+                  Suggested Tags&nbsp;&nbsp;
+                  {!this.state.toggleSugTags &&
+                    <FontAwesomeIcon
+                      style={{ cursor: "pointer", fontSize: 22 }}
+                      icon={faPlusSquare}
+                      onClick={() => this.setState({
+                        toggleSugTags: !this.state.toggleSugTags
+                      })}
                     />}
-                  </div>
+                  {this.state.toggleSugTags &&
+                    <FontAwesomeIcon
+                      style={{ cursor: "pointer", fontSize: 22 }}
+                      icon={faMinusSquare}
+                      onClick={() => this.setState({
+                        toggleSugTags: !this.state.toggleSugTags
+                      })}
+                    />}
                 </div>
                 {this.state.toggleSugTags &&
-                <TagsComponent
-                  type="suggested"
-                  tags={this.state.suggTags}
-                  clickedTag={this.tagSuggested}
-                />}
-              </div>}
-            </div>
-            <div className="b-section">
-              <button onClick={this.submit} className="btn btn-accent">Submit</button>
-              <button onClick={this.nextPlace} className="ml-3 btn btn-accent-outline">Next Place</button>
+                  <TagsComponent
+                    type="suggested"
+                    tags={this.state.suggTags}
+                    clickedTag={this.tagSuggested}
+                  />}
+              </>}
             </div>
           </div>
         </div>
-      </div>      
+      </div>
     )
   }
 }

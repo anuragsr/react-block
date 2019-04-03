@@ -16,13 +16,15 @@ export default class FilePreviewComponent extends Component {
 
   render(){
     return (
-      <div className="col-lg-12 up-files">
-        {this.state.arr.length?<>
-          <div className="mb-2">Attachments:</div>
-          {this.state.arr.map((el, i) => {
-            return <img key={i} src={el.image_url} height="100" alt=""/>          
-          })}
-        </>:"No files uploaded"}
+      <div className="row">
+        <div className="col-lg-12 up-files">
+          {this.state.arr.length?<>
+            <div className="mb-2">Attachments:</div>
+            {this.state.arr.map((el, i) => {
+              return <img key={i} src={el.image_url} height="100" alt=""/>          
+            })}
+          </>:"No files uploaded"}
+        </div>
       </div>
     )
   }

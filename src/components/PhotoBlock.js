@@ -23,8 +23,6 @@ export default class PhotoBlock extends Component {
     super(props)    
     this.http = new HttpService()
     this.state = {
-      // showNotif: false,
-      // notifType: "submit",
       categories: [],
       photos: [],
       currPhoto: {},
@@ -40,28 +38,35 @@ export default class PhotoBlock extends Component {
   }
 
   componentDidMount(){
-    this.http
-    .get('/api/v1/photos', {
-      limit: 10
-    }, auth)
+    this.getPhotos()
     .then(res => {
       let photos = res.data.results
       , currPhoto = photos[0]
       currPhoto.labels.forEach(lbl => lbl.edit = false)
-
-      l(photos)
+      currPhoto.key = Math.random()
+      // l(photos)
       this.setState({ photos, currPhoto })
+      this.getCategories()
+    })
+  }
 
-      this.http
-      .get('/api/v1/categories')
-      .then(res => {
-        let categories = res.data.results//, currCat = categories[0]
-        this.setState({ categories })
-      })
+  getPhotos = () => {
+    return this.http.get('/api/v1/photos', {
+      limit: 10
+    }, auth)
+  }
+  
+  getCategories = () => {
+    this.http
+    .get('/api/v1/categories')
+    .then(res => {
+      let categories = res.data.results//, currCat = categories[0]
+      this.setState({ categories })
     })
   }
 
   nextPhoto = () => {
+    this.child.destroyCanvas()
     let idx = withIndex(this.state.photos).filter(x => x.value.id === this.state.currPhoto.id)[0].index;
     // l(idx)
     if(idx === this.state.photos.length - 1){
@@ -69,7 +74,9 @@ export default class PhotoBlock extends Component {
     }else{
       idx++
     }
-    this.setState({ currPhotoIdx: idx, currPhoto: this.state.photos[idx] })
+    let currPhoto = this.state.photos[idx]
+    currPhoto.key = Math.random()
+    this.setState({ currPhotoIdx: idx, currPhoto })
   }
 
   placeSelected = currPlace => this.setState({ currPlace })
@@ -86,15 +93,95 @@ export default class PhotoBlock extends Component {
 
     if(photos.length){
       currPhoto = photos[0]
-      // currPhoto.labels.forEach(lbl => lbl.edit = false)
-      this.setState({ showingUploaded: true, currPhotoIdx: 0, photos, currPhoto })      
+      currPhoto.key = Math.random()
+      this.setState({ 
+        photos, 
+        currPhoto,
+        currPhotoIdx: 0,
+        showingUploaded: true,
+      }, () => {
+        // Here we call ML and process the photos in the background
+        this.state.ml && this.processUploads()
+      })      
     }
-
-    // Here we call ML and process the photos in the background
-    // if(this.state.ml)
-      this.processUploads()
     
-    this.setState({ uploadedFiles: [], showUpload: false })
+    this.setState({ 
+      uploadedFiles: [], 
+      showUpload: false 
+    })
+  }
+
+  processUploads = () => {
+    let index = 0
+    , photos = this.state.photos
+    , currPhoto
+    , request = () => {
+      let file = photos[index]
+      , req = { newBaseUrl: true }
+      , fd = new FormData()
+      req.file = fd
+      
+      // Instantiate copy of file, giving it new name (to avoid large image_url sending). Takes roughly same amount of time
+      // let fileCopy = new File([file], file.name, { type: file.type })
+      // fd.append('file', fileCopy)
+
+      if(file.fromUrl){
+        fd.append('file', file.image_url)
+      }else{
+        fd.append('file', file)
+      }
+
+      return this.http
+      .post('http://18.202.217.216:5000/category', req)
+      .then(res => {
+        // l("Category Result:", res) 
+        if (res.data.category)
+          file.category = { name: Object.keys(res.data.category[0])[0] }
+        
+        this.http
+        .post('http://18.202.217.216:5000/detect', req)
+        .then(res => {
+          // l("Labels Result:", res) 
+          if (typeof res.data === "object") {
+            let response = JSON.parse(res.data.result)
+            , labels = []
+            // l(response)
+            response.forEach(r => {
+              r && labels.push({
+                edit: false,
+                form: "Rectangle",
+                id: 0,
+                label: {
+                  id: 0,
+                  name: r.label,
+                  tag: null
+                },
+                object_coords: r.float_rect.map(c => c.toString())
+              })
+            })
+            
+            file.labels = labels
+            // l(file)
+          }
+          // l(this.state.currPhotoIdx)
+          currPhoto = photos[this.state.currPhotoIdx]
+          currPhoto.key = Math.random()
+          
+          this.setState({
+            photos,
+            currPhoto,
+          }, () => {
+            // l(this.state)
+          })
+  
+          index++
+          if (index >= photos.length) return
+          return request()
+        })
+      })
+
+    }
+    return request()
   }
 
   cancelUpload = () => this.setState({ uploadedFiles: [], showUpload: false })
@@ -104,27 +191,6 @@ export default class PhotoBlock extends Component {
     this.setState( state => ({
       uploadedFiles: state.uploadedFiles.concat(...files)    
     }))
-  }
-
-  processUploads = () => {
-    // axios.get(...)
-    // .then((response) => {
-    //   return axios.get(...); // using response.data
-    // })
-    // .then((response) => {
-    //   console.log('Response', response);
-    // });
-
-    this.http
-    .post('http://18.202.217.216:5000/detect', {
-      files: {
-        file: this.state.currPhoto
-      },
-      newBaseUrl: true
-    })
-    .then(res => {
-      l(res)
-    })
   }
 
   handleCatUpdate = cat => {
@@ -145,28 +211,48 @@ export default class PhotoBlock extends Component {
 
   submit = () => {
     let im = this.state.currPhoto
-    , request = {
-      id: im.id,
-      labels: im.labels,
-      category: im.category
-    }
-    
-    if(im.fromURL){
-      request.image_url = im.image_url
-    } else{
-      request.files = {
-        file: im
-      }
-    }
+    , req
 
-    l(request)
+    if (!im.uploaded){
+      req = {
+        id: im.id,
+        labels: im.labels,
+        category: im.category
+      }
+    }else{
+      req = new FormData()
+      let tmp = {...im}
+      delete tmp.id
+      // l(tmp)
+      req.append('file', tmp)
+      // if (im.fromUrl) {
+      //   req.append('file', im.image_url)
+      // }
+
+      // req.append('id', typeof im.id === "string" ? null : im.id)
+      // im.labels.forEach(l => {        
+      //   req.append('labels[]', l)
+      // })
+      // req.append('category', im.category)
+    }
 
     this.http
-    .put('/api/v1/submit_photo', request, auth)    
+    .put('/api/v1/submit_photo', req, auth)
     .then(res => {
       l(res)
-      if(res.status === 200){
-        this.nextPhoto()
+      if (res.status === 200) {
+        if(this.state.currPhotoIdx < this.state.photos.length - 1) {
+          this.nextPhoto()
+        } else {
+          this.getPhotos()
+          .then(res => {
+            let photos = res.data.results
+            , currPhoto = photos[0]
+            currPhoto.labels.forEach(lbl => lbl.edit = false)
+            currPhoto.key = Math.random()
+            this.setState({ photos, currPhoto })
+          })
+        }
       }
     })
   }
@@ -179,16 +265,15 @@ export default class PhotoBlock extends Component {
     , showingUploaded = this.state.showingUploaded
 
     return (
-      <div className="block-content">        
-        {
-          photos.length > 0 && <>
-          <div style={{display: !this.state.showUpload?"block":"none" }}>
-            <div className="row px-4">
+      <div className="block-content">
+        {photos.length > 0 && <>
+          <div style={{ display: !this.state.showUpload?"block":"none" }}>
+            <div className="row">
               <div className="col-lg-8">
                 {showingUploaded && <div className="counter">
                   {currPhotoIdx + 1} of {photos.length}
                 </div>}
-                <div className="title">
+                <div className="title photo">
                   <span title={photo.name}>{photo.name}</span>
                 </div>
                 {photo.ml_check_date !== null &&
@@ -203,13 +288,13 @@ export default class PhotoBlock extends Component {
               </div>
             </div>
             <div className="body">           
-              <div className="row b-section">
+              <div className="row">
                 <div className="col-lg-6">
                   <img src="assets/up-icon.png" alt=""/>
                   <a className="up-link" href="javascript:void(0)" onClick={this.addPhoto}>Upload Photos</a>
                 </div>
               </div>
-              <div className="row b-section">
+              <div className="row">
                 <div className="col-lg-6">
                   {/* WithPlace: <pre>{JSON.stringify(this.props.withPlace, null, 2)}</pre> */}
                   {/* Place: <pre>{JSON.stringify(this.state.currPlace, null, 2)}</pre> */}
@@ -232,39 +317,41 @@ export default class PhotoBlock extends Component {
                 </div>
               </div>
               <ImageComponent
+                onRef={ref => (this.child = ref)}
                 image={photo}
                 categories={categories}
                 imageUpdated={this.handleImageUpdate}
                 catUpdated={this.handleCatUpdate}
               />
-              <div className="b-section">
-                <div className="custom-control custom-checkbox">
-                  <input checked={this.state.ml?"checked":""} onChange={this.mlChanged} type="checkbox" className="custom-control-input" id={checkId} />
-                  <label className="custom-control-label" htmlFor={checkId}>Turn On ML</label>
+              <div className="row">
+                <div className="col-lg-6">
+                  <div className="custom-control custom-checkbox">
+                    <input checked={this.state.ml?"checked":""} onChange={this.mlChanged} type="checkbox" className="custom-control-input" id={checkId} />
+                    <label className="custom-control-label" htmlFor={checkId}>Turn On ML</label>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div style={{display: this.state.showUpload?"block":"none" }}>
-            <div className="title">Upload Photos</div>
-            <div className="body">
-              <div className="row">
-                <FileInputComponent
-                  handleFiles={this.filesUploaded}
-                />
-                <FilePreviewComponent 
-                  images={this.state.uploadedFiles}
-                />
+          <div style={{ display: this.state.showUpload?"block":"none" }}>
+            <div className="title row">
+              <div className="col-lg-6">
+                Upload Photos
               </div>
-              <div className="b-section">
-                <button onClick={this.doUpload} className="btn btn-accent">Upload</button>
-                <button onClick={this.cancelUpload} className="ml-3 btn btn-accent-outline">Cancel</button>
+            </div>
+            <div className="body">
+              <FileInputComponent handleFiles={this.filesUploaded} />
+              <FilePreviewComponent images={this.state.uploadedFiles}/>
+              <div className="row">
+                <div className="col-lg-12">
+                  <button onClick={this.doUpload} className="btn btn-accent">Upload</button>
+                  <button onClick={this.cancelUpload} className="ml-3 btn btn-accent-outline">Cancel</button>
+                </div>
               </div>
             </div>
           </div>
-          </>
-        }
+        </>}
       </div>
     )
   }

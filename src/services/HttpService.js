@@ -7,7 +7,6 @@ let apiHost = '', call
 export default class HttpService {
   
   constructor(){
-    l()    
     if(mock){
       this.initMock()     
     }else{
@@ -176,16 +175,29 @@ export default class HttpService {
       params,
       auth
     }
+    
+    // if (params && params.newBaseUrl) {
+    //   config.url = url      
+    //   delete config.params.newBaseUrl
+    // }
+
     return this.doRequest(config)
   }
   
   post(url, data, auth) {
     let config = {
       method: "post",
-      url: data.newBaseUrl?url:apiHost + url,
+      url: apiHost + url,
       data,
       auth
     }
+
+    if (data.newBaseUrl) {
+      config.url = url
+      config.data = data.file
+      delete config.data.newBaseUrl
+    }
+    
     return this.doRequest(config)
   }
 

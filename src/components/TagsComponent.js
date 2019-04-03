@@ -33,19 +33,23 @@ export default class TagsComponent extends Component {
 
   render(){
     return (
-      <div>
-        <ul className={this.props.type==="default"?"tag-ctn":"tag-ctn sug"}>
-          {this.state.items.map((item, i) => 
-            <li onClick ={() => this.handleClick(item)} key={i} className={item.optional?"optional":""}>
-              <div>
-                <img src={item.image} alt="" />
-                {this.getDisplayName(item.full_name)}
-                <span onClick={() => this.handleRemove(item)}>{this.props.type==="default" && <span>&times;</span>}</span>
-              </div>
-            </li>
-          )}
-        </ul>        
-      </div>
+      <ul className={this.props.type==="default"?"tag-ctn":"tag-ctn sug"}>
+        {this.state.items.map((item, i) => {
+          let currImg
+          if (this.props.type === "default"){
+            currImg = item.image !== null ? item.image : "assets/tag-plh.png"
+          } else{
+            currImg = item.image !== null ? item.image : "assets/tag-plh-sug.png"
+          }
+          return <li onClick={() => this.handleClick(item)} key={i} className={item.optional ? "optional" : ""}>
+            <div>
+              <img src={currImg} alt="" />
+              {this.getDisplayName(item.full_name)}
+              <span onClick={() => this.handleRemove(item)}>{this.props.type === "default" && <span>&times;</span>}</span>
+            </div>
+          </li>
+        })}
+      </ul>
     )
   }
 }

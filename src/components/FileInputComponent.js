@@ -1,9 +1,11 @@
 import React, { Component } from 'react'
+import HttpService from '../services/HttpService'
 import { l, rand } from '../helpers/common'
 
 export default class FileInputComponent extends Component {
   constructor(props) {
     super(props)
+    this.http = new HttpService()
     this.dropInput = React.createRef()
     this.fileInput = React.createRef()
     this.state = {
@@ -63,7 +65,6 @@ export default class FileInputComponent extends Component {
   }
   
   prepareForUpload = files => {
-    l(files)
     let count = 0
     Array.from(files).forEach(file => {
       //Only pics
@@ -76,7 +77,8 @@ export default class FileInputComponent extends Component {
           file.image_url = event.target.result
           file.ml_check_date = null
           file.labels = []
-          // file.id = rand(5)
+          file.id = rand(5)
+          file.uploaded = true
           if(count === files.length)
             this.props.handleFiles(files)
         }
@@ -94,33 +96,36 @@ export default class FileInputComponent extends Component {
     , split = url.split("/")
 
     this.props.handleFiles([{ 
-      // id: rand(5),
+      id: rand(5),
       name: split[split.length - 1],
       image_url: url, 
       ml_check_date: null,
       labels: [],
-      fromURL: true
+      fromUrl: true,
+      uploaded: true,
     }])
     this.setState({ loadUrl: "" })
   }
 
   render(){
     return (
-      <div className="col-lg-6 b-section">
-        <div ref={this.dropInput} className="dropzone">
-          <img src="assets/dz-img.png" alt=""/>
-          <input className="inputfile" id="file" type="file" multiple
-            ref={this.fileInput}
-            onChange={() => this.prepareForUpload(this.fileInput.current.files)}
-          />
-          <div>
-            Drop any .jpg, .png or <label htmlFor="file">browse your files</label>
+      <div className="row">
+        <div className="col-lg-6">
+          <div ref={this.dropInput} className="dropzone">
+            <img src="assets/dz-img.png" alt=""/>
+            <input className="inputfile" id="file" type="file" multiple
+              ref={this.fileInput}
+              onChange={() => this.prepareForUpload(this.fileInput.current.files)}
+            />
+            <div>
+              Drop any .jpg, .png or <label htmlFor="file">browse your files</label>
+            </div>
           </div>
-        </div>
-        <div className="url-inp">
-          or enter remote photo URL<br/>
-          <input value={this.state.loadUrl} onChange={this.loadUrlChanged} type="text" className="form-control tag-inp" placeholder="Place URL here .."/>
-          <img onClick={this.doLoadUrl} src="assets/btn-remote.png" alt=""/>
+          <div className="url-inp">
+            or enter remote photo URL<br/>
+            <input value={this.state.loadUrl} onChange={this.loadUrlChanged} type="text" className="form-control tag-inp" placeholder="Place URL here .."/>
+            <img onClick={this.doLoadUrl} src="assets/btn-remote.png" alt=""/>
+          </div>
         </div>
       </div>
     )

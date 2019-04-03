@@ -244,11 +244,12 @@ export default class ImageComponent extends Component {
   }
 
   componentDidMount(){
+    this.props.onRef(this)
     window.addEventListener('resize', this.resizeObjects)
   }
 
   componentWillReceiveProps = nextProps => {
-    // l("Again")
+    // l("Next Props")
     if(nextProps.image.category){
       let currCat = nextProps.image.category.name
       this.setState({ currCat })
@@ -262,12 +263,16 @@ export default class ImageComponent extends Component {
     this.drawObjects()
   }
   
-  createCanvas = () => {
+  destroyCanvas = () => {
     if(this.app){
       imgRef.current.removeChild(this.app.view)
       this.app.destroy()
       this.app = null
     }
+  }
+
+  createCanvas = () => {
+    this.destroyCanvas()
     this.app = new PIXI.Application(
       imgRef.current.clientWidth, 
       imgRef.current.clientHeight, {
@@ -895,9 +900,9 @@ export default class ImageComponent extends Component {
         
     return (
       <div className="row">
-        <div className="b-section col-lg-8">
-          <div className="row">            
-            <div className="col-2 pl-0">
+        <div className="col-lg-8">
+          <div className="row pb-0">
+            <div className="col-2 pr-0">
               <div className={"obj-sel " + (this.state.adding === "polygon"?"active":"")} onClick={() => this.startAdding('polygon')}>
                 <img src="assets/icon-random.png" alt=""/>
                 {this.state.adding === 'polygon' && <div className="ctn-add-action">
@@ -922,17 +927,31 @@ export default class ImageComponent extends Component {
             </div>
             <div className="col-10 pl-0">
               <div ref={imgRef} className={"ctn-photo " + (this.state.adding !== ""?"adding":"")}>
+                <div className="img-loader h-100 w-100 position-absolute">
+                  <svg x="0px" y="0px" width="40px" height="40px" viewBox="0 0 50 50">
+                    <path d="M25.251,6.461c-10.318,0-18.683,8.365-18.683,18.683h4.068c0-8.071,6.543-14.615,14.615-14.615V6.461z">
+                      <animateTransform attributeType="xml"
+                        attributeName="transform"
+                        type="rotate"
+                        from="0 25 25"
+                        to="360 25 25"
+                        dur="0.6s"
+                        repeatCount="indefinite" />
+                    </path>
+                  </svg>
+                </div>
                 <img 
-                  src={image.image_url} 
+                  alt={image.key}
+                  key={image.key}
+                  src={image.image_url}
                   onLoad={this.imageLoaded}
                   width="100%"
-                  alt=""
                 />
               </div>
             </div>        
           </div>
         </div>
-        <div className="b-section col-lg-4 ctn-cat">
+        <div className="col-lg-4 ctn-cat">
           <div>Photo category</div>
           {categories.length > 0 &&
           <select 
