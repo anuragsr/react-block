@@ -1,11 +1,9 @@
 import React, { Component } from 'react'
-import HttpService from '../services/HttpService'
 import { l, rand } from '../helpers/common'
 
 export default class FileInputComponent extends Component {
   constructor(props) {
     super(props)
-    this.http = new HttpService()
     this.dropInput = React.createRef()
     this.fileInput = React.createRef()
     this.state = {
