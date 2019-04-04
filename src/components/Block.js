@@ -3,7 +3,7 @@ import Switch from 'react-switch'
 import TagBlock from './TagBlock'
 import PlaceBlock from './PlaceBlock'
 import PhotoBlock from './PhotoBlock'
-import { l } from '../helpers/common';
+import { l } from '../helpers/common'
 
 export default class Block extends Component {
   

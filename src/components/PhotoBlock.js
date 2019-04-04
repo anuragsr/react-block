@@ -4,16 +4,16 @@ import AutoCompleteComponent from './AutoCompleteComponent'
 import ImageComponent from './ImageComponent'
 import FileInputComponent from './FileInputComponent'
 import HttpService from '../services/HttpService'
-import { l, rand, withIndex, getFormattedTime } from '../helpers/common'
+import { l, auth, rand, withIndex, getFormattedTime } from '../helpers/common'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCheck } from '@fortawesome/free-solid-svg-icons'
 import FilePreviewComponent from './FilePreviewComponent';
 
-const auth = {
-  username: 'ml_page',
-  password: '}XhE9p2/FQjx9.e'
-}
+// const auth = {
+//   username: 'ml_page',
+//   password: '}XhE9p2/FQjx9.e'
+// }
 const checkId = rand(5)
 // const checkId_p = rand(5)
 
@@ -44,7 +44,7 @@ export default class PhotoBlock extends Component {
       , currPhoto = photos[0]
       currPhoto.labels.forEach(lbl => lbl.edit = false)
       currPhoto.key = Math.random()
-      // l(photos)
+      l(photos)
       this.setState({ photos, currPhoto })
       this.getCategories()
     })

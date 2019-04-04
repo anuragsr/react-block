@@ -3,7 +3,7 @@ import AutoCompleteComponent from './AutoCompleteComponent'
 import TagsComponent from './TagsComponent'
 import SliderComponent from './SliderComponent'
 import HttpService from '../services/HttpService'
-import { l, rand, withIndex } from '../helpers/common'
+import { l, auth, rand, withIndex } from '../helpers/common'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlusSquare, faMinusSquare } from '@fortawesome/free-regular-svg-icons'
@@ -41,7 +41,7 @@ export default class PlaceBlock extends Component {
 
   componentDidMount(){
     this.http
-    .get('/api/v1/bots', { parallel: true })
+    .get('/api/v1/bots')
     .then(res => {
       let bots = res.data.results, currBot = bots[0]
       this.setState({ bots, currBot })
@@ -49,10 +49,7 @@ export default class PlaceBlock extends Component {
       .get('/api/v1/places', {
         query: "",
         approved: true
-      },{
-        username: 'ml_page',
-        password: '}XhE9p2/FQjx9.e'
-      })
+      }, auth)
       .then(res => {
         let places = res.data.results
         l(places)

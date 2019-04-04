@@ -41,7 +41,7 @@ export default class TagBlock extends Component {
 
   componentDidMount = () => {
     this.http
-    .get('/api/v1/bots', { parallel: true })
+    .get('/api/v1/bots')
     .then(res => {
       let bots = res.data.results, currBot = bots[0]
       this.setState({ bots, currBot })      

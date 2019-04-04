@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import Autosuggest from 'react-autosuggest'
 import AutosuggestHighlightParse from 'autosuggest-highlight/parse'
 import HttpService from '../services/HttpService'
-import { l } from '../helpers/common'
+import { l, auth } from '../helpers/common'
 
 const getIndices = (str, searchStr, caseSensitive) => {
   let searchStrLen = searchStr.length
@@ -67,40 +67,25 @@ export default class AutoCompleteComponent extends Component {
   }
 
   getSuggestions = value => {
-    let showAnim = true, showAttr = false, url, params, auth
+    let showAnim = true, showAttr = false, url
+    , params = {
+      query: value,
+      series: true,
+    }
+
     if(this.props.changeInput)
       this.props.changeInput(showAnim, showAttr)
 
-    auth = {
-      username: 'ml_page',
-      password: '}XhE9p2/FQjx9.e'
-    }
-
     if(this.props.type === "tag"){
+      url = '/api/v1/tags'
       if(this.props.parent === "place"){
-        url = '/api/v1/tags'
-        params = { 
-          query: value,
-          place_id: this.props.placeId
-        }
-      }else if(this.props.parent === "tag"){
-        url = '/api/v1/tags'
-        params = { 
-          query: value
-        }
+        params.place_id = this.props.placeId        
       }
     }else if(this.props.type === "place"){
       url = '/api/v1/places'
-      params = { 
-        query: value,
-        from_ml_page: true
-        // approved: true
-      }
+      params.from_ml_page = true
     }else if(this.props.type === "city"){
       url = '/api/v1/cities'
-      params = { 
-        query: value
-      }
     }
 
     this.http

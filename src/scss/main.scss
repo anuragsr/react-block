@@ -2,6 +2,41 @@ body{
   background: #f5f7fa;
 }
 
+.navbar{
+  box-shadow: 0 10px 20px 0 rgba($b, .1);
+  font-family: $heebo-r;
+  z-index: 0;
+  input{
+    color: $dz-bdr;
+    border-color: $dz-bdr;
+    &::-webkit-input-placeholder,
+    &:-ms-input-placeholder,
+    &:-moz-placeholder,
+    &::-moz-placeholder {
+      color: $dz-bdr;
+    }
+  }
+  .btn-accent, .btn-accent-outline {
+    padding: .4rem 2rem;
+  }
+}
+
+.error{
+  color: $w;
+  background: $err-bg;
+  font-family: $heebo-r;
+  position: relative;
+  z-index: 1;
+  span{
+    font-weight: 500
+  }
+}
+
+.logged-in{
+  span{
+    color: $sc;
+  }
+}
 // input:focus{
 //   outline: none;
 // }
