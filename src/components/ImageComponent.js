@@ -153,6 +153,29 @@ class Circle extends PIXI.Graphics {
   }
 }
 
+class NumberCircle extends PIXI.Graphics {
+  constructor(params) {
+    super()
+    this.c = params.c
+    this.r = params.r || 1
+    this.es = params.edgeSize || 1
+    this.lc = params.lineColor || 0x000000
+    this.fc = params.fillColor || 0x000000
+    this.fo = params.opacity || 1
+    this.draw()
+  }
+
+  draw = () => {
+    this
+    .clear()
+    .lineStyle(this.es, this.lc, 1)
+    .beginFill(this.fc, this.fo)
+    .drawCircle(this.c.x, this.c.y, this.r)
+    .endFill()
+    .closePath()
+  }
+}
+
 let randHex = () => {
   return "0x" + "000000".replace(/0/g, () => {
     return (~~(Math.random()*16)).toString(16)
@@ -210,6 +233,23 @@ let randHex = () => {
   }
 
   return returnVar
+}
+, getGraphicCenter = gr => {
+  let center
+  
+  if(gr.type === "circle"){
+    center = gr.c
+  }else{
+    center = gr.sq.reduce((a, b) => {
+      return { x: a.x + b.x, y: a.y + b.y }
+    }, { x: 0, y: 0 })
+    
+    let len = gr.sq.length
+    center.x/=len
+    center.y/=len
+  }
+
+  return center
 }
 , polyArr = []
 , imgRef, bg
@@ -417,10 +457,20 @@ export default class ImageComponent extends Component {
     let height = imgRef.current.clientHeight
     , width = imgRef.current.clientWidth
     , tempPoly = this.state.tempPoly
-    , labelData
+    , labelData = {
+      edit: false,
+      active: false,
+      form: type,
+      id: 0,
+      label: {
+        id: 0,
+        name: "new label",
+        tag: null
+      },
+    }
 
     switch(type){
-      case 'rectangle':
+      case 'Rectangle':
         let tmp = []
         tempPoly.sq.forEach((s, idx) => {
           if(idx%2 === 0){
@@ -430,54 +480,23 @@ export default class ImageComponent extends Component {
             )
           }            
         })
-        
-        labelData = {
-          edit: false,
-          form: "Rectangle",
-          id: 0,
-          label: {
-            id: 0, 
-            name: "new label", 
-            tag: null
-          },
-          object_coords: tmp
-        }
+        labelData.object_coords = tmp        
       break
       
-      case 'polygon':
-        labelData = {
-          edit: false,
-          form: "Polygon",
-          id: 0,
-          label: {
-            id: 0, 
-            name: "new label", 
-            tag: null
-          },
-          object_coords: tempPoly.sq.map(s => {
-            return { x: s.x, y: s.y }
-          }).reduce((a, b) => {
-            return a.concat(...[(b.x/width).toString(), (b.y/height).toString()])
-          }, [])
-        }
+      case 'Polygon':
+        labelData.object_coords = tempPoly.sq.map(s => {
+          return { x: s.x, y: s.y }
+        }).reduce((a, b) => {
+          return a.concat(...[(b.x / width).toString(), (b.y / height).toString()])
+        }, [])
       break
         
       default: 
-        labelData = {
-          edit: false,
-          form: "Circle",
-          id: 0,
-          label: {
-            id: 0, 
-            name: "new label", 
-            tag: null
-          },
-          object_coords: [
-            (tempPoly.c.x/width).toString(), 
-            (tempPoly.c.y/height).toString(),
-            (tempPoly.r/width).toString()
-          ]
-        }
+        labelData.object_coords = [
+          (tempPoly.c.x / width).toString(),
+          (tempPoly.c.y / height).toString(),
+          (tempPoly.r / width).toString()
+        ]
       break
     }
 
@@ -495,7 +514,7 @@ export default class ImageComponent extends Component {
   }
 
   drawObjects = () => {
-    this.props.image.labels.forEach(lbl => {
+    this.props.image.labels.forEach((lbl, idx) => {
       let form = lbl.form.toLowerCase()
       , params
       , poly
@@ -530,9 +549,14 @@ export default class ImageComponent extends Component {
         break
       }
 
+      params.idx = idx + 1
+      poly = this.drawShape(params)
       lbl.color = hexJStoCSS(color)
-      poly = this.drawShape(params)          
+      lbl.edit = false
+      lbl.active = false
       poly.labelData = lbl
+
+      this.addNumberLabel(poly, params.idx)
       polyArr.push(poly)
     })
 
@@ -644,11 +668,6 @@ export default class ImageComponent extends Component {
     this.ctn.addChild(graphic)
     graphic.type = graphicType
     graphic.interactive = true
-    graphic
-    .on('pointerdown', onDragStart)
-    .on('pointerup', onDragEnd)
-    .on('pointerupoutside', onDragEnd)
-    .on('pointermove', onDragMove)
 
     if(eventType === 'shape'){
       graphic.buttonMode  = true
@@ -658,15 +677,39 @@ export default class ImageComponent extends Component {
       else
         graphic.cursor = "move"
     }
+    
+    graphic
+    .on('pointerdown', onDragStart)
+    .on('pointerup', onDragEnd)
+    .on('pointerupoutside', onDragEnd)
+    .on('pointermove', onDragMove)
 
     function onDragStart(e){
       // l(e)
-      // store a reference to the data
-      // the reason for this is because of multitouch
-      // we want to track the movement of this particular touch
-      this.data = e.data
-      this.alpha = 0.5
-      this.dragging = true
+      let ld
+      switch(eventType){
+        case 'point':
+          ld = this.parent.labelData
+          if (!ld || (ld && ld.active)) {
+            this.data = e.data
+            this.alpha = 0.5
+            this.dragging = true
+          }
+        break
+        
+        default:
+          ld = this.labelData
+          if (ld && !ld.active){
+            polyArr.forEach(p => p.labelData.active = false)
+            ld.active = true
+          }
+          else{
+            this.data = e.data
+            this.alpha = 0.5
+            this.dragging = true
+          }
+        break
+      }
     }
 
     function onDragEnd(){
@@ -780,6 +823,10 @@ export default class ImageComponent extends Component {
               s.position.y+= this.data.originalEvent.movementY
             })
             this.draw()
+            if(this.children.length){
+              let center = getGraphicCenter(this)
+              this.children[0].position.set(center.x, center.y)
+            }
           break
 
           default:
@@ -821,10 +868,46 @@ export default class ImageComponent extends Component {
               // Free movement - move only single point
             }
             this.parent.draw()
+            if (this.parent.children.length) {
+              let center = getGraphicCenter(this.parent)
+              this.parent.children[0].position.set(center.x, center.y)
+            }
           break
         }
       }
     }
+  }
+
+  addNumberLabel = (graphic, index) => {
+    let circCtn = new PIXI.Container()
+    , center = getGraphicCenter(graphic)
+    graphic.addChild(circCtn)      
+
+    if (graphic.type !== "circle")
+      circCtn.pivot.set(-8, -8)
+
+    circCtn.position.x = center.x
+    circCtn.position.y = center.y
+
+    let circ = new NumberCircle({
+      c: { x: 0, y: 0 },
+      r: 15,
+      edgeSize: 2,
+      lineColor: 0x000000,
+      fillColor: 0xffffff,
+      opacity: 1
+    })
+    circCtn.addChild(circ)
+
+    let text = new PIXI.Text(index, new PIXI.TextStyle({
+      fontSize: 14,
+      fontWeight: "bold",
+      align: "center",
+      wordWrap: true
+    }))
+
+    text.anchor.set(0.5, 0.5)
+    circCtn.addChild(text)
   }
 
   catChanged = e => {
@@ -849,6 +932,8 @@ export default class ImageComponent extends Component {
 
       this.props.imageUpdated(tempPoly.labelData, "add")
       polyArr.push(tempPoly)
+      
+      this.addNumberLabel(tempPoly, polyArr.length)
       this.resetForAdding()
     })
   }
@@ -858,10 +943,10 @@ export default class ImageComponent extends Component {
     this.setState({ tempLblName: lbl.label.name })
   }
 
-  deleteLabel = lbl => {  
+  deleteLabel = lbl => {      
     let tmpPolyArr = []
     polyArr.forEach(p => {
-      if (p.labelData.id === lbl.id){
+      if (p.labelData === lbl){
         p.sq.forEach(s => this.ctn.removeChild(s))
         this.ctn.removeChild(p)
       } else{
@@ -893,6 +978,30 @@ export default class ImageComponent extends Component {
     this.setState({ tempLblName: lbl.label.name })
   }
 
+  makeImmutable = () => {
+    polyArr.forEach(p => p.labelData.active = false)
+  }
+
+  labelClicked = lbl => {
+    let tmp
+    polyArr.forEach(p => {
+      if (p.labelData === lbl){
+        // Removing from ctn, to add at end later
+        tmp = p
+        this.ctn.removeChild(p)
+        p.sq.forEach(s => this.ctn.removeChild(s))
+      }else{
+        p.labelData.active = false
+      }
+    })
+    tmp.labelData.active = true
+    tmp.sq.forEach(s => {
+      this.ctn.addChild(s)
+      s.parent = tmp
+    })
+    this.ctn.addChild(tmp)
+  }
+
   render(){
     const image = this.props.image
     , labels = image.labels
@@ -906,21 +1015,21 @@ export default class ImageComponent extends Component {
               <div className={"obj-sel " + (this.state.adding === "polygon"?"active":"")} onClick={() => this.startAdding('polygon')}>
                 <img src="assets/icon-random.png" alt=""/>
                 {this.state.adding === 'polygon' && <div className="ctn-add-action">
-                  <FontAwesomeIcon onClick={e => this.doneAdding(e, 'polygon')} icon={faCheck} style={{ color: 'green' }} />
+                  <FontAwesomeIcon onClick={e => this.doneAdding(e, 'Polygon')} icon={faCheck} style={{ color: 'green' }} />
                   <FontAwesomeIcon onClick={e => this.cancelAdd(e)} icon={faTimes} style={{ color: 'red' }} />
                 </div>}
               </div>
               <div className={"obj-sel " + (this.state.adding === "rectangle"?"active":"")} onClick={() => this.startAdding('rectangle')}>
                 <img src="assets/icon-square.png" alt=""/>
                 {this.state.adding === 'rectangle' && <div className="ctn-add-action">
-                  <FontAwesomeIcon onClick={e => this.doneAdding(e, 'rectangle')} icon={faCheck} style={{ color: 'green' }} />
+                  <FontAwesomeIcon onClick={e => this.doneAdding(e, 'Rectangle')} icon={faCheck} style={{ color: 'green' }} />
                   <FontAwesomeIcon onClick={e => this.cancelAdd(e)} icon={faTimes} style={{ color: 'red' }} />
                 </div>}
               </div>
               <div className={"obj-sel " + (this.state.adding === "circle"?"active":"")} onClick={() => this.startAdding('circle')}>
                 <img src="assets/icon-circle.png" alt=""/>
                 {this.state.adding === 'circle' && <div className="ctn-add-action">
-                  <FontAwesomeIcon onClick={e => this.doneAdding(e, 'circle')} icon={faCheck} style={{ color: 'green' }} />
+                  <FontAwesomeIcon onClick={e => this.doneAdding(e, 'Circle')} icon={faCheck} style={{ color: 'green' }} />
                   <FontAwesomeIcon onClick={e => this.cancelAdd(e)} icon={faTimes} style={{ color: 'red' }} />
                 </div>}
               </div>
@@ -970,6 +1079,7 @@ export default class ImageComponent extends Component {
             {labels.map((lbl, idx) => {
               return (
                 <div 
+                  onClick={() => this.labelClicked(lbl)}
                   className="lbl-item" 
                   key={idx} 
                   style={{ 
@@ -984,19 +1094,19 @@ export default class ImageComponent extends Component {
                       value={this.state.tempLblName} 
                       onChange={this.tempLblNameChanged}                        
                     />
-                    <span onClick={() => this.doEditLabel(lbl)}>
+                    <span onClick={e => {e.stopPropagation(); this.doEditLabel(lbl)}}>
                       <FontAwesomeIcon icon={faSave} />
                     </span>
-                    <span onClick={() => this.cancelEdit(lbl)}>
+                    <span onClick={e => {e.stopPropagation(); this.cancelEdit(lbl)}}>
                       <FontAwesomeIcon icon={faTimes} />
                     </span>
                   </>}
                   {!lbl.edit && <>
                     <span style={{ color: "#2c405a" }}>{lbl.label.name}</span>
-                    <span onClick={() => this.editLabel(lbl)}>
+                    <span onClick={e => {e.stopPropagation(); this.editLabel(lbl)}}>
                       <FontAwesomeIcon icon={faEdit} />
                     </span>
-                    <span onClick={() => this.deleteLabel(lbl)}>
+                    <span onClick={e => {e.stopPropagation(); this.deleteLabel(lbl)}}>
                       <FontAwesomeIcon icon={faTrash} />
                     </span>
                   </>}

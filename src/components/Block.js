@@ -9,13 +9,17 @@ export default class Block extends Component {
   
   constructor(props) {
     super(props)
-    this.state = { show: this.props.show }
+    this.state = { 
+      show: this.props.show,
+    }
   }
   
   toggled = show => {
     this.setState({ show })
     this.props.handleToggle(show, this.props.idx)
   }
+
+  handlePlaceChanged = place => this.props.placeChanged(place)
 
   render() {
     return (
@@ -40,9 +44,9 @@ export default class Block extends Component {
         {
           this.state.show && 
           (
-            this.props.type === "Place"?<PlaceBlock/>
+            this.props.type === "Place"?<PlaceBlock placeChanged={this.handlePlaceChanged}/>
             :this.props.type === "Tag"?<TagBlock/>
-            :<PhotoBlock withPlace={this.props.withPlace}/>
+            :<PhotoBlock placeObj={this.props.placeObj}/>
           )
         }
       </div>      

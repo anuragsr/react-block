@@ -10,6 +10,7 @@ import { faPlusSquare, faMinusSquare } from '@fortawesome/free-regular-svg-icons
 
 const checkId = rand(5)
 const checkId_r = rand(5)
+let suggestions = []
 
 export default class PlaceBlock extends Component {
   
@@ -41,7 +42,7 @@ export default class PlaceBlock extends Component {
 
   componentDidMount(){
     this.http
-    .get('/api/v1/bots')
+    .get('/api/v1/bots', { from_ml_page: true })
     .then(res => {
       let bots = res.data.results, currBot = bots[0]
       this.setState({ bots, currBot })
@@ -119,11 +120,12 @@ export default class PlaceBlock extends Component {
 
   placeChanged = currPlace => {
     this.setState({ currPlace, tags:[], showAttr: false })
+    this.props.placeChanged({ currPlace })
     this.getSuggTags(currPlace)
   } 
   
   placeInputChanged = (showAnim, showAttr) => this.setState({ showAnim, showAttr })
-  
+
   botChanged = e => {
     let currBot = this.state.bots.filter(bot => { return bot.id === parseInt(e.target.value) })[0]
     this.setState({ currBot })
@@ -148,6 +150,9 @@ export default class PlaceBlock extends Component {
     , showTags = !!tags.length
 
     this.setState({ tags, showTags }, this.tagsChanged)
+    setTimeout(() => {
+      suggestions.length = 0
+    }, 200)
     // this.tagsChanged()
   }
 
@@ -277,9 +282,23 @@ export default class PlaceBlock extends Component {
     }
   }
 
+  handleSuggestions =  s => suggestions = s
+
+  handleKey = event => {
+    event.preventDefault()
+    l(event.keyCode, "Place Block")
+    if (event.keyCode === 13) {
+      // Enter Key
+      l(suggestions)
+      if (!suggestions.length) {
+        this.submit()
+      }
+    }
+  }
+
   render() {
     return (
-      <div className="block-content">
+      <div className="block-content" tabIndex="0" onKeyUp={this.handleKey}>
         {this.state.places.length > 0 &&
         <div className="title row">
           <div className="col-lg-5">
@@ -302,7 +321,7 @@ export default class PlaceBlock extends Component {
                 // changeInput={this.placeInputChanged}
                 optionSelected={this.placeChanged}
               />
-              <button onClick={this.nextPlace} disabled={!this.state.tags.length} className="ml-3 btn btn-accent-outline">Next Place</button>
+              <button onClick={this.nextPlace} className="ml-3 btn btn-accent-outline">Next Place</button>
               <button onClick={this.submit} disabled={!this.state.tags.length} className="ml-3 btn btn-accent">Submit</button>
             </div>
           </div>
@@ -361,12 +380,13 @@ export default class PlaceBlock extends Component {
               <AutoCompleteComponent
                 inputProps={{
                   className: 'tag-inp form-control',
-                  placeholder: 'Add tag ..',
+                  placeholder: 'Add tag ..'
                 }}
                 type="tag"
                 parent="place"
                 placeId={this.state.currPlace.id}
                 changeInput={this.placeInputChanged}
+                getCurrSugg={this.handleSuggestions}
                 optionSelected={this.tagAdded}
               />
             </div>

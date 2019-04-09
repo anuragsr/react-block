@@ -21,10 +21,10 @@ export default class App extends Component {
   }
 
   componentDidMount(){
-    this.setState({
-      username: 'ml_page',
-      password: '}XhE9p2/FQjx9.e'
-    })
+    // this.setState({
+    //   username: 'ml_page',
+    //   password: '}XhE9p2/FQjx9.e'
+    // }, this.signIn)
   }
 
   handleInputChange = event => {
@@ -36,7 +36,7 @@ export default class App extends Component {
   }
 
   signIn = e => {
-    e.preventDefault()
+    e && e.preventDefault()
     // Login rest call
     this.http
     .post('/api/v1/login', {
@@ -47,7 +47,7 @@ export default class App extends Component {
     .then(res => {
       l(res)
       // res.data.permissions = ["photo_block", "place_block", "tag_block"] 
-      // res.data.permissions = ["place_block", "tag_block"] 
+      // res.data.permissions = ["photo_block", "tag_block"] 
       // res.data.permissions = ["tag_block"] 
 
       let perm = res.data.permissions
@@ -102,7 +102,8 @@ export default class App extends Component {
       <div className="error w-100 py-2 text-center">
         <span>Ooops…</span>Invalid email or password!
       </div>}
-      {this.state.isAuth && <Main blocks={this.state.perm}/>}
+      {this.state.isAuth && 
+      <Main blocks={this.state.perm}/>}
     </>)
   }
 }

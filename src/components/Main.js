@@ -5,7 +5,7 @@ import { l } from '../helpers/common'
 export default class Main extends Component {
   constructor(props){
     super(props)
-    this.state = { blocks: [] }
+    this.state = { blocks: [], placeObj: {} }
   }
   
   componentDidMount(){
@@ -17,22 +17,40 @@ export default class Main extends Component {
         { type: "Place", show: true, toRender: b.includes("place_block") },
         { type: "Tag", show: true, toRender: b.includes("tag_block") },
       ],
-      withPlace: true,
+      placeObj: {
+        withPlace: b.includes("photo_block") && b.includes("place_block"),
+        place: {}
+      }
+    })
+  }
+
+  handlePlaceChanged = place => {
+    // l(place)
+    this.setState({ 
+      placeObj: {
+        ...this.state.placeObj,
+        place: place.currPlace
+      }
     })
   }
 
   handleToggle = (show, idx) => {
-    // l(show, idx)
+    
     let state = this.state
     state.blocks[idx].show = show
-    this.setState({ state })
-    // l(blocks)
-
-    let blocks = this.state.blocks
+    
+    let blocks = state.blocks
     , showPhoto = blocks.filter(bl => bl.type === "Photo")[0].show
     , showPlace = blocks.filter(bl => bl.type === "Place")[0].show
-    
-    this.setState({ withPlace : showPhoto && showPlace })
+    , withPlace = showPhoto && showPlace
+
+    this.setState({
+      blocks: state.blocks,
+      placeObj: {
+        place: showPlace?state.placeObj.place:{},
+        withPlace
+      }
+    })
   }
   
   render(){
@@ -44,8 +62,9 @@ export default class Main extends Component {
               key={i} idx={i}
               show={bl.show}
               type={bl.type}
+              placeChanged={this.handlePlaceChanged}
               handleToggle={this.handleToggle}
-              withPlace={this.state.withPlace} />:null
+              placeObj={this.state.placeObj} />:null
         })}
       </div>
     )

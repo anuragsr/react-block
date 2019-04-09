@@ -8,8 +8,10 @@ import { l, rand } from '../helpers/common'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlusSquare, faMinusSquare } from '@fortawesome/free-regular-svg-icons'
+
 const checkId = rand(5)
 const checkId_r = rand(5)
+let suggestions = []
 
 export default class TagBlock extends Component {
   
@@ -41,7 +43,7 @@ export default class TagBlock extends Component {
 
   componentDidMount = () => {
     this.http
-    .get('/api/v1/bots')
+    .get('/api/v1/bots', { from_ml_page: true })
     .then(res => {
       let bots = res.data.results, currBot = bots[0]
       this.setState({ bots, currBot })      
@@ -130,6 +132,9 @@ export default class TagBlock extends Component {
     , showTags = !!tags.length
 
     this.setState({ tags, showTags }, this.tagsChanged)
+    setTimeout(() => {
+      suggestions.length = 0
+    }, 200)
     // this.tagsChanged()
   }
 
@@ -258,15 +263,29 @@ export default class TagBlock extends Component {
     }
   }
 
+  handleSuggestions = s => suggestions = s
+
+  handleKey = event => {
+    event.preventDefault()
+    l(event.keyCode, "Tag Block")
+    if (event.keyCode === 13) {
+      // Enter Key
+      l(suggestions)
+      if (!suggestions.length) {
+        this.submit()
+      }
+    }
+  }
+
   render() {
     return (
-      <div className="block-content">
+      <div className="block-content" tabIndex="0" onKeyUp={this.handleKey}>
         <div className="title row">
           <div className="col-lg-6">
             Create new tag block   
           </div>
           <div className="col-lg-6 text-right">
-            <button onClick={this.nextBlock} disabled={!this.state.tags.length} className="btn btn-accent-outline">Next Block</button>
+            <button onClick={this.nextBlock} className="btn btn-accent-outline">Next Block</button>
             <button onClick={this.submit} disabled={!this.state.tags.length} className="ml-3 btn btn-accent">Submit</button>
           </div>
         </div>
@@ -329,6 +348,7 @@ export default class TagBlock extends Component {
                 type="tag"
                 parent="tag"
                 changeInput={this.inputChanged}
+                getCurrSugg={this.handleSuggestions}
                 optionSelected={this.tagAdded}
               />
             </div>

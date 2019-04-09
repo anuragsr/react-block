@@ -16,11 +16,22 @@ import FilePreviewComponent from './FilePreviewComponent';
 // }
 const checkId = rand(5)
 // const checkId_p = rand(5)
+const getActive = arr => {
+  let tmp
+  for(let i = 0; i < arr.length; i++){
+    if(arr[i].active){
+      tmp = arr[i]
+      break
+    }
+  }
+  return tmp
+}
 
 export default class PhotoBlock extends Component {
   
   constructor(props) {
-    super(props)    
+    super(props)
+    l(this.props)
     this.http = new HttpService()
     this.state = {
       categories: [],
@@ -38,22 +49,54 @@ export default class PhotoBlock extends Component {
   }
 
   componentDidMount(){
-    this.getPhotos()
+    this.doApiCall(this.props)
+  }
+
+  componentWillReceiveProps = nextProps => {
+    // l("Next Props", nextProps)
+    this.doApiCall(nextProps)    
+  }
+
+  doApiCall = props => {
+    let placeId = null, canCall = false
+
+    if (props.placeObj.withPlace) {
+      if (!Object.keys(props.placeObj.place).length) {
+        l("Wait for place selection")
+      } else {
+        placeId = props.placeObj.place.id
+        canCall = true
+      }
+    } else {
+      canCall = true
+    }
+
+    canCall && this.getPhotos(placeId)
+  }
+
+  getPhotos = id => {
+
+    let params = {
+      limit: 10,
+      place_id: id,
+      // series: true
+    }
+    
+    // l(params)
+    
+    this.http
+    .get('/api/v1/photos', params, auth)
     .then(res => {
+      
       let photos = res.data.results
       , currPhoto = photos[0]
       currPhoto.labels.forEach(lbl => lbl.edit = false)
       currPhoto.key = Math.random()
       l(photos)
+      this.child && this.child.destroyCanvas()
       this.setState({ photos, currPhoto })
       this.getCategories()
     })
-  }
-
-  getPhotos = () => {
-    return this.http.get('/api/v1/photos', {
-      limit: 10
-    }, auth)
   }
   
   getCategories = () => {
@@ -204,10 +247,21 @@ export default class PhotoBlock extends Component {
     if(type === "add"){
       currPhoto.labels.push(label)
     } else if (type === "delete"){
-      currPhoto.labels = currPhoto.labels.filter(l => l.id !== label.id)
+      currPhoto.labels.splice(currPhoto.labels.indexOf(label), 1)
+      // currPhoto.labels = currPhoto.labels.filter(l => l.id !== label.id)
     }
     this.setState({ currPhoto }/* , () => l(this.state.currPhoto) */)
   }
+
+  // if (im.fromUrl) {
+  //   req.append('file', im.image_url)
+  // }
+
+  // req.append('id', typeof im.id === "string" ? null : im.id)
+  // im.labels.forEach(l => {        
+  //   req.append('labels[]', l)
+  // })
+  // req.append('category', im.category)
 
   submit = () => {
     let im = this.state.currPhoto
@@ -225,19 +279,10 @@ export default class PhotoBlock extends Component {
       delete tmp.id
       // l(tmp)
       req.append('file', tmp)
-      // if (im.fromUrl) {
-      //   req.append('file', im.image_url)
-      // }
-
-      // req.append('id', typeof im.id === "string" ? null : im.id)
-      // im.labels.forEach(l => {        
-      //   req.append('labels[]', l)
-      // })
-      // req.append('category', im.category)
     }
 
     this.http
-    .put('/api/v1/submit_photo', req, auth)
+    .put('/api/v1/submit_photo', req)
     .then(res => {
       l(res)
       if (res.status === 200) {
@@ -257,6 +302,25 @@ export default class PhotoBlock extends Component {
     })
   }
 
+  handleKey = event => {
+    event.preventDefault()
+    // l(event.keyCode, "Photo Block")
+    let lbls = this.state.currPhoto.labels
+    if(event.keyCode === 13){
+      // Enter Key
+      if (getActive(lbls)){
+        this.child.makeImmutable()
+      }else{
+        l("Submit")
+        // this.submit()
+      }
+    } else if (event.keyCode === 8){
+      // Backspace
+      let activeLbls = getActive(lbls)
+      if (activeLbls) this.child.deleteLabel(activeLbls)
+    }
+  }
+
   render() {
     const photo = this.state.currPhoto
     , photos = this.state.photos
@@ -265,10 +329,10 @@ export default class PhotoBlock extends Component {
     , showingUploaded = this.state.showingUploaded
 
     return (
-      <div className="block-content">
+      <div className="block-content" tabIndex="0" onKeyUp={this.handleKey}>
         {photos.length > 0 && <>
           <div style={{ display: !this.state.showUpload?"block":"none" }}>
-            <div className="row">
+            <div className="title row">
               <div className="col-lg-8">
                 {showingUploaded && <div className="counter">
                   {currPhotoIdx + 1} of {photos.length}
@@ -296,13 +360,14 @@ export default class PhotoBlock extends Component {
               </div>
               <div className="row">
                 <div className="col-lg-6">
-                  {/* WithPlace: <pre>{JSON.stringify(this.props.withPlace, null, 2)}</pre> */}
+                  {/* PlaceObj: <pre>{JSON.stringify(this.props.placeObj, null, 2)}</pre> */}
                   {/* Place: <pre>{JSON.stringify(this.state.currPlace, null, 2)}</pre> */}
-                  {Boolean(Object.keys(this.state.currPlace).length) && 
-                    <div className="mb-4 title-city">
-                      Current City: {this.state.currPlace.name}
-                    </div>}
-                  {!this.props.withPlace &&
+                  {!this.props.placeObj.withPlace && 
+                  Boolean(Object.keys(this.state.currPlace).length) && 
+                  <div className="mb-4 title-city">
+                    Current City: {this.state.currPlace.name}
+                  </div>}
+                  {!this.props.placeObj.withPlace &&
                   <AutoCompleteComponent 
                     inputProps={{
                       className: 'tag-inp form-control',

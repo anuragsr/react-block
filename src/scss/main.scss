@@ -6,14 +6,15 @@ body{
   box-shadow: 0 10px 20px 0 rgba($b, .1);
   font-family: $heebo-r;
   z-index: 0;
-  input{
+  input.form-control{
     color: $dz-bdr;
     border-color: $dz-bdr;
+    &:focus,
     &::-webkit-input-placeholder,
     &:-ms-input-placeholder,
     &:-moz-placeholder,
     &::-moz-placeholder {
-      color: $dz-bdr;
+      color: $dz-bdr !important;
     }
   }
   .btn-accent, .btn-accent-outline {
@@ -37,9 +38,6 @@ body{
     color: $sc;
   }
 }
-// input:focus{
-//   outline: none;
-// }
 
 .btn-accent{
   padding: .5rem 1rem;
@@ -80,12 +78,3 @@ body{
   border-color: $tagbg;
   background-color: $tagbg;
 }
-
-// .apiSwitch{  
-//   position: absolute;
-//   right: 0;
-//   top: 0;
-//   background: $w;
-//   font-family: $mont-sb;
-//   box-shadow: 0 0 5px 1px rgba($b, .2);
-// }

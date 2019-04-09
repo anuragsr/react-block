@@ -112,8 +112,12 @@ export default class AutoCompleteComponent extends Component {
 
       // To set all options 
       this.setState({ suggestions: currRes })
+
       if(this.props.changeInput)
         this.props.changeInput(showAnim, showAttr)
+        
+      if(this.props.getCurrSugg)
+        this.props.getCurrSugg(currRes)
     })
     .catch(error => {
       // error callback
@@ -149,6 +153,13 @@ export default class AutoCompleteComponent extends Component {
 
   shouldRenderSuggestions = value => typeof value !== "undefined" && value.trim().length > 0
   
+  // handleKeyUp = event => {
+  //   event.preventDefault()
+  //   event.stopPropagation()
+  //   l(event.keyCode, "Autocomplete")
+  //   l(this.state.suggestions)
+  // }
+  
   render() {
     const { value, suggestions } = this.state
     const inputProps = this.props.inputProps
@@ -159,13 +170,13 @@ export default class AutoCompleteComponent extends Component {
     return (
       <div>
         <Autosuggest
+          // onKeyUp={this.handleKeyUp}
           suggestions={suggestions}
           onSuggestionsFetchRequested={this.onSuggestionsFetchRequested}
           onSuggestionsClearRequested={this.onSuggestionsClearRequested}
           onSuggestionSelected={this.onSuggestionSelected}
           getSuggestionValue={this.getSuggestionValue}
           renderSuggestion={this.renderSuggestion}
-          // shouldRenderSuggestions={this.shouldRenderSuggestions}
           highlightFirstSuggestion={true}
           inputProps={inputProps}
         />
