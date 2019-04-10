@@ -253,7 +253,7 @@ export default class PlaceBlock extends Component {
       l(request)
   
       this.http
-      .post('/api/v1/send_attraction_for_place', request)
+      .post('/api/v1/send_attraction_for_place', request, auth)
       .then(res => {
         l(res.data)
         //  Show notif, undo

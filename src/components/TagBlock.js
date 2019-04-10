@@ -4,7 +4,7 @@ import AutoCompleteComponent from './AutoCompleteComponent'
 import TagsComponent from './TagsComponent'
 import SliderComponent from './SliderComponent'
 import HttpService from '../services/HttpService'
-import { l, rand } from '../helpers/common'
+import { l, rand, auth } from '../helpers/common'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlusSquare, faMinusSquare } from '@fortawesome/free-regular-svg-icons'
@@ -234,7 +234,7 @@ export default class TagBlock extends Component {
       l(request)
   
       this.http
-      .post('/api/v1/send_attraction_for_tags', request)
+      .post('/api/v1/send_attraction_for_tags', request, auth)
       .then(res => {
         l(res.data)
         //  Show notif, undo
