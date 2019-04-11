@@ -231,6 +231,10 @@ export default class PlaceBlock extends Component {
     if(this.state.tags.length){
       this.setState({
         showAttr: false,
+        att: {
+          manual: 0,
+          auto: 0
+        },
         tagsText: this.state.tags.map((t, i) => {
           if(i === this.state.tags.length - 1)
             return t.full_name
@@ -263,12 +267,9 @@ export default class PlaceBlock extends Component {
           lastPlaceId: res.data.id 
         })
         setTimeout(() => {
-          this.setState({ 
+          !this.state.tags.length &&
+          this.setState({
             showAttr: false,
-            att: {
-              manual: 0,
-              auto: 0
-            }
           })
           
           if(this.state.notifType === "submit"){

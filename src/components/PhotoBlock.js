@@ -41,8 +41,8 @@ export default class PhotoBlock extends Component {
       showingUploaded: false,
       currPlace: {},
       uncheckedOnly: false,
-      ml: !false,
-      showUpload: !false,
+      ml: false,
+      showUpload: false,
       uploadedFiles: [],
       loadUrl: "",
     }

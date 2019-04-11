@@ -46,12 +46,11 @@ export default class App extends Component {
     })
     .then(res => {
       l(res)
-      res.data.permissions = ["photo_block", "place_block", "tag_block"] 
+      // res.data.permissions = ["photo_block", "place_block", "tag_block"] 
       // res.data.permissions = ["photo_block", "tag_block"] 
       // res.data.permissions = ["tag_block"] 
 
-      let perm = res.data.permissions
-      this.setState({ isAuth: true, perm })
+      this.setState({ isAuth: true, perm: res.data.permissions })
 
       // Set auth user
       auth.username = this.state.username
