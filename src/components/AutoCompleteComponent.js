@@ -151,14 +151,7 @@ export default class AutoCompleteComponent extends Component {
     })
   }
 
-  shouldRenderSuggestions = value => typeof value !== "undefined" && value.trim().length > 0
-  
-  // handleKeyUp = event => {
-  //   event.preventDefault()
-  //   event.stopPropagation()
-  //   l(event.keyCode, "Autocomplete")
-  //   l(this.state.suggestions)
-  // }
+  shouldRenderSuggestions = value => typeof value !== "undefined" && value.trim().length > 0  
   
   render() {
     const { value, suggestions } = this.state

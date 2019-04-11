@@ -46,7 +46,7 @@ export default class App extends Component {
     })
     .then(res => {
       l(res)
-      // res.data.permissions = ["photo_block", "place_block", "tag_block"] 
+      res.data.permissions = ["photo_block", "place_block", "tag_block"] 
       // res.data.permissions = ["photo_block", "tag_block"] 
       // res.data.permissions = ["tag_block"] 
 
@@ -68,7 +68,12 @@ export default class App extends Component {
   }
 
   logOut = () => {
-    this.setState({ isAuth: false, perm: [] })
+    this.setState({ 
+      isAuth: false,
+      perm: [],
+      username: "",
+      password: ""
+    })
   }
   
   render(){

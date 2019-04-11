@@ -40,9 +40,9 @@ export default class PhotoBlock extends Component {
       currPhotoIdx: null,
       showingUploaded: false,
       currPlace: {},
-      ml: false,
       uncheckedOnly: false,
-      showUpload: false,
+      ml: !false,
+      showUpload: !false,
       uploadedFiles: [],
       loadUrl: "",
     }
@@ -75,7 +75,6 @@ export default class PhotoBlock extends Component {
   }
 
   getPhotos = id => {
-
     let params = {
       limit: 10,
       place_id: id,
@@ -86,8 +85,7 @@ export default class PhotoBlock extends Component {
     
     this.http
     .get('/api/v1/photos', params, auth)
-    .then(res => {
-      
+    .then(res => {      
       let photos = res.data.results
       , currPhoto = photos[0]
       currPhoto.labels.forEach(lbl => lbl.edit = false)
@@ -160,6 +158,8 @@ export default class PhotoBlock extends Component {
     , currPhoto
     , request = () => {
       let file = photos[index]
+      , catUrl
+      , detUrl
       , req = { newBaseUrl: true }
       , fd = new FormData()
       req.file = fd
@@ -168,29 +168,35 @@ export default class PhotoBlock extends Component {
       // let fileCopy = new File([file], file.name, { type: file.type })
       // fd.append('file', fileCopy)
 
+      // l(file)
       if(file.fromUrl){
-        fd.append('file', file.image_url)
+        fd.append('url', file.image_url)
+        catUrl = 'http://18.202.217.216:5000/category_url'
+        detUrl = 'http://18.202.217.216:5000/detect_url'
       }else{
         fd.append('file', file)
+        catUrl = 'http://18.202.217.216:5000/category_buffer'
+        detUrl = 'http://18.202.217.216:5000/detect_buffer'
       }
 
       return this.http
-      .post('http://18.202.217.216:5000/category', req)
+      .post(catUrl, req)
       .then(res => {
         // l("Category Result:", res) 
         if (res.data.category)
           file.category = { name: Object.keys(res.data.category[0])[0] }
         
         this.http
-        .post('http://18.202.217.216:5000/detect', req)
+        .post(detUrl, req)
         .then(res => {
           // l("Labels Result:", res) 
-          if (typeof res.data === "object") {
-            let response = JSON.parse(res.data.result)
+          if (res.data.length) {
+            // let response = JSON.parse(res.data)
+            let response = res.data
             , labels = []
             // l(response)
-            response.forEach(r => {
-              r && labels.push({
+            response.forEach(r => 
+              labels.push({
                 edit: false,
                 form: "Rectangle",
                 id: 0,
@@ -201,7 +207,7 @@ export default class PhotoBlock extends Component {
                 },
                 object_coords: r.float_rect.map(c => c.toString())
               })
-            })
+            )
             
             file.labels = labels
             // l(file)
@@ -251,11 +257,7 @@ export default class PhotoBlock extends Component {
       // currPhoto.labels = currPhoto.labels.filter(l => l.id !== label.id)
     }
     this.setState({ currPhoto }/* , () => l(this.state.currPhoto) */)
-  }
-
-  // if (im.fromUrl) {
-  //   req.append('file', im.image_url)
-  // }
+  }  
 
   // req.append('id', typeof im.id === "string" ? null : im.id)
   // im.labels.forEach(l => {        
@@ -278,7 +280,11 @@ export default class PhotoBlock extends Component {
       let tmp = {...im}
       delete tmp.id
       // l(tmp)
-      req.append('file', tmp)
+      if (tmp.fromUrl) {
+        req.append('url', tmp.image_url)
+      }else{
+        req.append('file', tmp)
+      }
     }
 
     this.http
@@ -289,14 +295,7 @@ export default class PhotoBlock extends Component {
         if(this.state.currPhotoIdx < this.state.photos.length - 1) {
           this.nextPhoto()
         } else {
-          this.getPhotos()
-          .then(res => {
-            let photos = res.data.results
-            , currPhoto = photos[0]
-            currPhoto.labels.forEach(lbl => lbl.edit = false)
-            currPhoto.key = Math.random()
-            this.setState({ photos, currPhoto })
-          })
+          this.doApiCall(this.props)
         }
       }
     })
@@ -311,8 +310,8 @@ export default class PhotoBlock extends Component {
       if (getActive(lbls)){
         this.child.makeImmutable()
       }else{
-        l("Submit")
-        // this.submit()
+        // l("Submit")
+        this.submit()
       }
     } else if (event.keyCode === 8){
       // Backspace
