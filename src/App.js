@@ -1,4 +1,7 @@
 import React, { Component } from 'react'
+import $ from 'jquery'
+import Popper from 'popper.js'
+import 'bootstrap/dist/js/bootstrap.bundle.min'
 
 import Main from './components/Main'
 import HttpService from './services/HttpService'
@@ -6,6 +9,8 @@ import { l, auth } from './helpers/common'
 
 import 'bootstrap/dist/css/bootstrap.min.css'
 import './App.scss'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCaretDown } from '@fortawesome/free-solid-svg-icons';
 
 export default class App extends Component {
   constructor(){
@@ -48,7 +53,7 @@ export default class App extends Component {
       l(res)
       // res.data.permissions = ["photo_block", "place_block", "tag_block"] 
       // res.data.permissions = ["photo_block", "tag_block"] 
-      // res.data.permissions = ["tag_block"] 
+      // res.data.permissions = ["place_block"] 
 
       this.setState({ isAuth: true, perm: res.data.permissions })
 
@@ -77,10 +82,10 @@ export default class App extends Component {
   
   render(){
     return (<>
-      <nav className="navbar navbar-expand-lg navbar-light bg-white">
+      <nav className="navbar navbar-expand-lg navbar-dark">
         <div className="container">
           <a className="navbar-brand" href="javascript:void(0)">
-            <img src="assets/burger.png" alt=""/>
+            <img src="assets/burger.svg" alt=""/>
           </a>
           <button className="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span className="navbar-toggler-icon"></span>
@@ -95,10 +100,20 @@ export default class App extends Component {
               <button className="btn btn-accent" type="submit">Sign In</button>
             </form>}
             {this.state.isAuth && 
-            <form className="form-inline logged-in" onSubmit={this.logOut}>
-              <img src="assets/user-icon.png" alt=""/><span className="mx-3">{this.state.username}</span>
-              <button className="btn btn-accent-outline" type="submit">Logout</button>
-            </form>}
+              <ul className="navbar-nav logged-in">
+                <li className="nav-item">
+                  <img src="assets/user-icon.png" alt=""/>
+                  <span className="mx-3">{this.state.username}</span>                  
+                </li>
+                <li className="nav-item dropdown">
+                  <a className="nav-link dropdown-toggle" href="javascript:void(0)" data-toggle="dropdown">
+                  </a>
+                  <div className="dropdown-menu">
+                    <a className="dropdown-item" onClick={this.logOut} href="javascript:void(0)">Logout</a>                    
+                  </div>
+                </li>
+              </ul>
+            }
           </div>
         </div>
       </nav>

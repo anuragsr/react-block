@@ -7,7 +7,7 @@ import HttpService from '../services/HttpService'
 import { l, rand, auth } from '../helpers/common'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faPlusSquare, faMinusSquare } from '@fortawesome/free-regular-svg-icons'
+import { faCaretRight } from '@fortawesome/free-solid-svg-icons'
 
 const checkId = rand(5)
 const checkId_r = rand(5)
@@ -279,37 +279,39 @@ export default class TagBlock extends Component {
   }
 
   render() {
-    return (
+    return (<>
+      {this.state.showNotif && <div className="block-notif">
+        {this.state.notifType === "submit" && <>
+          <div className="col-lg-11 px-0">
+            <div className="title">
+              <span>New tag block created!&nbsp;&nbsp;</span>
+              <span className="tag-text">Tags: {this.state.tagsText}</span>
+            </div>
+          </div>
+          <div className="col-lg-1 pr-0">
+            <div onClick={this.undo} className="undo float-right">Undo</div>
+          </div>
+        </>}
+        {this.state.notifType === "undo" && 
+        <div className="col-lg-12 px-0 text-center">
+          <div className="title">
+            <span>Tag block deleted successfully!&nbsp;&nbsp;</span>
+            <span onClick={this.onUndo} className="undo">Ok</span>
+          </div>
+        </div>}
+      </div>}
       <div className="block-content" tabIndex="0" onKeyUp={this.handleKey}>
         <div className="title row">
           <div className="col-lg-6">
             Create new tag block   
           </div>
           <div className="col-lg-6 text-right">
-            <button onClick={this.nextBlock} className="btn btn-accent-outline">Next Block</button>
+            <button onClick={this.nextBlock} className="btn btn-accent-outline">
+              Next&nbsp;&nbsp;<FontAwesomeIcon icon={faCaretRight} />
+            </button>
             <button onClick={this.submit} disabled={!this.state.tags.length} className="ml-3 btn btn-accent">Submit</button>
           </div>
-        </div>
-        <div className={this.state.showNotif?"shown notif":"notif"}>
-          {
-            this.state.notifType === "submit" &&
-            <div>
-              <div className="n-title">New tag block created!</div>
-              <div onClick={this.undo} className="undo float-right">Undo</div>
-              <div className="n-body">
-                Tags: {this.state.tagsText}
-                <br/>
-                Attraction: {this.state.att.manual}
-              </div>
-            </div>
-          }{
-            this.state.notifType === "undo" &&
-            <div>
-              <div className="n-title">Tag block deleted successfully!</div>
-              <div onClick={this.onUndo} className="undo float-left">Ok</div>    
-            </div>
-          }
-        </div>
+        </div>        
         <div className="body">
           <div className="row align-items-center">
             <div className="col-lg-7">
@@ -340,7 +342,7 @@ export default class TagBlock extends Component {
             </div>
           </div>
           <div className="row">
-            <div className="col-lg-12">
+            <div className="col-lg-6">
               <AutoCompleteComponent
                 inputProps={{
                   className: 'tag-inp form-control',
@@ -372,7 +374,7 @@ export default class TagBlock extends Component {
             </div>          
           </div>
           <div className="row">
-            <div className="col-lg-7">
+            <div className="col-lg-6">
               {/* ShowAnim: <pre>{JSON.stringify(this.state.showAnim, null, 2)}</pre> */}
               {/* ShowAttr: <pre>{JSON.stringify(this.state.showAttr, null, 2)}</pre> */}
               {this.state.showAnim &&
@@ -382,9 +384,9 @@ export default class TagBlock extends Component {
                   <div className="dot"></div>
                   <div className="dot"></div>
               </div>}
-              {this.state.showAttr &&
-                <SliderComponent att={this.state.att} changeAtt={this.attChanged}
-              />}
+              {<div style={{ display: this.state.showAttr?"block":"none" }}>
+                <SliderComponent att={this.state.att} changeAtt={this.attChanged} />
+              </div>}
             </div>
           </div>
           <div className="row">
@@ -399,23 +401,29 @@ export default class TagBlock extends Component {
             <div className="col-lg-12">
               {this.state.showSugTags && <>
                 <div className="tags-title">
-                  Suggested Tags&nbsp;&nbsp;
-                  {!this.state.toggleSugTags && 
-                    <FontAwesomeIcon 
-                      style={{ cursor: "pointer", fontSize: 22 }}
-                      icon={faPlusSquare} 
-                      onClick={() => this.setState({ 
-                        toggleSugTags: !this.state.toggleSugTags
-                      })}
-                    />}
-                  {this.state.toggleSugTags && 
-                    <FontAwesomeIcon 
-                      style={{ cursor: "pointer", fontSize: 22 }}
-                      icon={faMinusSquare} 
-                      onClick={() => this.setState({ 
-                        toggleSugTags: !this.state.toggleSugTags
-                      })}
-                  />}
+                  Suggested Tags&nbsp;&nbsp;                  
+                  <img src="assets/plus.svg" alt=""
+                    style={{
+                      display: !this.state.toggleSugTags ? "inline-block" : "none",
+                      cursor: "pointer",
+                      position: "relative",
+                      top: 0, left: 3
+                    }}
+                    onClick={() => this.setState({
+                      toggleSugTags: !this.state.toggleSugTags
+                    })}
+                  />                  
+                  <img src="assets/minus.svg" alt=""
+                    style={{
+                      display: this.state.toggleSugTags ? "inline-block" : "none",
+                      cursor: "pointer",
+                      position: "relative",
+                      top: -3, left: 3
+                    }}
+                    onClick={() => this.setState({
+                      toggleSugTags: !this.state.toggleSugTags
+                    })}
+                  />
                 </div>
                 {this.state.toggleSugTags &&
                 <TagsComponent
@@ -428,6 +436,7 @@ export default class TagBlock extends Component {
           </div>
         </div>
       </div>
+    </>
     )
   }
 }

@@ -121,7 +121,7 @@ export default class FileInputComponent extends Component {
           </div>
           <div className="url-inp">
             or enter remote photo URL<br/>
-            <input value={this.state.loadUrl} onChange={this.loadUrlChanged} type="text" className="form-control tag-inp" placeholder="Place URL here .."/>
+            <input value={this.state.loadUrl} onChange={this.loadUrlChanged} type="text" className="form-control tag-inp" placeholder="Enter photo URL .."/>
             <img onClick={this.doLoadUrl} src="assets/btn-remote.png" alt=""/>
           </div>
         </div>

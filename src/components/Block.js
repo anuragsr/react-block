@@ -26,7 +26,7 @@ export default class Block extends Component {
       <div className="m-4 block">
         <div className="block-title">
           <div>{this.props.type} Block</div>
-          <Switch
+          {/* <Switch
             checked={this.state.show}
             onChange={this.toggled}
             onColor="#54b6b8"
@@ -38,6 +38,18 @@ export default class Block extends Component {
             activeBoxShadow="0px 0px 1px 10px rgba(0, 0, 0, 0.2)"
             height={20}
             width={40}
+            className="react-switch"
+          /> */}
+          <Switch
+            checked={this.state.show}
+            onChange={this.toggled}
+            uncheckedIcon={false}
+            checkedIcon={false}
+            handleDiameter={16}
+            onColor="#1785fb"
+            onHandleColor="#fff"
+            height={20}
+            width={36}
             className="react-switch"
           />
         </div>

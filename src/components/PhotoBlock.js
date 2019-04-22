@@ -3,19 +3,15 @@ import React, { Component } from 'react'
 import AutoCompleteComponent from './AutoCompleteComponent'
 import ImageComponent from './ImageComponent'
 import FileInputComponent from './FileInputComponent'
+import FilePreviewComponent from './FilePreviewComponent'
 import HttpService from '../services/HttpService'
 import { l, auth, rand, withIndex, getFormattedTime } from '../helpers/common'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCheck } from '@fortawesome/free-solid-svg-icons'
-import FilePreviewComponent from './FilePreviewComponent';
+import { faCheck, faCaretRight, faTimes } from '@fortawesome/free-solid-svg-icons'
 
-// const auth = {
-//   username: 'ml_page',
-//   password: '}XhE9p2/FQjx9.e'
-// }
+
 const checkId = rand(5)
-// const checkId_p = rand(5)
 const getActive = arr => {
   let tmp
   for(let i = 0; i < arr.length; i++){
@@ -31,7 +27,7 @@ export default class PhotoBlock extends Component {
   
   constructor(props) {
     super(props)
-    l(this.props)
+    // l(this.props)
     this.http = new HttpService()
     this.state = {
       categories: [],
@@ -45,6 +41,7 @@ export default class PhotoBlock extends Component {
       showUpload: false,
       uploadedFiles: [],
       loadUrl: "",
+      showCityDropdown: false,
     }
   }
 
@@ -120,7 +117,9 @@ export default class PhotoBlock extends Component {
     this.setState({ currPhotoIdx: idx, currPhoto })
   }
 
-  placeSelected = currPlace => this.setState({ currPlace })
+  placeSelected = currPlace => {
+    this.setState({ currPlace }, this.toggleChooseCity())
+  }
   
   mlChanged = e => this.setState({ ml: e.target.checked })
   
@@ -259,12 +258,6 @@ export default class PhotoBlock extends Component {
     this.setState({ currPhoto }/* , () => l(this.state.currPhoto) */)
   }  
 
-  // req.append('id', typeof im.id === "string" ? null : im.id)
-  // im.labels.forEach(l => {        
-  //   req.append('labels[]', l)
-  // })
-  // req.append('category', im.category)
-
   submit = () => {
     let im = this.state.currPhoto
     , req
@@ -295,6 +288,7 @@ export default class PhotoBlock extends Component {
         if(this.state.currPhotoIdx < this.state.photos.length - 1) {
           this.nextPhoto()
         } else {
+          this.setState({ showingUploaded: false })
           this.doApiCall(this.props)
         }
       }
@@ -320,6 +314,14 @@ export default class PhotoBlock extends Component {
     }
   }
 
+  toggleChooseCity = () => {
+    if(!this.props.placeObj.withPlace){
+      let dd = this.state.showCityDropdown
+      dd = !dd
+      this.setState({ showCityDropdown: dd })
+    }
+  }
+
   render() {
     const photo = this.state.currPhoto
     , photos = this.state.photos
@@ -330,56 +332,82 @@ export default class PhotoBlock extends Component {
     return (
       <div className="block-content" tabIndex="0" onKeyUp={this.handleKey}>
         {photos.length > 0 && <>
-          <div style={{ display: !this.state.showUpload?"block":"none" }}>
-            <div className="title row">
-              <div className="col-lg-8">
-                {showingUploaded && <div className="counter">
-                  {currPhotoIdx + 1} of {photos.length}
-                </div>}
-                <div className="title photo">
-                  <span title={photo.name}>{photo.name}</span>
+          <div style={{ display: !this.state.showUpload ? "block" : "none" }}>
+            <div className="title row pb-0">
+              <div className="col-lg-9">
+                <div className="row pb-0">
+                  <div className="col-lg-12 photo-sb">                    
+                    <div className="counter"
+                      style={{
+                        display: showingUploaded ? "inline-block" : "none"
+                      }}
+                    >{currPhotoIdx + 1}/{photos.length}</div>
+                    <div className="checkTime"
+                      style={{
+                        display: photo.ml_check_date !== null ? "inline-block" : "none"
+                      }}
+                    ><FontAwesomeIcon style={{ color: "#56d86c" }} icon={faCheck} />
+                      &nbsp;&nbsp;Checked: {getFormattedTime(photo.ml_check_date)}
+                    </div>
+                  </div>
                 </div>
-                {photo.ml_check_date !== null &&
-                <div className="checkTime">
-                  <FontAwesomeIcon style={{ color: "green" }} icon={faCheck} />
-                  &nbsp;&nbsp;Checked: {getFormattedTime(photo.ml_check_date)}
-                </div>}
+                <div className="row">
+                  <div className="col-lg-12">
+                    <div className="title photo">
+                      <span title={photo.name}>{photo.name}</span>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="col-lg-4 text-right">
-                <button onClick={this.nextPhoto} className="btn btn-accent-outline">Next Photo</button>
+              <div className="col-lg-3 text-right">
+                <button onClick={this.nextPhoto} className="btn btn-accent-outline">
+                  Next&nbsp;&nbsp;<FontAwesomeIcon icon={faCaretRight} />
+                </button>
                 <button onClick={this.submit} className="ml-3 btn btn-accent">Submit</button>
               </div>
             </div>
             <div className="body">           
               <div className="row">
-                <div className="col-lg-6">
-                  <img src="assets/up-icon.png" alt=""/>
-                  <a className="up-link" href="javascript:void(0)" onClick={this.addPhoto}>Upload Photos</a>
-                </div>
-              </div>
-              <div className="row">
-                <div className="col-lg-6">
-                  {/* PlaceObj: <pre>{JSON.stringify(this.props.placeObj, null, 2)}</pre> */}
-                  {/* Place: <pre>{JSON.stringify(this.state.currPlace, null, 2)}</pre> */}
-                  {!this.props.placeObj.withPlace && 
-                  Boolean(Object.keys(this.state.currPlace).length) && 
-                  <div className="mb-4 title-city">
-                    Current City: {this.state.currPlace.name}
+                <div className="col-lg-12 photo-sb">                  
+                    
+                  {!this.state.showCityDropdown && 
+                  <div className="ctn-icon" onClick={this.toggleChooseCity}>
+                    <img src="assets/map-pin.svg" alt=""/>
+                    <div className="up-link">
+                      {Object.keys(this.state.currPlace).length?
+                      this.state.currPlace.name:<>All cities</>}
+                    </div>
                   </div>}
-                  {!this.props.placeObj.withPlace &&
-                  <AutoCompleteComponent 
-                    inputProps={{
-                      className: 'tag-inp form-control',
-                      placeholder: 'Choose the city',
-                    }}
-                    type="city"
-                    // parent="place"
-                    // placeId={this.state.currPlace.id}
-                    // changeInput={this.placeInputChanged}
-                    optionSelected={this.placeSelected}
-                  />}
+
+                  {this.state.showCityDropdown && <div className="col-lg-6 pl-0">
+                    <AutoCompleteComponent
+                      inputProps={{
+                        className: 'tag-inp form-control sec',
+                        placeholder: 'Choose the city ..',
+                      }}
+                      type="city"
+                      // parent="place"
+                      // placeId={this.state.currPlace.id}
+                      // changeInput={this.placeInputChanged}
+                      optionSelected={this.placeSelected}
+                    />
+                    <FontAwesomeIcon icon={faTimes} 
+                      style={{
+                        cursor: "pointer",
+                        position: "absolute",
+                        right: 30, top: 18
+                      }}
+                      onClick={this.toggleChooseCity}
+                    />
+                  </div>}
+                  
+                  <div className="ctn-icon" onClick={this.addPhoto}>
+                    <img src="assets/image.svg" alt=""/>
+                    <div className="up-link">Upload Photos</div>
+                  </div>
                 </div>
               </div>
+              
               <ImageComponent
                 onRef={ref => (this.child = ref)}
                 image={photo}
@@ -387,6 +415,7 @@ export default class PhotoBlock extends Component {
                 imageUpdated={this.handleImageUpdate}
                 catUpdated={this.handleCatUpdate}
               />
+
               <div className="row">
                 <div className="col-lg-6">
                   <div className="custom-control custom-checkbox">

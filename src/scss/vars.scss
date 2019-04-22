@@ -1,19 +1,27 @@
 $w: #fff;
 $b: #000;
+$body-bg: #f5f7fa;
 $err-bg: #ff4c43;
+$bg-pr: #1785fb;
+$bg-sc: #f9f9fb;
+$bdr-sc: #d0dce5;
+
+$acc: #56d86c;
 $pr: #2c405a;
 $sc: #3f536e;
 $line: #d8e5ee;
-$tagbg: #5bb884;
-$tagbgsc: #ab7df6;
-$acc: #54b6b8;
-$acc-dark: #418688;
+$n-title: #292f36;
+$sub-title: #8dabc4;
+$link: #145bbc;
+// $tagbg: #5bb884;
+// $tagbgsc: #ab7df6;
+// $acc: #54b6b8;
+// $acc-dark: #418688;
+$acc-dark: #c5d9e8;
 $plinpbg: #f6f6f6;
-$chktime: #8dabc4;
 $c-bdr: #a8c6df;
 $c-idx: #40a1a4;
-$dz-bg: #f9f9fb;
-$dz-bdr: #c5d9e8;
+$dz-bdr: #dde4ff;
 
 // Justify content: space between
 %j-s-b {
@@ -38,11 +46,12 @@ $dz-bdr: #c5d9e8;
 
 // Prefix & Keyframes mixins
 @mixin prefixed($property, $value) {
-  -webkit-#{$property}: #{$value};
-  -moz-#{$property}: #{$value};
-  -ms-#{$property}: #{$value};
-  -o-#{$property}: #{$value};
-  #{$property}: #{$value};
+  -webkit-#{$property}: #{$value}; /* Safari */
+  -khtml-#{$property}: #{$value}; /* Konqueror HTML */  
+  -moz-#{$property}: #{$value}; /* Firefox */
+  -ms-#{$property}: #{$value}; /* Internet Explorer/Edge */
+  -o-#{$property}: #{$value}; /* Opera */
+  #{$property}: #{$value}; /* Non-prefixed version */
 }
 
 @mixin keyframes($name) {

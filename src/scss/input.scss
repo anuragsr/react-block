@@ -6,30 +6,22 @@
     height: 50px;
     width: 300px;
     background: $plinpbg;
-    font-family: $heebo-r;
-    // padding: 1.25rem 1rem;
+    font-family: $sp-r;
     &::-webkit-input-placeholder {
-      font-size: 11px;
-      font-family: $mont-m;
-      letter-spacing: 1.4px;
+      font-size: 17px;
+      font-family: $sp-r;
     }
-    
     &:-ms-input-placeholder {
-      font-size: 11px;
-      font-family: $mont-m;
-      letter-spacing: 1.4px;
+      font-size: 17px;
+      font-family: $sp-r;
     }
-    
     &:-moz-placeholder {
-      font-size: 11px;
-      font-family: $mont-m;
-      letter-spacing: 1.4px;
+      font-size: 17px;
+      font-family: $sp-r;
     }
-    
     &::-moz-placeholder {
-      font-size: 11px;
-      font-family: $mont-m;
-      letter-spacing: 1.4px;
+      font-size: 17px;
+      font-family: $sp-r;
     }
   }
 }
@@ -38,19 +30,18 @@
 input.tag-inp{
   font-size: 18px;
   padding: 25px 15px;
+  &.sec{
+    background: $bg-sc;
+  }
 }
-
-// ul.react-autocomplete-input > li.active{
-//   background: $acc;
-// }
 
 // For tags
 .tag-outer{
-  background: $dz-bg;
+  background: $bg-sc;
   padding: 10px;
   border: 5px dashed $dz-bdr;
   border-radius: 10px;
-  color: $chktime;
+  color: $sub-title;
   .no-tags-plh{
     text-align: center;
     padding: 10px 0;
@@ -59,46 +50,51 @@ input.tag-inp{
 
 ul.tag-ctn{
   padding: 5px;
+  font-size: 15px;
   padding-left: 0;
   border-radius: 2px;
   margin-bottom: 0;
-  // margin-bottom: 10px;
-  &.sug li{
-    background: $tagbgsc;
+  li{
+    cursor: pointer;
+    display: inline-block;
+    padding: 5px 10px;
+    // background: $tagbg;
+    background: $bg-pr;
+    color: $w;
+    border-radius: 5px;
+    margin-right: 5px;
+    margin-bottom: 5px;  
     &.optional{
-      background: rgba($tagbgsc, .7);
+      background: rgba($bg-pr, .7);
       img{
         opacity: .7;
       }
     }
-  }
-}
-
-ul.tag-ctn li{
-  cursor: pointer;
-  display: inline-block;
-  padding: 5px 10px;
-  background: $tagbg;
-  color: $w;
-  border-radius: 5px;
-  margin-right: 5px;
-  margin-bottom: 5px;  
-  &.optional{
-    background: rgba($tagbg, .7);
+    div{
+      @extend %j-s-b;
+    }
     img{
-      opacity: .7;
+      height: 35px;
+      margin-right: 10px;
+    }
+    span{
+      opacity: .8;
+      font-size: 30px;
+      margin-left: 10px;
+      margin-top: -7px;
     }
   }
-  div{
-    @extend %j-s-b;
-  }
-  img{
-    height: 35px;
-    margin-right: 10px;
-  }
-  span{
-    font-size: 15px;
-    margin-left: 10px;
+  &.sug li{
+    // font-weight: bold;
+    color: $b;
+    background: $bg-sc;
+    border: 1px solid $bdr-sc;
+    &.optional{
+      background: rgba($bg-sc, .7);
+      img{
+        opacity: .7;
+      }
+    }
   }
 }
 
@@ -162,22 +158,22 @@ ul.tag-ctn li{
     height: 10px;
     width: 10px;
     border-radius: 10px;
-    background: $tagbg;
+    background: $bg-pr;
     @include prefixed(animation, upDown .5s ease-in-out);
     @include prefixed(animation-direction, alternate);
     @include prefixed(animation-iteration-count, infinite);
     
     &:nth-of-type(2){
       @include prefixed(animation-delay, .1s);
-      background: fade-out($tagbg, .5);
+      background: fade-out($bg-pr, .5);
     }
     &:nth-of-type(3){
       @include prefixed(animation-delay, .2s);
-      background: fade-out($tagbg, .7);
+      background: fade-out($bg-pr, .7);
     }
     &:nth-of-type(4){
       @include prefixed(animation-delay, .3s);
-      background: fade-out($tagbg, .9);
+      background: fade-out($bg-pr, .9);
     }
   }
 }
@@ -192,8 +188,15 @@ ul.tag-ctn li{
 }
 
 //  For the slider
+.rc-slider {
+  pointer-events: none;
+  .rc-slider-handle {
+    pointer-events: auto;
+  }
+}
+
 .sl-title, .tags-title{ // For both slider and tags title
-  font-family: $mont-m;
+  font-family: $sp-r;
   font-size: 18px;
   color: $sc;
   margin-bottom: 15px;

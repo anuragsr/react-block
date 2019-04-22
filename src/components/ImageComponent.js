@@ -342,7 +342,7 @@ export default class ImageComponent extends Component {
 
     bg.interactive = true
     bg.visible = false
-    bg.cursor = "crosshair"
+    // bg.cursor = "crosshair"
 
     bg.on('pointerdown', e => {
       let c = {...e.data.global}
@@ -1006,28 +1006,38 @@ export default class ImageComponent extends Component {
     const image = this.props.image
     , labels = image.labels
     , categories = this.props.categories
-        
+    
+    let cursorImg = "default"
+    
+    if(this.state.adding === "polygon"){
+      cursorImg = "url('assets/cursor-poly.svg') 9 14.5, auto"
+    } else if(this.state.adding === "rectangle"){
+      cursorImg = "url('assets/cursor-square.svg') 9 14.5, auto"
+    } else if(this.state.adding === "circle"){
+      cursorImg = "url('assets/cursor-circle.svg') 9 14.5, auto"
+    }
+
     return (
       <div className="row">
         <div className="col-lg-8">
           <div className="row pb-0">
             <div className="col-2 pr-0">
               <div className={"obj-sel " + (this.state.adding === "polygon"?"active":"")} onClick={() => this.startAdding('polygon')}>
-                <img src="assets/icon-random.png" alt=""/>
+                <img src="assets/poly.svg" alt=""/>
                 {this.state.adding === 'polygon' && <div className="ctn-add-action">
                   <FontAwesomeIcon onClick={e => this.doneAdding(e, 'Polygon')} icon={faCheck} style={{ color: 'green' }} />
                   <FontAwesomeIcon onClick={e => this.cancelAdd(e)} icon={faTimes} style={{ color: 'red' }} />
                 </div>}
               </div>
               <div className={"obj-sel " + (this.state.adding === "rectangle"?"active":"")} onClick={() => this.startAdding('rectangle')}>
-                <img src="assets/icon-square.png" alt=""/>
+                <img src="assets/square.svg" alt=""/>
                 {this.state.adding === 'rectangle' && <div className="ctn-add-action">
                   <FontAwesomeIcon onClick={e => this.doneAdding(e, 'Rectangle')} icon={faCheck} style={{ color: 'green' }} />
                   <FontAwesomeIcon onClick={e => this.cancelAdd(e)} icon={faTimes} style={{ color: 'red' }} />
                 </div>}
               </div>
               <div className={"obj-sel " + (this.state.adding === "circle"?"active":"")} onClick={() => this.startAdding('circle')}>
-                <img src="assets/icon-circle.png" alt=""/>
+                <img src="assets/circle.svg" alt=""/>
                 {this.state.adding === 'circle' && <div className="ctn-add-action">
                   <FontAwesomeIcon onClick={e => this.doneAdding(e, 'Circle')} icon={faCheck} style={{ color: 'green' }} />
                   <FontAwesomeIcon onClick={e => this.cancelAdd(e)} icon={faTimes} style={{ color: 'red' }} />
@@ -1035,7 +1045,10 @@ export default class ImageComponent extends Component {
               </div>
             </div>
             <div className="col-10 pl-0">
-              <div ref={imgRef} className={"ctn-photo " + (this.state.adding !== ""?"adding":"")}>
+              <div ref={imgRef} 
+                className={"ctn-photo " + (this.state.adding !== ""?"adding":"")}
+                style={{ cursor: cursorImg }}
+              >
                 <div className="img-loader h-100 w-100 position-absolute">
                   <svg x="0px" y="0px" width="40px" height="40px" viewBox="0 0 50 50">
                     <path d="M25.251,6.461c-10.318,0-18.683,8.365-18.683,18.683h4.068c0-8.071,6.543-14.615,14.615-14.615V6.461z">
@@ -1075,40 +1088,67 @@ export default class ImageComponent extends Component {
             })}
           </select>}
           <div className="ctn-lbl">
+            <div>Objects</div>
             {/* Object.keys(image).length && labels.length &&  */}
-            {labels.map((lbl, idx) => {
+            {labels.length === 0?<span>0 objects created.</span>:
+            labels.map((lbl, idx) => {
+              // l(lbl)
+              
               return (
                 <div 
                   onClick={() => this.labelClicked(lbl)}
                   className="lbl-item" 
                   key={idx} 
                   style={{ 
-                    border: "5px dashed " + lbl.color,
-                    boxShadow: lbl.edit?"0 10px 20px 0 rgba(0, 0, 0, .1)":"none"
+                    boxShadow: lbl.edit ? "0 0 6px 0 #1785fb" : "none"
                   }}
                   >
-                  <div style={{ background: lbl.color }}>{idx + 1}</div>                  
+                  
+                  {lbl.form === "Polygon" && 
+                  <svg width="24" height="24" viewBox="0 0 24 24">
+                    <defs>
+                      <path id="a" d="M4 16.414V20h3.586l12-12L16 4.414l-12 12zM16.707 2.293l5 5a1 1 0 0 1 0 1.414l-13 13A1 1 0 0 1 8 22H3a1 1 0 0 1-1-1v-5a1 1 0 0 1 .293-.707l13-13a1 1 0 0 1 1.414 0z" />
+                    </defs>
+                    <use fill={lbl.color} fillRule="nonzero" href="#a"/>
+                  </svg>}
+                  
+                  {lbl.form === "Rectangle" && 
+                  <svg width="24" height="24" viewBox="0 0 24 24">
+                    <defs>
+                      <path id="b" d="M5 4a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1H5zm0-2h14a3 3 0 0 1 3 3v14a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3V5a3 3 0 0 1 3-3z"/>
+                    </defs>
+                    <use fill={lbl.color} fillRule="nonzero" href="#b"/>
+                  </svg>}
+                  
+                  {lbl.form === "Circle" && 
+                  <svg width="24" height="24" viewBox="0 0 24 24">
+                    <defs>
+                      <path id="c" d="M12 23C5.925 23 1 18.075 1 12S5.925 1 12 1s11 4.925 11 11-4.925 11-11 11zm0-2a9 9 0 1 0 0-18 9 9 0 0 0 0 18z" />
+                    </defs>
+                    <use fill={lbl.color} fillRule="nonzero" href="#c"/>
+                  </svg>}
+
                   {lbl.edit && <>
                     <input 
                       className="form-control" 
                       value={this.state.tempLblName} 
                       onChange={this.tempLblNameChanged}                        
                     />
-                    <span onClick={e => {e.stopPropagation(); this.doEditLabel(lbl)}}>
+                    {/* <span onClick={e => {e.stopPropagation(); this.doEditLabel(lbl)}}>
                       <FontAwesomeIcon icon={faSave} />
                     </span>
                     <span onClick={e => {e.stopPropagation(); this.cancelEdit(lbl)}}>
                       <FontAwesomeIcon icon={faTimes} />
-                    </span>
+                    </span> */}
                   </>}
                   {!lbl.edit && <>
-                    <span style={{ color: "#2c405a" }}>{lbl.label.name}</span>
-                    <span onClick={e => {e.stopPropagation(); this.editLabel(lbl)}}>
+                    <span>{(idx + 1) + ". " + lbl.label.name}</span>
+                    {/* <span onClick={e => {e.stopPropagation(); this.editLabel(lbl)}}>
                       <FontAwesomeIcon icon={faEdit} />
                     </span>
                     <span onClick={e => {e.stopPropagation(); this.deleteLabel(lbl)}}>
                       <FontAwesomeIcon icon={faTrash} />
-                    </span>
+                    </span> */}
                   </>}
                 </div>
               )
