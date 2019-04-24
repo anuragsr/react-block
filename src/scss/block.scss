@@ -212,18 +212,20 @@
             // &:hover{
             //   background: rgba($b, .05);
             // }
-            span{
+            span.lbl-name{
               color: $b;
               margin-left: 10px;
               margin-right: 5px;
               // cursor: pointer;
             }
-            input{
+            .labelInput{
               border: none;
+              background: none;
               display: inline-block;
-              width: 50%;
-              // margin-right: 10px;
+              // width: 50%;
+              margin-left: 10px;
               &:focus{       
+                outline: none;
                 box-shadow: none;
               }
             }

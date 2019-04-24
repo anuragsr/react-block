@@ -24,9 +24,10 @@ const getIndices = (str, searchStr, caseSensitive) => {
 export default class AutoCompleteComponent extends Component {
   constructor(props) {
     super(props)
+    let value = this.props.inputProps.value
     this.http = new HttpService()
     this.state = {
-      value: '',
+      value: value?value:'',
       suggestions: [],
     }
   }
@@ -38,6 +39,8 @@ export default class AutoCompleteComponent extends Component {
       return suggestion.name
     }else if(this.props.type === "city"){
       return suggestion.name
+    } else if(this.props.type === "label"){
+      return suggestion.name
     } 
   }
   
@@ -48,6 +51,8 @@ export default class AutoCompleteComponent extends Component {
     }else if(this.props.type === "place"){
       suggestionText = `${suggestion.name}`    
     }else if(this.props.type === "city"){
+      suggestionText = `${suggestion.name}`
+    }else if(this.props.type === "label"){
       suggestionText = `${suggestion.name}`
     }
 
@@ -86,6 +91,9 @@ export default class AutoCompleteComponent extends Component {
       params.from_ml_page = true
     }else if(this.props.type === "city"){
       url = '/api/v1/cities'
+    }else if(this.props.type === "label"){
+      url = '/api/v1/keywords'
+      // url = '/api/v1/cities'
     }
 
     this.http
@@ -100,6 +108,8 @@ export default class AutoCompleteComponent extends Component {
       }else if(this.props.type === "place"){
         suggestions = currRes.filter(x => x.name.toLowerCase().includes(value.toLowerCase()))      
       }else if(this.props.type === "city"){
+        suggestions = currRes.filter(x => x.name.toLowerCase().includes(value.toLowerCase()))      
+      }else if(this.props.type === "label"){
         suggestions = currRes.filter(x => x.name.toLowerCase().includes(value.toLowerCase()))      
       }  
       l("Results containing current query:", suggestions)
@@ -129,6 +139,7 @@ export default class AutoCompleteComponent extends Component {
     this.setState({
       value: newValue
     })
+    if (this.props.inputChanged) this.props.inputChanged(newValue)
   }
 
   onSuggestionsFetchRequested = ({ value }) => {
@@ -144,11 +155,9 @@ export default class AutoCompleteComponent extends Component {
 
   onSuggestionSelected = (event, { suggestion, suggestionValue, suggestionIndex, sectionIndex, method }) => {
     // l({ suggestion, suggestionValue, suggestionIndex, sectionIndex, method })
-    this.props.optionSelected(suggestion)
-    this.setState({
-      value: '',
-      suggestions: []
-    })
+    this.props.optionSelected(suggestion, method)
+    this.setState({ suggestions: [] })
+    if (this.props.type !== "label") this.setState({ value: '' })   
   }
 
   shouldRenderSuggestions = value => typeof value !== "undefined" && value.trim().length > 0  
@@ -171,6 +180,7 @@ export default class AutoCompleteComponent extends Component {
           getSuggestionValue={this.getSuggestionValue}
           renderSuggestion={this.renderSuggestion}
           highlightFirstSuggestion={true}
+          // alwaysRenderSuggestions={true}
           inputProps={inputProps}
         />
       </div>

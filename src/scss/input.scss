@@ -122,6 +122,21 @@ ul.tag-ctn{
   z-index: 2;
 }
 
+.ctn-lbl{
+  .lbl-auto-cpl {
+    display: inline-block;
+  }
+  .react-autosuggest__container--open {
+    .react-autosuggest__suggestions-container {
+      min-width: 150px;
+      top: 35px;
+    }
+  }
+  .react-autosuggest__suggestion {  
+    padding: 5px 10px;
+  }
+}
+
 .react-autosuggest__suggestions-list {
   margin: 0;
   padding: 0;

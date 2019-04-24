@@ -10,10 +10,9 @@ import { l, auth, rand, withIndex, getFormattedTime } from '../helpers/common'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCheck, faCaretRight, faTimes } from '@fortawesome/free-solid-svg-icons'
 
-
 const checkId = rand(5)
 const getActive = arr => {
-  let tmp
+  let tmp = false
   for(let i = 0; i < arr.length; i++){
     if(arr[i].active){
       tmp = arr[i]
@@ -22,12 +21,14 @@ const getActive = arr => {
   }
   return tmp
 }
+let blkRef
 
 export default class PhotoBlock extends Component {
   
   constructor(props) {
     super(props)
     // l(this.props)
+    blkRef = React.createRef()
     this.http = new HttpService()
     this.state = {
       categories: [],
@@ -255,8 +256,10 @@ export default class PhotoBlock extends Component {
       currPhoto.labels.splice(currPhoto.labels.indexOf(label), 1)
       // currPhoto.labels = currPhoto.labels.filter(l => l.id !== label.id)
     }
-    this.setState({ currPhoto }/* , () => l(this.state.currPhoto) */)
-  }  
+    this.setState({ currPhoto }, () => {
+      blkRef.current.focus()
+    })
+  }
 
   submit = () => {
     let im = this.state.currPhoto
@@ -297,20 +300,21 @@ export default class PhotoBlock extends Component {
 
   handleKey = event => {
     event.preventDefault()
-    // l(event.keyCode, "Photo Block")
+    l(event.keyCode, "Photo Block")
     let lbls = this.state.currPhoto.labels
     if(event.keyCode === 13){
       // Enter Key
-      if (getActive(lbls)){
-        this.child.makeImmutable()
+      let lbl = getActive(lbls)
+      if (lbl){
+        // this.child.makeImmutable()
+        this.child.editLabel(this.child.state.tempLblName)
       }else{
-        // l("Submit")
         this.submit()
       }
     } else if (event.keyCode === 8){
       // Backspace
-      let activeLbls = getActive(lbls)
-      if (activeLbls) this.child.deleteLabel(activeLbls)
+      // let activeLbls = getActive(lbls)
+      // if (activeLbls) this.child.deleteLabel(activeLbls)
     }
   }
 
@@ -330,7 +334,7 @@ export default class PhotoBlock extends Component {
     , showingUploaded = this.state.showingUploaded
 
     return (
-      <div className="block-content" tabIndex="0" onKeyUp={this.handleKey}>
+      <div ref={blkRef} className="block-content" tabIndex="0" onKeyUp={this.handleKey}>
         {photos.length > 0 && <>
           <div style={{ display: !this.state.showUpload ? "block" : "none" }}>
             <div className="title row pb-0">
@@ -386,9 +390,6 @@ export default class PhotoBlock extends Component {
                         placeholder: 'Choose the city ..',
                       }}
                       type="city"
-                      // parent="place"
-                      // placeId={this.state.currPlace.id}
-                      // changeInput={this.placeInputChanged}
                       optionSelected={this.placeSelected}
                     />
                     <FontAwesomeIcon icon={faTimes} 

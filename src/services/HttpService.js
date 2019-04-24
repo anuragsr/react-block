@@ -214,6 +214,7 @@ export default class HttpService {
   doRequest = config => {
     // l(config)
     if (config.params && config.params.series){
+      delete config.params.series
       if(call){
         call.cancel('One request at a time, fellas!')
       }

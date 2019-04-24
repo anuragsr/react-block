@@ -9,8 +9,6 @@ import { l, auth } from './helpers/common'
 
 import 'bootstrap/dist/css/bootstrap.min.css'
 import './App.scss'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCaretDown } from '@fortawesome/free-solid-svg-icons';
 
 export default class App extends Component {
   constructor(){
@@ -53,6 +51,7 @@ export default class App extends Component {
       l(res)
       // res.data.permissions = ["photo_block", "place_block", "tag_block"] 
       // res.data.permissions = ["photo_block", "tag_block"] 
+      // res.data.permissions = ["photo_block"] 
       // res.data.permissions = ["place_block"] 
 
       this.setState({ isAuth: true, perm: res.data.permissions })
@@ -100,20 +99,19 @@ export default class App extends Component {
               <button className="btn btn-accent" type="submit">Sign In</button>
             </form>}
             {this.state.isAuth && 
-              <ul className="navbar-nav logged-in">
-                <li className="nav-item">
-                  <img src="assets/user-icon.png" alt=""/>
-                  <span className="mx-3">{this.state.username}</span>                  
-                </li>
-                <li className="nav-item dropdown">
-                  <a className="nav-link dropdown-toggle" href="javascript:void(0)" data-toggle="dropdown">
-                  </a>
-                  <div className="dropdown-menu">
-                    <a className="dropdown-item" onClick={this.logOut} href="javascript:void(0)">Logout</a>                    
-                  </div>
-                </li>
-              </ul>
-            }
+            <ul className="navbar-nav logged-in">
+              <li className="nav-item">
+                <img src="assets/user-icon.png" alt=""/>
+                <span className="mx-3">{this.state.username}</span>                  
+              </li>
+              <li className="nav-item dropdown">
+                <a className="nav-link dropdown-toggle" href="javascript:void(0)" data-toggle="dropdown">
+                </a>
+                <div className="dropdown-menu">
+                  <a className="dropdown-item" onClick={this.logOut} href="javascript:void(0)">Logout</a>                    
+                </div>
+              </li>
+            </ul>}
           </div>
         </div>
       </nav>
