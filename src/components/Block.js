@@ -16,7 +16,8 @@ export default class Block extends Component {
   
   toggled = show => {
     this.setState({ show })
-    this.props.handleToggle(show, this.props.idx)
+    if (this.props.type !== "Tag")
+      this.props.handleToggle(show, this.props.idx)
   }
 
   handlePlaceChanged = place => this.props.placeChanged(place)
@@ -26,20 +27,6 @@ export default class Block extends Component {
       <div className="m-4 block">
         <div className="block-title">
           <div>{this.props.type} Block</div>
-          {/* <Switch
-            checked={this.state.show}
-            onChange={this.toggled}
-            onColor="#54b6b8"
-            onHandleColor="#fff"
-            handleDiameter={20}
-            uncheckedIcon={false}
-            checkedIcon={false}
-            boxShadow="0px 1px 5px rgba(0, 0, 0, 0.6)"
-            activeBoxShadow="0px 0px 1px 10px rgba(0, 0, 0, 0.2)"
-            height={20}
-            width={40}
-            className="react-switch"
-          /> */}
           <Switch
             checked={this.state.show}
             onChange={this.toggled}

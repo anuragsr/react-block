@@ -165,7 +165,7 @@ export default class AutoCompleteComponent extends Component {
   render() {
     const { value, suggestions } = this.state
     const inputProps = this.props.inputProps
-
+   
     inputProps.value = value
     inputProps.onChange = this.onChange
 
@@ -179,7 +179,7 @@ export default class AutoCompleteComponent extends Component {
           onSuggestionSelected={this.onSuggestionSelected}
           getSuggestionValue={this.getSuggestionValue}
           renderSuggestion={this.renderSuggestion}
-          highlightFirstSuggestion={true}
+          highlightFirstSuggestion={this.props.type !== "label"?true:false}
           // alwaysRenderSuggestions={true}
           inputProps={inputProps}
         />

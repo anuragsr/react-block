@@ -3,11 +3,10 @@ import * as PIXI from 'pixi.js'
 
 import AutoCompleteComponent from './AutoCompleteComponent'
 import HttpService from '../services/HttpService'
-import { l, auth } from '../helpers/common'
+import { l, auth, rand } from '../helpers/common'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faTimes, faCheck } from '@fortawesome/free-solid-svg-icons'
-// import { faEdit, faSave } from '@fortawesome/free-regular-svg-icons'
 
 PIXI.Graphics.prototype.drawDashedBorder = function(points, dash, gap){
   let p1, p2, dashLeft = 0, gapLeft = 0, x = 0, y = 0
@@ -48,122 +47,107 @@ PIXI.Graphics.prototype.drawDashedBorder = function(points, dash, gap){
 }
 
 PIXI.Graphics.prototype.getCenter = function() {
-  let center
-
-  if (this.type === "circle") {
-    center = this.c
-  } else {
-    center = this.sq.reduce((a, b) => {
-      return { x: a.x + b.x, y: a.y + b.y }
-    }, { x: 0, y: 0 })
-
-    let len = this.sq.length
-    center.x /= len
-    center.y /= len
+  let b = this.getBounds()
+  return {
+    x: b.x + b.width/2,
+    y: b.y + b.height/2,
   }
-
-  return center
 }
 
 class Polygon extends PIXI.Graphics {
-  constructor(sq, params) {
+  constructor(params) {
     super()
-    this.sq = sq || []
-    this.dashed = params.dashed
     this.fo = params.opacity || 0
     this.co = params.color || 0x000000
     this.lw = params.edgeSize || 1
-    this.sq.forEach(s => s.parent = this)
+    this.points = params.points
     this.draw()
   }
 
   draw = () => {
     let points = [], i = 0    
-    this.sq.forEach(s => {
-      points[i] = s.position.x + s.s/2
-      points[i+1] = s.position.y + s.s/2
+    this.points.forEach(s => {
+      points[i] = s.x
+      points[i+1] = s.y
       i+=2
     })
 
     this
     .clear()
-    .lineStyle(this.lw, this.co, this.dashed.enabled?0:1)
     .beginFill(this.co, this.fo)
     .drawPolygon(points)
     .endFill()
     .closePath()
-
-    if(this.dashed.enabled){
-      points = this.sq.map(s => {
-        return {
-          x: s.position.x + s.s/2,
-          y: s.position.y + s.s/2
-        }
-      })
-      this
-      .lineStyle(this.lw, this.co, 1)
-      .drawDashedBorder(points, 8, 7)
-    }
+    .lineStyle(this.lw, this.co, 1)
+    .drawDashedBorder(this.points, 8, 7)
   }
 }
 
 class Square extends PIXI.Graphics {
-  constructor(s, c) {
+  constructor(s, c, o) {
     super()
     this.s = s || 1
     this.c = c || 0x000000
+    this.o = typeof o !== "undefined" ? o : 1
     this.draw()
   }  
 
   draw = () => {
     this
     .clear()
-    .beginFill(this.c)
+    .lineStyle(1, 0x979797, 1)    
+    .beginFill(this.c, this.o)
     .drawRect(0, 0, this.s, this.s)
     .endFill()
   }
 }
 
 class Circle extends PIXI.Graphics {
-  constructor(sq, params) {
+  constructor(params) {
     super()
-    this.sq = sq || []
-    this.dashed = params.dashed
-    this.c = params.circleData.c
-    this.r = params.circleData.r || 1
+    // this.r = params.circleData.r || 1
+    this.c = {}
     this.lw = params.edgeSize || 1
     this.co = params.color || 0x000000
     this.fo = params.opacity || 1
-    this.sq.forEach(s => s.parent = this)
+    this.points = params.points  
     this.draw()
   }  
-
+  
   draw = () => {
+    // Get dummy outer square
+    let tempPoly = new Polygon({
+      points: this.points
+    })
+    , bounds = tempPoly.getBounds()
+    , center = tempPoly.getCenter()
+    // l(bounds, center)
+
+    this.r = bounds.width / 2
+    this.c.x = center.x// - this.s / 2
+    this.c.y = center.y// - this.s / 2
+
+    let points = [], i = 0
+    , noPoints = this.r / 2
+    , angle = 2 * Math.PI / noPoints
+
+    for (i = 0; i < noPoints; i++) {
+      points.push({
+        x: this.c.x + this.r * Math.cos(angle * i),
+        y: this.c.y + this.r * Math.sin(angle * i)
+      })
+    }
+
     this
     .clear()
-    .lineStyle(this.lw, this.co, this.dashed.enabled?0:1)
     .beginFill(this.co, this.fo)
     .drawCircle(this.c.x, this.c.y, this.r)
     .endFill()
     .closePath()
-
-    if(this.dashed.enabled){
-      let points = []
-      , noPoints = this.r/2
-      , angle = 2*Math.PI/noPoints
-
-      for(let i = 0; i < noPoints; i++){
-        // let x = angle*i - Math.PI/2
-        points.push({
-          x: this.c.x + this.r*Math.cos(angle*i),
-          y: this.c.y + this.r*Math.sin(angle*i)
-        })
-      }
-      
-      this
-      .lineStyle(this.lw, this.co, 1)
-      .drawDashedBorder(points, 8, 7)
-    }
+    .lineStyle(this.lw, this.co, 1)
+    .drawDashedBorder(points, 8, 7)
+    // if (bounds.width > 50 && bounds.width === bounds.height){
+    // }
   }
 }
 
@@ -173,7 +157,6 @@ class NumberCircle extends PIXI.Graphics {
     this.c = params.c
     this.r = params.r || 1
     this.es = params.edgeSize || 1
-    this.lc = params.lineColor || 0x000000
     this.fc = params.fillColor || 0x000000
     this.fo = params.opacity || 1
     this.draw()
@@ -182,7 +165,6 @@ class NumberCircle extends PIXI.Graphics {
   draw = () => {
     this
     .clear()
-    .lineStyle(this.es, this.lc, 1)
     .beginFill(this.fc, this.fo)
     .drawCircle(this.c.x, this.c.y, this.r)
     .endFill()
@@ -196,39 +178,45 @@ let randHex = () => {
   })
 }
 , hexJStoCSS = str => '#' + str.substring(2, str.length)
-, distance = (x1, y1, x2, y2) => Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2))
 , getCoords = (data, type, subtype) => {
-  let height = imgRef.current.clientHeight
-  , width = imgRef.current.clientWidth
+  let height = imgInnerRef.current.clientHeight
+  , width = imgInnerRef.current.clientWidth
+  , returnVar = []
   , coords
-  , returnVar
 
   switch(type){
     case 'rectangle':
-      let point1, point2, point3, point4
+    case 'circle':
       switch(subtype){
         case 'percent':
-          coords = data.object_coords.map(c => parseFloat(parseFloat(c).toFixed(2)))  
-          point1 = [coords[0]*width, coords[1]*height]
-          point2 = [coords[2]*width, coords[1]*height]
-          point3 = [coords[2]*width, coords[3]*height]
-          point4 = [coords[0]*width, coords[3]*height]      
+          coords = data.object_coords.map(c => parseFloat(parseFloat(c).toFixed(2))) 
+          returnVar.push({
+            x: coords[0] * width, y: coords[1] * height
+          },{
+            x: coords[2] * width, y: coords[1] * height
+          },{
+            x: coords[2]*width, y: coords[3]*height
+          },{
+            x: coords[0]*width, y: coords[3]*height
+          })
         break
-    
+          
         default:
-          point1 = [data.tl.x, data.tl.y]
-          point2 = [data.br.x, data.tl.y]
-          point3 = [data.br.x, data.br.y]
-          point4 = [data.tl.x, data.br.y]
+          returnVar.push({
+            x: data.tl.x, y: data.tl.y
+          },{
+            x: data.br.x, y: data.tl.y
+          },{
+            x: data.br.x, y: data.br.y
+          },{
+            x: data.tl.x, y: data.br.y
+          })    
         break
       }  
-      returnVar = [].concat(...[point1, point2, point3, point4])
     break
     
-    case 'polygon':
+    default: // Polygon
       coords = data.object_coords.map(c => parseFloat(parseFloat(c).toFixed(2)))
-      returnVar = []
-
       for(let i = 0; i < coords.length - 1; i+=2){
         returnVar.push({
           x: coords[i]*width,
@@ -236,131 +224,186 @@ let randHex = () => {
         })
       }
     break
-    
-    default:
-      coords = data.object_coords.map(c => parseFloat(parseFloat(c).toFixed(2)))      
-      returnVar = {
-        c: { x: coords[0]*width, y: coords[1]*height },
-        r: coords[2]*width
-      }
-    break
   }
 
   return returnVar
 }
-, polyArr = []
+, ctnArr = []
+, imgInnerRef
 , imgRef, bg
 , tempPointArr = []
 , tempColor
+, tempCtn = { 
+  id: rand(7),
+  lastSqPosArr: [],
+  labelData: { active: true } 
+}
 , rectangleCoords = {}
-, circleData = {}
 , polyParams = {
-  // opacity: .7,
-  // edgeSize: 2,
   opacity: .4,
   edgeSize: 5,
-  pointSize: 15,
-  dashed: {
-    enabled: true,
-    dash: 8,
-    gap: 7,
-  }
+  pointSize: 10,
 }
-, delBtn = new PIXI.Sprite.from('assets/delete-3.png')
-, currentObject = null
+, currCtnObj = null
+, inBounds = true
+, dummyLabels = [
+  {
+    form: "Rectangle",
+    id: 396,
+    label: {
+      id: 7738,
+      name: "fashion accessory",
+      tag: null,
+    },
+    object_coords: [
+      "0.3132956922054291",
+      "0.27638623118400574",
+      "0.9963658452033997",
+      "0.8171226382255554",
+    ]
+  },
+  {
+    form: "Circle",
+    id: 39601,
+    label: {
+      id: 77381,
+      name: "circle",
+      tag: null,
+    },
+    object_coords: [
+      "0.2660536421530819",
+      "0.03249433527307487",
+      "0.6242626535534694",
+      "0.7778712830904767"
+    ]
+  },
+  {
+    form: "Polygon",
+    id: 396012,
+    label: {
+      id: 773812,
+      name: "poly",
+      tag: null,
+    },
+    object_coords: [
+      "0.050795250896057347", 
+      "0.1671309192200557", 
+      "0.06334005376344086", 
+      "0.7158774373259053", 
+      "0.25509632616487454", 
+      "0.8579387186629527", 
+      "0.32857302867383514", 
+      "0.6295264623955432", 
+      "0.28377016129032256", 
+      "0.21727019498607242", 
+      "0.19058019713261648", 
+      "0.03064066852367688"
+    ]
+  }
+]
+, suggestions = []
+, fromOptions = false
 
 export default class ImageComponent extends Component {
   constructor(props) {
     super(props)
     imgRef = React.createRef()
+    imgInnerRef = React.createRef()
     this.http = new HttpService()
     this.state = {
       currCat: "",
       tempLblName: "",
       adding: "",
-      tempPoly: ""
+      imgOrientation: ""
     }
   }
 
   componentDidMount(){
     this.props.onRef(this)
     window.addEventListener('resize', this.resizeObjects)
-    delBtn.interactive = true
-    delBtn.buttonMode = true
-    delBtn.on('pointerdown', () => this.deleteLabel())
   }
 
   componentWillReceiveProps = nextProps => {
     // l("Next Props")
+    if(!nextProps.image.labelsChanged)
+      this.setState({ imgOrientation: "" })
+
     if(nextProps.image.category){
       let currCat = nextProps.image.category.name
       this.setState({ currCat })
     }
   }
 
-  imageLoaded = () => {
-    // l("New Image loaded")
-    polyArr.length = 0
-    this.createCanvas()
-    this.drawObjects()
+  imageLoaded = img => {
+    // console.clear()
+    l("Image loaded: ", img.width, img.height)
+    
+    let ctnWidth = imgRef.current.clientWidth
+    , ctnHeight = imgRef.current.clientHeight
+    , ratio = img.height / img.width
+    , tempWidth = ctnWidth
+    , tempHeight = ratio * tempWidth
+
+    l("After height matched: ", tempWidth, tempHeight)
+
+    if (tempHeight > ctnHeight) this.setState({ imgOrientation: "portrait" })
+    else this.setState({ imgOrientation: "landscape" })
+    
+    setTimeout(this.createCanvas, 10)
   }
   
   destroyCanvas = () => {
+    ctnArr.length = 0
     if(this.app){
-      imgRef.current.removeChild(this.app.view)
+      imgInnerRef.current.removeChild(this.app.view)
       this.app.destroy()
       this.app = null
     }
   }
 
   createCanvas = () => {
-    this.destroyCanvas()
+    this.destroyCanvas()    
+    
     this.app = new PIXI.Application(
-      imgRef.current.clientWidth, 
-      imgRef.current.clientHeight, {
+      imgInnerRef.current.clientWidth, 
+      imgInnerRef.current.clientHeight, {
       transparent: true,
       antialias: true
     })
     this.ctn = new PIXI.Container()
+    this.ctn.sortableChildren = true
     this.app.stage.addChild(this.ctn)
 
     let view = this.app.view
     view.style.position = "absolute"
     // view.style.outline = "5px solid green"
     view.style.top = view.style.left = 0
-    imgRef.current.appendChild(view)
+    imgInnerRef.current.appendChild(view)
     
     // Blank rectangle for click events for adding shapes
     this.addBackground()
 
-    // Delete button for objects    
-    // delBtn.alpha = 0
-    delBtn.visible = false
-    delBtn.position.set(50, 50)
-    delBtn.anchor.set(-.25, .25)
-    this.ctn.addChild(delBtn)
+    // Draw objects if existing in image
+    this.drawObjects()
   }
 
   addBackground = () => {
+    let params, tempPoly
     bg = new PIXI.Graphics()
     bg
-    .beginFill(0xFFFF00, 0)
-    .lineStyle(0, 0xFF0000)
-    .drawRect(0, 0, imgRef.current.clientWidth, imgRef.current.clientHeight)
+    .beginFill(0x000000, 0)
+    .lineStyle(0, 0x000000)
+    .drawRect(0, 0, imgInnerRef.current.clientWidth, imgInnerRef.current.clientHeight)
     this.ctn.addChild(bg)
 
     bg.interactive = true
     bg.visible = false
-    // bg.cursor = "crosshair"
 
     bg.on('pointerdown', e => {
       let c = {...e.data.global}
-      , tempPoly = this.state.tempPoly
 
-      if(tempPoly){
-        tempPoly.sq.forEach(s => this.ctn.removeChild(s))
-        this.ctn.removeChild(tempPoly)
-        this.setState({ tempPoly: "" })
+      if(tempCtn){
+        this.clearTempCtn()
       }
 
       switch(this.state.adding){
@@ -372,28 +415,62 @@ export default class ImageComponent extends Component {
         
         case 'polygon':
           tempPointArr.push(c)
-          let params = {
+          params = {
             ...polyParams,
             type: 'polygon',
-            color: tempColor,            
+            color: tempColor,
             points: tempPointArr,
           }
-          tempPoly = this.drawShape(params)
 
-          // tempPoly = this.drawPolygon(tempPointArr, 15, 2, tempColor, .7, )
-          this.setState({ tempPoly })
+          tempPoly = this.drawShape(params)
+          tempCtn.shape = tempPoly
+          tempCtn.boundingBox = this.drawBoundingBox(tempPoly)
+          tempCtn.controlPoints = this.drawControlPoints(params.points, 'polygon')
+          tempCtn.numberCtn = this.drawNumberLabel(tempPoly, tempColor)
+          tempCtn.deleteBtn = this.drawDeleteButton(tempPoly)
+          currCtnObj = tempCtn
+
         break
         
         default:
           this.data = e.data
           this.drawingCirc = true
-          circleData.c = c
+          rectangleCoords.tl = { x: c.x, y: c.y }
         break
       }
     })
 
     bg.on('pointerup', e => {
       // l("Done Creating")
+      if(this.drawingCirc){
+        tempCtn.boundingBox = this.drawBoundingBox(tempPoly)
+        let bb = tempPoly.getBounds()
+        , points = [
+          { x: bb.x, y: bb.y },
+          { x: bb.x + bb.width, y: bb.y },
+          { x: bb.x + bb.width, y: bb.y + bb.height },
+          { x: bb.x, y: bb.y + bb.height },
+        ]
+        tempCtn.controlPoints = this.drawControlPoints(points, 'circle')
+        tempCtn.numberCtn = this.drawNumberLabel(tempPoly, tempColor)
+        tempCtn.deleteBtn = this.drawDeleteButton(tempPoly)
+
+        let height = imgInnerRef.current.clientHeight
+        , width = imgInnerRef.current.clientWidth
+        , size = polyParams.pointSize
+        , newPos = tempCtn.controlPoints.map(s => {
+          return { x: s.x, y: s.y }
+        })
+        
+        tempCtn.labelData.object_coords = [
+          (newPos[0].x + size / 2) / width,
+          (newPos[0].y + size / 2) / height,
+          (newPos[2].x + size / 2) / width,
+          (newPos[2].y + size / 2) / height,
+        ].map(x => x.toString())  
+
+        currCtnObj = tempCtn
+      }
       this.data = null
       this.drawingRect = false
       this.drawingCirc = false      
@@ -402,13 +479,9 @@ export default class ImageComponent extends Component {
     bg.on('pointermove', () => {
       if(this.data){
         let p = this.data.global
-        , tempPoly = this.state.tempPoly
-        , params
 
-        if(tempPoly){
-          tempPoly.sq && tempPoly.sq.forEach(s => this.ctn.removeChild(s))
-          this.ctn.removeChild(tempPoly)
-          this.setState({ tempPoly: "" })
+        if(tempCtn){
+          this.clearTempCtn()
         }
 
         if(this.drawingRect){
@@ -419,300 +492,383 @@ export default class ImageComponent extends Component {
             color: tempColor,
             points: getCoords(rectangleCoords, 'rectangle', ''),
           }
+
+          tempPoly = this.drawShape(params)
+          tempCtn.shape = tempPoly
+          tempCtn.boundingBox = this.drawBoundingBox(tempPoly)
+          tempCtn.controlPoints = this.drawControlPoints(params.points, 'rectangle')
+          tempCtn.numberCtn = this.drawNumberLabel(tempPoly, tempColor)
+          tempCtn.deleteBtn = this.drawDeleteButton(tempPoly)
+          currCtnObj = tempCtn
+
         }else if(this.drawingCirc){
-          circleData.r = distance(circleData.c.x, circleData.c.y, p.x, p.y)
+          rectangleCoords.br = { x: p.x, y: p.y }
           params = {
             ...polyParams,
             type: 'circle',
             color: tempColor,
-            circleData: circleData,
+            points: getCoords(rectangleCoords, 'rectangle', ''),
           }
-        }
 
-        tempPoly = this.drawShape(params)
-        this.setState({ tempPoly })
+          tempPoly = this.drawShape(params)
+          tempCtn.shape = tempPoly
+        }
       }
     })
   }
 
-  resetForAdding = () => {
+  clearTempCtn = () => {
+    Object.keys(tempCtn).forEach(key => {
+      if(key === "controlPoints") tempCtn[key].forEach(obj => this.ctn.removeChild(obj))
+      else this.ctn.removeChild(tempCtn[key])
+    })
+    tempCtn = { 
+      id: rand(7),
+      lastSqPosArr: [],
+      labelData: { active: true } 
+    }
+  }
+
+  resetForAdding = e => {
+    typeof e !== "undefined" && e.stopPropagation()
     bg.visible = false
     tempPointArr.length = 0
-    polyArr.forEach(p => {
-      p.visible = true
-      p.sq && p.sq.forEach(s => s.visible = true)
-    })
-    this.setState({ adding: "", tempPoly: "" })
+    this.clearTempCtn()
+    this.setState({ adding: "" })
+    this.props.editing(false)
   }
 
   startAdding = type => {
-    // l(bg)
-    let tempPoly = this.state.tempPoly
     bg.visible = true
     tempColor = randHex()
-    polyArr.forEach(p => {
-      p.visible = false
-      p.sq && p.sq.forEach(s => s.visible = false)
-    })
-    if(tempPoly){
-      tempPoly.sq.forEach(s => this.ctn.removeChild(s))
-      this.ctn.removeChild(tempPoly)
-    }
-    delBtn.visible = false
-    this.setState({ adding: type, tempPoly: "" })
+    this.hideObjects(true)
+    this.clearTempCtn()
+    this.setState({ adding: type })
+    this.props.editing(true)
   }
 
   doneAdding = (e, type) => {
     typeof e !== "undefined" && e.stopPropagation()
-    let height = imgRef.current.clientHeight
-    , width = imgRef.current.clientWidth
-    , tempPoly = this.state.tempPoly
-    , labelData = {
-      edit: false,
-      active: false,
-      form: type,
+    let ld = currCtnObj.labelData
+    ld.active = false
+    ld.edit = false
+    ld.form = type
+    ld.id = 0
+    ld.label = {
       id: 0,
-      label: {
-        id: 0,
-        name: "new label",
-        tag: null
-      },
+      name: "new label",
+      tag: null
     }
-
-    if (tempPoly){
-      switch(type){
-        case 'Rectangle':
-          let tmp = []
-          tempPoly.sq.forEach((s, idx) => {
-            if(idx%2 === 0){
-              tmp.push(
-                ((s.x + s.s/2)/width).toString(), 
-                ((s.y + s.s/2)/height).toString()
-              )
-            }            
-          })
-          labelData.object_coords = tmp        
-        break
-        
-        case 'Polygon':
-          labelData.object_coords = tempPoly.sq.map(s => {
-            return { x: s.x, y: s.y }
-          }).reduce((a, b) => {
-            return a.concat(...[(b.x / width).toString(), (b.y / height).toString()])
-          }, [])
-        break
-          
-        default: 
-          labelData.object_coords = [
-            (tempPoly.c.x / width).toString(),
-            (tempPoly.c.y / height).toString(),
-            (tempPoly.r / width).toString()
-          ]
-        break
-      }
-  
-      // Add new label based on the above data
-      tempPoly.labelData = labelData
-      this.addLabel(tempPoly)
-    }
-  }
-  
-  cancelAdd = e => {
-    e.stopPropagation()
-    let tempPoly = this.state.tempPoly
-    tempPoly.sq && tempPoly.sq.forEach(s => this.ctn.removeChild(s))
-    this.ctn.removeChild(tempPoly)    
-    this.resetForAdding()
+    this.addLabel()
   }
 
   drawObjects = () => {
-    this.props.image.labels.forEach((lbl, idx) => {
+    // let labels = dummyLabels
+    let labels = this.props.image.labels
+    
+    labels.forEach((lbl, idx) => {
+      tempCtn = { id: rand(7), lastSqPosArr: [] }
+
       let form = lbl.form.toLowerCase()
-      , params
-      , poly
-      , color = randHex()  
+      , tempPoly
+      , params = {
+        ...polyParams,
+        type: form,
+        color: randHex(),
+      }
+
+      params.points = getCoords(lbl, form, 'percent')
+      tempPoly = this.drawShape(params)
+      tempCtn.shape = tempPoly
+      tempCtn.boundingBox = this.drawBoundingBox(tempPoly)
 
       switch(form){
-        case 'rectangle':    
-          params = {
-            ...polyParams,
-            type: form,
-            color: color,
-            points: getCoords(lbl, 'rectangle', 'percent'),
-          }
-        break
-        
+        case 'rectangle':
         case 'polygon':
-          params = {
-            ...polyParams,
-            type: form,
-            color: color,
-            points: getCoords(lbl, 'polygon'),
-          }
-        break
-        
-        default:           
-          params = {
-            ...polyParams,
-            type: form,
-            color: color,
-            circleData: getCoords(lbl, 'circle'),
-          }
+          tempCtn.controlPoints = this.drawControlPoints(params.points, form)
+        break   
+
+        default:
+          let bb = tempPoly.getBounds()
+          , points = [
+            { x: bb.x, y: bb.y },
+            { x: bb.x + bb.width, y: bb.y },
+            { x: bb.x + bb.width, y: bb.y + bb.height },
+            { x: bb.x, y: bb.y + bb.height },
+          ]
+          tempCtn.controlPoints = this.drawControlPoints(points, 'circle')
         break
       }
 
-      params.idx = idx + 1
-      poly = this.drawShape(params)
-      lbl.color = hexJStoCSS(color)
+      tempCtn.numberCtn = this.drawNumberLabel(tempPoly, params.color, idx + 1)
+      tempCtn.deleteBtn = this.drawDeleteButton(tempPoly)
+      
+      lbl.ref = React.createRef()
+      lbl.color = hexJStoCSS(params.color)
       lbl.edit = false
       lbl.active = false
-      poly.labelData = lbl
+      tempCtn.labelData = lbl
 
-      this.addNumberLabel(poly, params.idx)
-      polyArr.push(poly)
+      ctnArr.push(tempCtn)
     })
+    
+    this.drawAllObjects()
 
+    // For same color in label
     this.props.imageUpdated()
-  }
-
-  setDelBtn = () => {
-    this.ctn.removeChild(delBtn)
-
-    let b = currentObject.getBounds()
-    delBtn.position.set(b.x + b.width, b.y)
-    delBtn.visible = true
-
-    if (currentObject.type === 'circle') delBtn.anchor.set(.5, 0)
-    else delBtn.anchor.set(-.25, .25)
-
-    this.ctn.addChild(delBtn)
   }
 
   resizeObjects = () => {
     // Resize canvas according to image
-    this.createCanvas()    
-
-    // Redraw shapes based on new canvas size
-    // Maintain the positions of coordinates
-    let tempPolyArr = []
-    , tempPoly
+    this.app.renderer.resize(
+      imgInnerRef.current.clientWidth,
+      imgInnerRef.current.clientHeight
+    )
     
-    polyArr.forEach((poly, idx) => {
-      let lbl = poly.labelData
+    // Resize background
+    bg
+    .clear()
+    .beginFill(0x000000, 0)
+    .lineStyle(0, 0x000000)
+    .drawRect(0, 0, imgInnerRef.current.clientWidth, imgInnerRef.current.clientHeight)
+    
+    // Redraw shapes based on new canvas size
+    ctnArr.forEach(ctnObj => {
+      // l(ctnObj)
+      let lbl = ctnObj.labelData
       , form = lbl.form.toLowerCase()
-      , params = {
-        ...polyParams,
-        type: form,
-        color: poly.graphicsData[0].fillColor,
-      }
-      // this.props.imageUpdated(lbl, "delete")
-      
-      switch(form){
-        case 'rectangle':
-          // params.points = getRectangleCoords(lbl, 'percent')
-          params.points = getCoords(lbl, form, 'percent')
-        break
-        
-        case 'polygon':
-          params.points = getCoords(lbl, form)
-        break
-        
-        default: 
-          params.circleData = getCoords(lbl, form)     
-        break
-      }
+      , points, bounds, center
+      , gr = ctnObj.shape
+      , bb = ctnObj.boundingBox
+      , nc = ctnObj.numberCtn
+      , db = ctnObj.deleteBtn
 
-      // l(params)
-      params.idx = idx + 1
-      tempPoly = this.drawShape(params)      
-      lbl.color = hexJStoCSS(params.color)
-      lbl.edit = false
-      lbl.active = false
-      tempPoly.labelData = lbl
-
-      this.addNumberLabel(tempPoly, params.idx)      
-      tempPolyArr.push(tempPoly)
+      // Get new coordinates by percent
+      points = getCoords(lbl, form, 'percent')
+      gr.points = points
+      gr.draw()
+            
+      // Reposition control points
+      bounds = gr.getBounds()
       
-      if (currentObject != null && currentObject.labelData === lbl) {        
-        currentObject = tempPoly
-        this.setDelBtn()
+      if (form === 'circle') {
+        points = [
+          { x: bounds.x, y: bounds.y },
+          { x: bounds.x + bounds.width, y: bounds.y },
+          { x: bounds.x + bounds.width, y: bounds.y + bounds.height },
+          { x: bounds.x, y: bounds.y + bounds.height },
+        ]
+      }
+            
+      ctnObj.lastSqPosArr = []
+      ctnObj.controlPoints.forEach((sq, i) => {
+        sq.position.set(points[i].x - sq.s / 2, points[i].y - sq.s/2)
+        ctnObj.lastSqPosArr.push({ x: sq.x, y: sq.y })
+      })
+
+      // Redraw the bounding box
+      bb
+      .clear()
+      .lineStyle(1, 0x979797, 1)
+      .drawRect(bounds.x, bounds.y, bounds.width, bounds.height)
+
+      // Update delete button, number circle positions
+      db.position.set(bounds.x + bounds.width - 50, bounds.y + 15)
+
+      center = gr.getCenter()
+      nc.position.set(center.x, center.y)
+    })
+  }
+
+  hideObjects = forAdding => {
+    // l(ctnArr)
+    ctnArr.forEach(ctnObj => {
+      ctnObj.labelData.active = false
+      ctnObj.labelData.edit = false
+      ctnObj.boundingBox.visible = false
+      ctnObj.controlPoints.forEach(sq => sq.visible = false)
+      ctnObj.deleteBtn.visible = false
+
+      if (forAdding){
+        ctnObj.shape.visible = false
+        ctnObj.numberCtn.visible = false
       }
     })
-
-    polyArr = tempPolyArr
-    l(this.props.image.labels)
   }
+  
+  deleteObject = ctnObj => {
+    this.ctn.removeChild(ctnObj.shape)
+    this.ctn.removeChild(ctnObj.boundingBox)
+    ctnObj.controlPoints.forEach(sq => this.ctn.removeChild(sq))
+    this.ctn.removeChild(ctnObj.numberCtn)
+    this.ctn.removeChild(ctnObj.deleteBtn)
+  }  
+
+  addObject = ctnObj => {
+    ctnObj.shape.visible = true
+    this.ctn.addChild(ctnObj.shape)
+  
+    ctnObj.boundingBox.visible = false
+    this.ctn.addChild(ctnObj.boundingBox)
+    
+    ctnObj.controlPoints.forEach(sq => {
+      sq.visible = false
+      this.ctn.addChild(sq)
+    })
+    
+    ctnObj.numberCtn.visible = true
+    this.ctn.addChild(ctnObj.numberCtn)
+    
+    ctnObj.deleteBtn.visible = false
+    this.ctn.addChild(ctnObj.deleteBtn)
+  }
+
+  drawAllObjects = () => ctnArr.forEach(ctnObj => this.addObject(ctnObj))
 
   drawShape = params => {
     let type = params.type
-    , sqArr = []
     , poly
 
     switch(type){
       case 'rectangle':
-        // Points as squares
-        for(let i = 0, idx = 0; i < params.points.length - 1; i+=2){
-          let sq = new Square(params.pointSize, params.color)
-          sq.idx = idx
-          sq.position.x = params.points[i] - params.pointSize/2
-          sq.position.y = params.points[i+1] - params.pointSize/2
-          sqArr.push(sq)
-          idx++
-        }
-
-        sqArr.forEach((s, idx) => {
-          this.addToStage(type, s, 'point', idx)
-        })
-        
-        // Rectangle from created squares
-        poly = new Polygon(sqArr, params)
-      break
-      
       case 'polygon':
-        // Points as squares
-        for(let i = 0; i < params.points.length; i++){
-          let sq = new Square(params.pointSize, params.color)
-          sq.position.x = params.points[i].x - params.pointSize/2
-          sq.position.y = params.points[i].y - params.pointSize/2
-          sqArr.push(sq)
-        }
-
-        sqArr.forEach(s => {
-          this.addToStage(type, s, 'point')
-        })
-        
-        // Polygon from created squares
-        poly = new Polygon(sqArr, params)
+        poly = new Polygon(params)
       break
 
       default:
-        // Single control square
-        let sq = new Square(params.pointSize, params.color)
-        sq.position.x = params.circleData.c.x + params.circleData.r - params.pointSize/2
-        sq.position.y = params.circleData.c.y - params.pointSize/2
-        
-        this.addToStage(type, sq, 'point')
-        
-        // Circle containing one square for resize
-        poly = new Circle([sq], params)
+        poly = new Circle(params)
       break
     }
-
-    this.addToStage(type, poly, 'shape')
+    
+    poly.type = type
+    poly.ctnObj = tempCtn
+    this.addInteraction(poly, 'shape')
     return poly
   }
+  
+  drawBoundingBox = poly => {
+    let bb = poly.getBounds()
+    , gr = new PIXI.Graphics()
+    
+    this.ctn.addChild(gr)
+    return gr
+      .lineStyle(1, 0x979797, 1)
+      .drawRect(bb.x, bb.y, bb.width, bb.height)
+  }
 
-  addToStage = (graphicType, graphic, eventType, pointIdx) => {
+  drawControlPoints = (points, type) => {
+    let sqArr = []
+    
+    for(let i = 0; i < points.length; i++){
+      let sq = new Square(polyParams.pointSize, 0xe5e5e5, 1)
+      sq.position.set(
+        points[i].x - polyParams.pointSize/2, 
+        points[i].y - polyParams.pointSize/2
+      )
+      sq.s = polyParams.pointSize
+      sq.idx = i
+      sq.type = type
+      sq.ctnObj = tempCtn
+      tempCtn.lastSqPosArr.push({ x: sq.x, y: sq.y })
+      this.addInteraction(sq, 'point')
+      sqArr.push(sq)
+    }
+
+    return sqArr
+  }
+
+  drawNumberLabel = (graphic, color, index) => {
+    let circCtn = new PIXI.Container()
+      , center = graphic.getCenter()
+
+    let circ = new NumberCircle({
+      c: { x: 0, y: 0 },
+      r: 25,
+      edgeSize: 2,
+      fillColor: color,
+      opacity: 1
+    })
+    circCtn.addChild(circ)
+
+    let text = new PIXI.Text(index, new PIXI.TextStyle({
+      fill: 0xffffff,
+      fontFamily: "sofia-pro-r",
+      fontSize: 24,
+      align: "center",
+      wordWrap: true
+    }))
+    text.anchor.set(0.5, 0.5)
+    circCtn.addChild(text)
+    circCtn.position.set(center.x, center.y)
+
+    circCtn.visible = false
+    this.ctn.addChild(circCtn)
+
+    return circCtn
+  }
+
+  drawDeleteButton = tempPoly => {
+    let b = tempPoly.getBounds()
+    , delBtn = new PIXI.Sprite.from('assets/delete-3.png')
+
+    delBtn.visible = false 
+    delBtn.interactive = true
+    delBtn.buttonMode = true
+    delBtn.ctnObj = tempCtn
+    delBtn.on('pointerdown', () => this.deleteLabel())
+    delBtn.position.set(b.x + b.width - 50, b.y + 15)    
+    this.ctn.addChild(delBtn)
+
+    return delBtn
+  }
+
+  moveToTopLayer = () => {
+    this.deleteObject(currCtnObj)
+    this.addObject(currCtnObj)
+
+    currCtnObj.boundingBox.visible = true
+    currCtnObj.deleteBtn.visible = true
+    currCtnObj.controlPoints.forEach(sq => sq.visible = true)
+    this.setState({ 
+      tempLblName: currCtnObj.labelData.label.name 
+    }, () => {
+      // l(currCtnObj.labelData.ref)
+      let input = currCtnObj
+        .labelData.ref.current
+        .children[1]
+        .children[0]
+        .children[0].children[0]
+      // l(input)
+      input.focus()
+    })
+  }
+
+  makeMutable = () => {
+    this.hideObjects()
+    currCtnObj.labelData.edit = true
+    currCtnObj.labelData.active = true
+    currCtnObj.boundingBox.visible = true
+    currCtnObj.controlPoints.forEach(sq => sq.visible = true)
+    currCtnObj.deleteBtn.visible = true
+    this.moveToTopLayer()    
+  }
+
+  makeImmutable = () => {
+    this.hideObjects()
+    this.props.imageUpdated()
+  }
+
+  addInteraction = (graphic, eventType) => {
     let self = this
+
     this.ctn.addChild(graphic)
-    graphic.type = graphicType
     graphic.interactive = true
     
     if(eventType === 'shape'){
       graphic.buttonMode  = true
     }else if(eventType === 'point'){
-      if(graphic.type === 'rectangle')
-        graphic.cursor = pointIdx%2?"nesw-resize":"nwse-resize"
+      if(graphic.type !== 'polygon')
+        graphic.cursor = graphic.idx % 2 ? "nesw-resize" : "nwse-resize"
       else
         graphic.cursor = "move"
     }
@@ -721,134 +877,128 @@ export default class ImageComponent extends Component {
     .on('pointerdown', onDragStart)
     .on('pointerup', onDragEnd)
     .on('pointerupoutside', onDragEnd)
-    .on('pointermove', onDragMove)
+    .on('pointermove', onDragMove)    
+
+    function setControlPointPositions(sq, point){
+      let idx = point.idx
+      , pos = point.position
+
+      switch (idx) {
+        case 0: // Top Left
+          sq[1].position.y = pos.y
+          sq[3].position.x = pos.x
+          break
+
+        case 1: // Top Right
+          sq[0].position.y = pos.y
+          sq[2].position.x = pos.x
+          break
+
+        case 2: // Bottom Right
+          sq[3].position.y = pos.y
+          sq[1].position.x = pos.x
+          break
+
+        default: // Bottom Left
+          sq[2].position.y = pos.y
+          sq[0].position.x = pos.x
+          break
+      }
+    }
+
+    function lerp(a, b, x) {
+      return a + x * (b - a)
+    }
+    
+    function getClosestPointOnLine(center, idx, pos){
+      let line = {
+        x0: center.x + 0,
+        y0: center.y + 0,
+      } // Line joining the 2 points
+
+      switch (idx % 2) {
+        case 0:
+          line.x1 = center.x + 100
+          line.y1 = center.y + 100
+          break
+
+        default:
+          line.x1 = center.x - 100
+          line.y1 = center.y + 100
+          break
+      }
+
+      let dx = line.x1 - line.x0
+        , dy = line.y1 - line.y0
+        , t = ((pos.x - line.x0) * dx + (pos.y - line.y0) * dy) / (dx * dx + dy * dy)
+
+      // t = Math.min(1, Math.max(0, t)) //- Not required here for infinite range
+
+      return {
+        x: lerp(line.x0, line.x1, t),
+        y: lerp(line.y0, line.y1, t),
+        // p: t
+      }
+    }
+
+    function getPosInBounds(pos, side){
+      let width = imgInnerRef.current.clientWidth
+      , height = imgInnerRef.current.clientHeight
+      return {
+        x: Math.min(Math.max(0, pos.x), width) - side / 2,
+        y: Math.min(Math.max(0, pos.y), height) - side / 2
+      }
+    }
 
     function onDragStart(e){
-      // l(e)
-      let ld
-      switch(eventType){
-        case 'point':
-          ld = this.parent.labelData
-          if (!ld || (ld && ld.active)) {
-            this.data = e.data
-            this.alpha = 0.5
-            this.dragging = true
-          }
-        break
-        
-        default:
-          ld = this.labelData
-          if (ld && !ld.active){
-            polyArr.forEach(p => {
-              p.labelData.active = false
-              p.labelData.edit = false
-            })
-            ld.active = true
-            ld.edit = true
-            
-            currentObject = this
-            self.setState({ tempLblName: ld.label.name })
-            self.setDelBtn()
-          }
-          else{
-            this.data = e.data
-            this.alpha = 0.5
-            this.dragging = true
-          }
-        break
+      currCtnObj = this.ctnObj
+      if (!currCtnObj.labelData.active) {
+        self.makeMutable()
+      } else {
+        this.data = e.data
+        this.alpha = 0.5
+        this.dragging = true
       }
+      // l(currCtnObj)
     }
 
     function onDragEnd(){
       // To end rectangle/circle drawing
       bg.emit('pointerup')
-
-      let height = imgRef.current.clientHeight
-      , width = imgRef.current.clientWidth
-      , size = polyParams.edgeSize
+      
+      let height = imgInnerRef.current.clientHeight
+      , width = imgInnerRef.current.clientWidth
+      // , size = polyParams.edgeSize
+      , size = polyParams.pointSize
       , newPos
+      , ld = currCtnObj.labelData
+      , gr = currCtnObj.shape
+      , sq = currCtnObj.controlPoints
 
-      switch(eventType){
-        case 'shape':
+      switch (gr.type) {
+        case 'rectangle':
+        case 'circle':
+          newPos = sq.map(s => {
+            return { x: s.x, y: s.y }
+          })
 
-          switch(this.type){
-            case 'rectangle': 
-              newPos = this.sq.map(s => {
-                return { x: s.x, y: s.y }
-              })
-              this.labelData &&
-              (this.labelData.object_coords = [
-                (newPos[0].x + size/2)/width,
-                (newPos[0].y + size/2)/height,
-                (newPos[2].x + size/2)/width,
-                (newPos[2].y + size/2)/height,
-              ].map(x => x.toString()))
-              // l(this.labelData.object_coords)
-            break
-            
-            case 'polygon':               
-              this.labelData &&
-              (this.labelData.object_coords = this.sq.map(s => {
-                return { x: s.x, y: s.y }
-              }).reduce((a, b) => {
-                return a.concat(...[(b.x/width).toString(), (b.y/height).toString()])
-              }, []))
-              // l(this.labelData.object_coords)
-            break
-
-            default:   
-              // l(this)            
-              this.labelData &&
-              (this.labelData.object_coords = [
-                (this.c.x/width).toString(), 
-                (this.c.y/height).toString(),
-                (this.r/width).toString()
-              ])
-            break
-          }
-
+          // 4 control points for both rectangle and square
+          ld.object_coords = [
+            (newPos[0].x + size / 2) / width,
+            (newPos[0].y + size / 2) / height,
+            (newPos[2].x + size / 2) / width,
+            (newPos[2].y + size / 2) / height,
+          ].map(x => x.toString())  
         break
-        
-        default:
 
-          switch(this.parent.type){
-            case 'rectangle': 
-              newPos = this.parent.sq.map(s => {
-                return { x: s.x, y: s.y }
-              })
-
-              this.parent.labelData &&
-              (this.parent.labelData.object_coords = [
-                (newPos[0].x + size/2)/width,
-                (newPos[0].y + size/2)/height,
-                (newPos[2].x + size/2)/width,
-                (newPos[2].y + size/2)/height,
-              ].map(x => x.toString()))
-              // l(this.parent.labelData.object_coords)
-            break
-            
-            case 'polygon': 
-              this.parent.labelData &&
-              (this.parent.labelData.object_coords = this.parent.sq.map(s => {
-                return { x: s.x, y: s.y }
-              }).reduce((a, b) => {
-                return a.concat(...[(b.x/width).toString(), (b.y/height).toString()])
-              }, []))
-              // l(this.parent.labelData.object_coords)
-            break
-
-            default: 
-              this.parent.labelData &&
-              (this.parent.labelData.object_coords = [
-                (this.parent.c.x/width).toString(), 
-                (this.parent.c.y/height).toString(),
-                (this.parent.r/width).toString()
-              ])
-            break
-          }
-          
+        default: // Polygon
+          ld.object_coords = sq.map(s => {
+            return { x: s.x, y: s.y }
+          }).reduce((a, b) => {
+            return a.concat(...[(b.x / width).toString(), (b.y / height).toString()])
+          }, [])
         break
-      }  
+      }
 
       this.alpha = 1
       this.dragging = false
@@ -858,115 +1008,99 @@ export default class ImageComponent extends Component {
 
     function onDragMove(){
       if(this.dragging){
-        switch(eventType){
-          case 'shape':
-            if(this.type === "circle"){
-              this.c.x+= this.data.originalEvent.movementX
-              this.c.y+= this.data.originalEvent.movementY
-            }
-            this.sq.forEach(s => {
-              // Would add checks here to prevent out of bounds
-              s.position.x+= this.data.originalEvent.movementX
-              s.position.y+= this.data.originalEvent.movementY
-            })
-            this.draw()
+        let gr = currCtnObj.shape
+        , bb = currCtnObj.boundingBox
+        , sq = currCtnObj.controlPoints
+        , db = currCtnObj.deleteBtn
+        , nc = currCtnObj.numberCtn
 
-            if(this.children.length){              
-              // Delete Button
-              delBtn.position.x+= this.data.originalEvent.movementX
-              delBtn.position.y+= this.data.originalEvent.movementY
+        switch(eventType){
+          case 'point':
+            let newPos = this.data.getLocalPosition(this.parent)
+            , posInBounds
+            
+            if(gr.type === 'rectangle'){
+              posInBounds = getPosInBounds(newPos, this.s)
+              this.position.set(posInBounds.x, posInBounds.y)
+              // Rectangular movement - drag other points too
+              setControlPointPositions(sq, this)
+            }else if(gr.type === 'polygon'){
+              // Free movement - move only single point
+              posInBounds = getPosInBounds(newPos, this.s)
+              this.position.set(posInBounds.x, posInBounds.y)
+            } else {
+              let point = getClosestPointOnLine(gr.c, this.idx, newPos)
+              , width = imgInnerRef.current.clientWidth
+              , height = imgInnerRef.current.clientHeight
               
-              // Number
-              let center = this.getCenter()
-              this.children[0].position.set(center.x, center.y)
+              if (point.x > 0 && point.y > 0 && 
+                point.x < width && point.y < height){
+                posInBounds = getPosInBounds(point, this.s)
+                this.position.set(posInBounds.x, posInBounds.y)
+                // Square movement - drag other points too
+                setControlPointPositions(sq, this)
+              }
             }
+            // Capture last good positions
+            // l(currCtnObj.lastSqPosArr)
+            currCtnObj.lastSqPosArr = []
+            sq.forEach(s => currCtnObj.lastSqPosArr.push({ x: s.x, y: s.y }))
           break
 
-          default:
-            let newPos = this.data.getLocalPosition(this.parent)        
-            this.position.x = newPos.x - this.s/2
-            this.position.y = newPos.y - this.s/2
-            if(this.parent.type === 'rectangle'){
-              // Rectangular movement - drag other points too
-              switch(this.idx){
-                case 0: // Top Left
-                  this.parent.sq[1].position.y = this.position.y
-                  this.parent.sq[3].position.x = this.position.x
-                break
-                
-                case 1: // Top Right
-                  this.parent.sq[0].position.y = this.position.y
-                  this.parent.sq[2].position.x = this.position.x
-                break
-                
-                case 2: // Bottom Right
-                  this.parent.sq[3].position.y = this.position.y
-                  this.parent.sq[1].position.x = this.position.x
-                break
-                
-                default: // Bottom Left
-                  this.parent.sq[2].position.y = this.position.y
-                  this.parent.sq[0].position.x = this.position.x
-                break              
-              }
-            }else if(this.parent.type === 'circle'){
-              // Change circle radius
-              this.parent.r = distance(
-                this.parent.c.x, 
-                this.parent.c.y,
-                newPos.x,
-                newPos.y
-              )
-            }else{
-              // Free movement - move only single point
+          default:   
+            // console.clear()
+            let e = this.data.originalEvent
+            , grB = gr.getBounds()
+            , bgB = bg.getBounds()
+
+            if( // If shape's bounding box is within image bounds
+              grB.x > 0 && grB.y > 0 &&
+              grB.x + grB.width < bgB.width &&
+              grB.y + grB.height < bgB.height
+            ) {
+              inBounds = true
+              // Capture last good positions
+              currCtnObj.lastSqPosArr = []
+              sq.forEach(s => currCtnObj.lastSqPosArr.push({ x: s.x, y: s.y }))
+              // l(currCtnObj.lastSqPosArr)
             }
-            this.parent.draw()
-            if (this.parent.children.length) {
-              // Delete Button
-              let b = this.parent.getBounds()
-              delBtn.position.set(b.x + b.width, b.y)              
-              
-              // Number
-              let center = this.parent.getCenter()
-              this.parent.children[0].position.set(center.x, center.y)
+            else {
+              inBounds = false
+              // l("Last good positions: ", currCtnObj.lastSqPosArr)
+              // Restore from last good positions
+              sq.forEach((s, idx) => s.position.set(
+                currCtnObj.lastSqPosArr[idx].x, 
+                currCtnObj.lastSqPosArr[idx].y
+              ))
             }
+            
+            // l("Within Bounds: ", inBounds)
+            sq.forEach(s => {
+              s.x+= e.movementX
+              s.y+= e.movementY              
+            })
           break
         }
+        // Update points for the shape and redraw
+        gr.points = sq.map(s => {
+          return { x: s.x + s.s / 2, y: s.y + s.s / 2 }
+        })
+        gr.draw()
+
+        let bounds = gr.getBounds()
+        , center = gr.getCenter()
+        
+        // Redraw the bounding box
+        bb
+        .clear()
+        .lineStyle(1, 0x979797, 1)
+        .drawRect(bounds.x, bounds.y, bounds.width, bounds.height)
+        
+        // Update delete button, number circle positions
+        db.position.set(bounds.x + bounds.width - 50, bounds.y + 15)
+        nc.position.set(center.x, center.y)
       }
     }
-  }
-
-  addNumberLabel = (graphic, index) => {
-    let circCtn = new PIXI.Container()
-    , center = graphic.getCenter()
-
-    graphic.addChild(circCtn)      
-
-    if (graphic.type !== "circle")
-      circCtn.pivot.set(-8, -8)
-
-    circCtn.position.x = center.x
-    circCtn.position.y = center.y
-
-    let circ = new NumberCircle({
-      c: { x: 0, y: 0 },
-      r: 15,
-      edgeSize: 2,
-      lineColor: 0x000000,
-      fillColor: 0xffffff,
-      opacity: 1
-    })
-    circCtn.addChild(circ)
-
-    let text = new PIXI.Text(index, new PIXI.TextStyle({
-      fontSize: 14,
-      fontWeight: "bold",
-      align: "center",
-      wordWrap: true
-    }))
-
-    text.anchor.set(0.5, 0.5)
-    circCtn.addChild(text)
   }
 
   catChanged = e => {
@@ -975,108 +1109,95 @@ export default class ImageComponent extends Component {
     this.props.catUpdated(currCat)
   }
 
-  // tempLblNameChanged = e => this.setState({ tempLblName: e.target.value })
   tempLblNameChanged = value => this.setState({ tempLblName: value })
+  
+  handleSuggestions = s => {
+    suggestions = s
+    fromOptions = false
+  }
 
-  addLabel = tempPoly => {
-    // l(tempPoly.labelData)    
+  addLabel = () => {
+    let ld = currCtnObj.labelData
+
     this.http
     .post('/api/v1/keywords', { 
-      name: tempPoly.labelData.label.name 
+      name: ld.label.name 
     }, auth)
     .then(res => {
       // l(res.data)
-      // l(tempPoly.labelData)
-      tempPoly.labelData.color = hexJStoCSS(tempColor)
-      tempPoly.labelData.label = res.data
 
-      this.props.imageUpdated(tempPoly.labelData, "add")
-      polyArr.push(tempPoly)
-      
-      this.addNumberLabel(tempPoly, polyArr.length)
+      ld.color = hexJStoCSS(tempColor)
+      ld.label = res.data
+      this.props.imageUpdated(ld, "add")
+
+      ctnArr.push(currCtnObj)
+      currCtnObj.numberCtn.children[1].text = ctnArr.length
+
+      currCtnObj.labelData.ref = React.createRef()
       this.resetForAdding()
+      this.drawAllObjects()      
     })
+  }
+
+  editLabel = name => {
+    let lbl = currCtnObj.labelData
+    // l(lbl.label, name, suggestions, fromOptions)
+    
+    // If selected from list, PUT else POST
+    if(fromOptions){
+      this.http
+      .put('/api/v1/keywords/' + lbl.label.id, {
+        name
+      }, auth)
+      .then(res => {
+        lbl.label = res.data
+        this.makeImmutable()
+      })
+      .catch(res => {
+        // l(res)
+        alert('There is another label with this name. Please use a different name.')
+      })
+    } else{
+      this.http
+      .post('/api/v1/keywords', {
+        name
+      }, auth)
+      .then(res => {
+        lbl.label = res.data
+        this.makeImmutable()
+      })
+      .catch(res => {
+        // l(res)
+        alert('There is another label with this name. Please use a different name.')
+      })
+    }
   }
 
   deleteLabel = () => {
-    // l(obj)
-    let tmpPolyArr = [], i = 1
-    polyArr.forEach(p => {
-      // if (p.labelData === lbl){
-      if(p === currentObject){
-        // l("obj", currentObject)
-        // l("matched", p)
-        p.sq.forEach(s => this.ctn.removeChild(s))
-        this.ctn.removeChild(p)
-      } else{
-        p.children[0].children[1].text = i
-        tmpPolyArr.push(p)
+    let tmpctnArr = [], i = 1
+    ctnArr.forEach(ctnObj => {
+      if (ctnObj.id === currCtnObj.id){
+        this.deleteObject(ctnObj)
+      } else {
+        ctnObj.numberCtn.children[1].text = i
+        tmpctnArr.push(ctnObj)
         i++
       }
     })
-    polyArr = tmpPolyArr
-    this.props.imageUpdated(currentObject.labelData, "delete")
-    delBtn.visible = false
-    // currentObject = null
+    ctnArr = tmpctnArr
+    this.props.imageUpdated(currCtnObj.labelData, "delete")
   }
   
   labelSelected = (option, method) => {
-    // l(option, method)
+    // l("Chosen from options: ", option, method)
+    fromOptions = true
     this.setState({ tempLblName: option.name })
     if (method === "click") this.editLabel(option.name)
   } 
 
-  editLabel = name => {
-    let lbl = currentObject.labelData
-    this.http
-    .put('/api/v1/keywords/'+ lbl.label.id, {    
-      name
-    }, auth)
-    .then(res => {
-      lbl.label = res.data
-      this.makeImmutable()
-    })
-    .catch(res => {
-      // l(res)
-      alert('There is another label with this name. Please use a different name.')
-    })
-  }
-
-  makeImmutable = () => {
-    polyArr.forEach(p => {
-      p.labelData.active = false
-      p.labelData.edit = false
-    })
-    delBtn.visible = false
-    currentObject = null
-    this.props.imageUpdated()
-  }
-
   labelClicked = lbl => {
-    let tmp
-    polyArr.forEach(p => {
-      if (p.labelData === lbl){
-        // Removing from ctn, to add at end later
-        tmp = p
-        this.ctn.removeChild(p)
-        p.sq.forEach(s => this.ctn.removeChild(s))
-      }else{
-        p.labelData.active = false
-        p.labelData.edit = false
-      }
-    })
-    
-    tmp.labelData.active = true
-    tmp.labelData.edit = true
-    tmp.sq.forEach(s => {
-      this.ctn.addChild(s)
-      s.parent = tmp
-    })
-    this.ctn.addChild(tmp)
-    
-    this.setState({ tempLblName: lbl.label.name })
-    currentObject = tmp
-    this.setDelBtn()
+    currCtnObj = ctnArr.filter(obj => obj.labelData === lbl)[0]
+    this.makeMutable()
   }
 
   render(){
@@ -1098,34 +1219,37 @@ export default class ImageComponent extends Component {
 
     return (
       <div className="row">
-        <div className="col-lg-8">
+        <div className="col-lg-9 col-xl-8">
           <div className="row pb-0">
             <div className="col-2 pr-0">
               <div className={"obj-sel " + (this.state.adding === "polygon"?"active":"")} onClick={() => this.startAdding('polygon')}>
                 <img src="assets/poly.svg" alt=""/>
                 {this.state.adding === 'polygon' && <div className="ctn-add-action">
                   <FontAwesomeIcon onClick={e => this.doneAdding(e, 'Polygon')} icon={faCheck} style={{ color: 'green' }} />
-                  <FontAwesomeIcon onClick={e => this.cancelAdd(e)} icon={faTimes} style={{ color: 'red' }} />
+                  <FontAwesomeIcon onClick={e => this.resetForAdding(e)} icon={faTimes} style={{ color: 'red' }} />
                 </div>}
               </div>
               <div className={"obj-sel " + (this.state.adding === "rectangle"?"active":"")} onClick={() => this.startAdding('rectangle')}>
                 <img src="assets/square.svg" alt=""/>
                 {this.state.adding === 'rectangle' && <div className="ctn-add-action">
                   <FontAwesomeIcon onClick={e => this.doneAdding(e, 'Rectangle')} icon={faCheck} style={{ color: 'green' }} />
-                  <FontAwesomeIcon onClick={e => this.cancelAdd(e)} icon={faTimes} style={{ color: 'red' }} />
+                  <FontAwesomeIcon onClick={e => this.resetForAdding(e)} icon={faTimes} style={{ color: 'red' }} />
                 </div>}
               </div>
               <div className={"obj-sel " + (this.state.adding === "circle"?"active":"")} onClick={() => this.startAdding('circle')}>
                 <img src="assets/circle.svg" alt=""/>
                 {this.state.adding === 'circle' && <div className="ctn-add-action">
                   <FontAwesomeIcon onClick={e => this.doneAdding(e, 'Circle')} icon={faCheck} style={{ color: 'green' }} />
-                  <FontAwesomeIcon onClick={e => this.cancelAdd(e)} icon={faTimes} style={{ color: 'red' }} />
+                  <FontAwesomeIcon onClick={e => this.resetForAdding(e)} icon={faTimes} style={{ color: 'red' }} />
                 </div>}
               </div>
             </div>
             <div className="col-10 pl-0">
               <div ref={imgRef} 
-                className={"ctn-photo " + (this.state.adding !== ""?"adding":"")}
+                // className={"ctn-photo " + (this.state.adding !== "" ? "adding" : "")}
+                className={"ctn-photo " + (
+                  this.state.imgOrientation === "landscape" ? "ctn-horizontal" : "ctn-vertical"
+                )}
                 style={{ cursor: cursorImg }}
               >
                 <div className="img-loader h-100 w-100 position-absolute">
@@ -1141,18 +1265,22 @@ export default class ImageComponent extends Component {
                     </path>
                   </svg>
                 </div>
-                <img 
-                  alt={image.key}
-                  key={image.key}
-                  src={image.image_url}
-                  onLoad={this.imageLoaded}
-                  width="100%"
-                />
+                <div ref={imgInnerRef} className="ctn-photo-inner">
+                  <img
+                    alt={image.key}
+                    key={image.key}
+                    src={image.image_url}
+                    onLoad={e => this.imageLoaded(e.currentTarget)}
+                    style={{
+                      opacity: this.state.imgOrientation !== "" ? 1 : 0
+                    }}
+                  />
+                </div>
               </div>
             </div>        
           </div>
         </div>
-        <div className="col-lg-4 ctn-cat">
+        <div className="col-lg-3 col-xl-4 ctn-cat">
           <div>Photo category</div>
           {categories.length > 0 &&
           <select 
@@ -1175,6 +1303,7 @@ export default class ImageComponent extends Component {
               
               return (
                 <div 
+                  ref={lbl.ref}
                   onClick={() => this.labelClicked(lbl)}
                   className="lbl-item" 
                   key={idx} 
@@ -1208,16 +1337,17 @@ export default class ImageComponent extends Component {
                   </svg>}
 
                   {lbl.edit && 
-                  <div className="lbl-auto-cpl">
+                  <div className="lbl-auto-cpl" >
                     <AutoCompleteComponent
                       inputProps={{
-                        className: 'labelInput',
+                        className: 'lbl-input',
                         size: inputSize,
                         value: this.state.tempLblName
                       }}
                       type="label"
                       inputChanged={this.tempLblNameChanged}
                       optionSelected={this.labelSelected}
+                      getCurrSugg={this.handleSuggestions}                      
                     />
                   </div>}
                   {!lbl.edit && <>

@@ -43,6 +43,7 @@ export default class PhotoBlock extends Component {
       uploadedFiles: [],
       loadUrl: "",
       showCityDropdown: false,
+      addingObject: false
     }
   }
 
@@ -86,8 +87,11 @@ export default class PhotoBlock extends Component {
     .then(res => {      
       let photos = res.data.results
       , currPhoto = photos[0]
+
       currPhoto.labels.forEach(lbl => lbl.edit = false)
       currPhoto.key = Math.random()
+      currPhoto.labelsChanged = false
+
       l(photos)
       this.child && this.child.destroyCanvas()
       this.setState({ photos, currPhoto })
@@ -115,6 +119,8 @@ export default class PhotoBlock extends Component {
     }
     let currPhoto = this.state.photos[idx]
     currPhoto.key = Math.random()
+    currPhoto.labelsChanged = false
+
     this.setState({ currPhotoIdx: idx, currPhoto })
   }
 
@@ -135,6 +141,8 @@ export default class PhotoBlock extends Component {
     if(photos.length){
       currPhoto = photos[0]
       currPhoto.key = Math.random()
+      currPhoto.labelsChanged = false
+
       this.setState({ 
         photos, 
         currPhoto,
@@ -256,6 +264,7 @@ export default class PhotoBlock extends Component {
       currPhoto.labels.splice(currPhoto.labels.indexOf(label), 1)
       // currPhoto.labels = currPhoto.labels.filter(l => l.id !== label.id)
     }
+    currPhoto.labelsChanged = true
     this.setState({ currPhoto }, () => {
       blkRef.current.focus()
     })
@@ -326,6 +335,10 @@ export default class PhotoBlock extends Component {
     }
   }
 
+  handleEditing = addingObject => {
+    this.setState({ addingObject })
+  }
+
   render() {
     const photo = this.state.currPhoto
     , photos = this.state.photos
@@ -364,10 +377,16 @@ export default class PhotoBlock extends Component {
                 </div>
               </div>
               <div className="col-lg-3 text-right">
-                <button onClick={this.nextPhoto} className="btn btn-accent-outline">
+                <button onClick={this.nextPhoto} 
+                  className="btn btn-accent-outline"
+                  disabled={this.state.addingObject}
+                >
                   Next&nbsp;&nbsp;<FontAwesomeIcon icon={faCaretRight} />
                 </button>
-                <button onClick={this.submit} className="ml-3 btn btn-accent">Submit</button>
+                <button onClick={this.submit} 
+                  className="ml-3 btn btn-accent"
+                  disabled={this.state.addingObject}
+                >Submit</button>
               </div>
             </div>
             <div className="body">           
@@ -415,6 +434,7 @@ export default class PhotoBlock extends Component {
                 categories={categories}
                 imageUpdated={this.handleImageUpdate}
                 catUpdated={this.handleCatUpdate}
+                editing={this.handleEditing}
               />
 
               <div className="row">
