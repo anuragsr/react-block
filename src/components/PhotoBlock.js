@@ -277,7 +277,11 @@ export default class PhotoBlock extends Component {
     if (!im.uploaded){
       req = {
         id: im.id,
-        labels: im.labels,
+        labels: im.labels.map(lbl => {
+          let tmp = {...lbl}
+          delete tmp.ref
+          return tmp
+        }),
         category: im.category
       }
     }else{
@@ -322,6 +326,8 @@ export default class PhotoBlock extends Component {
       }
     } else if (event.keyCode === 8){
       // Backspace
+      // l(this.child.state.deleteOnBackspace)
+      if(this.child.state.deleteOnBackspace) this.child.deleteLabel()
       // let activeLbls = getActive(lbls)
       // if (activeLbls) this.child.deleteLabel(activeLbls)
     }

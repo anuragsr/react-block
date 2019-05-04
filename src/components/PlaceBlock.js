@@ -399,7 +399,10 @@ export default class PlaceBlock extends Component {
               <div className="tag-outer">
                 {(this.state.tags.length === 0) &&
                   <div className="no-tags-plh">
-                    <img src="assets/start-add-plh.png" alt="" />
+                    <div className="inner">
+                      <img src="assets/start-add.svg" alt="" />
+                      <span>Start adding tags</span>
+                    </div>
                   </div>
                 }
                 {this.state.showTags &&
@@ -422,9 +425,10 @@ export default class PlaceBlock extends Component {
                   <div className="dot"></div>
                   <div className="dot"></div>
                 </div>}
-              {<div style={{ display: this.state.showAttr ? "block" : "none" }}>
+              {/* {<div style={{ display: this.state.showAttr ? "block" : "none" }}>
                 <SliderComponent att={this.state.att} changeAtt={this.attChanged} />
-              </div>}
+              </div>} */}
+              <SliderComponent att={this.state.att} changeAtt={this.attChanged} />
             </div>
           </div>
           <div className="row">

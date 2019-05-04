@@ -1,5 +1,6 @@
 .block{
   background: $w;
+  min-width: 780px;
   -webkit-touch-callout: none; /* iOS Safari */
   @include prefixed(user-select, none);
   .block-title{
@@ -148,8 +149,8 @@
         cursor: pointer;
         // margin: 0 auto;
         margin-bottom: 10px;
-        width: 42px;
-        height: 42px;
+        width: 48px;
+        height: 48px;
         border-radius: 12px;
         background: $bg-sc;
         &:hover, &.active{
@@ -159,7 +160,8 @@
           }
         }
         img{
-          height: 20px;
+          height: 24px;
+          width: 24px;
         }
         .ctn-add-action{          
           padding-left: 10px;
@@ -268,6 +270,9 @@
           cursor: pointer;
           text-decoration: underline;
         }
+        span{
+          color: $sc;
+        }
       }
       .url-inp{
         position: relative;
@@ -305,6 +310,7 @@
       height: 388px;
       background: $b;
       position: relative;
+      left: 25px;
       @extend %j-c;
       .ctn-photo-inner{
         position: relative;

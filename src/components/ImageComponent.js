@@ -314,7 +314,8 @@ export default class ImageComponent extends Component {
       currCat: "",
       tempLblName: "",
       adding: "",
-      imgOrientation: ""
+      imgOrientation: "",
+      deleteOnBackspace: false
     }
   }
 
@@ -336,7 +337,7 @@ export default class ImageComponent extends Component {
 
   imageLoaded = img => {
     // console.clear()
-    l("Image loaded: ", img.width, img.height)
+    // l("Image loaded: ", img.width, img.height)
     
     let ctnWidth = imgRef.current.clientWidth
     , ctnHeight = imgRef.current.clientHeight
@@ -344,7 +345,7 @@ export default class ImageComponent extends Component {
     , tempWidth = ctnWidth
     , tempHeight = ratio * tempWidth
 
-    l("After height matched: ", tempWidth, tempHeight)
+    // l("After height matched: ", tempWidth, tempHeight)
 
     if (tempHeight > ctnHeight) this.setState({ imgOrientation: "portrait" })
     else this.setState({ imgOrientation: "landscape" })
@@ -843,14 +844,17 @@ export default class ImageComponent extends Component {
     })
   }
 
-  makeMutable = () => {
+  makeMutable = deleteOnBackspace => {
     this.hideObjects()
     currCtnObj.labelData.edit = true
     currCtnObj.labelData.active = true
     currCtnObj.boundingBox.visible = true
     currCtnObj.controlPoints.forEach(sq => sq.visible = true)
     currCtnObj.deleteBtn.visible = true
-    this.moveToTopLayer()    
+    this.moveToTopLayer()
+
+    //Disable delete on backspace if label was clicked
+    this.setState({ deleteOnBackspace }) 
   }
 
   makeImmutable = () => {
@@ -953,7 +957,7 @@ export default class ImageComponent extends Component {
     function onDragStart(e){
       currCtnObj = this.ctnObj
       if (!currCtnObj.labelData.active) {
-        self.makeMutable()
+        self.makeMutable(true)
       } else {
         this.data = e.data
         this.alpha = 0.5
@@ -1195,9 +1199,9 @@ export default class ImageComponent extends Component {
     if (method === "click") this.editLabel(option.name)
   } 
 
-  labelClicked = lbl => {
+  labelClicked = lbl => {    
     currCtnObj = ctnArr.filter(obj => obj.labelData === lbl)[0]
-    this.makeMutable()
+    this.makeMutable(false)
   }
 
   render(){
@@ -1221,7 +1225,7 @@ export default class ImageComponent extends Component {
       <div className="row">
         <div className="col-lg-9 col-xl-8">
           <div className="row pb-0">
-            <div className="col-2 pr-0">
+            <div className="col-1">
               <div className={"obj-sel " + (this.state.adding === "polygon"?"active":"")} onClick={() => this.startAdding('polygon')}>
                 <img src="assets/poly.svg" alt=""/>
                 {this.state.adding === 'polygon' && <div className="ctn-add-action">
@@ -1244,13 +1248,11 @@ export default class ImageComponent extends Component {
                 </div>}
               </div>
             </div>
-            <div className="col-10 pl-0">
+            <div className="col-11">
               <div ref={imgRef} 
-                // className={"ctn-photo " + (this.state.adding !== "" ? "adding" : "")}
                 className={"ctn-photo " + (
                   this.state.imgOrientation === "landscape" ? "ctn-horizontal" : "ctn-vertical"
                 )}
-                style={{ cursor: cursorImg }}
               >
                 <div className="img-loader h-100 w-100 position-absolute">
                   <svg x="0px" y="0px" width="40px" height="40px" viewBox="0 0 50 50">
@@ -1265,7 +1267,10 @@ export default class ImageComponent extends Component {
                     </path>
                   </svg>
                 </div>
-                <div ref={imgInnerRef} className="ctn-photo-inner">
+                <div ref={imgInnerRef} 
+                  className="ctn-photo-inner"
+                  style={{ cursor: cursorImg }}
+                >
                   <img
                     alt={image.key}
                     key={image.key}

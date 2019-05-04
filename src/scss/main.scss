@@ -7,6 +7,17 @@ body{
   font-family: $sp-r;
   z-index: 1;
   background: $bg-pr;
+  height: 65px;
+  padding-left: 0;
+  padding-right: 0;
+  .navbar-brand{
+    border-right: 1px solid rgba($w, .2);
+    padding-left: 7px;
+    padding-right: 7px;
+  }
+  .navbar-nav, .form-inline{
+    padding-right: 10px;
+  }
   // input.form-control{
   //   color: $dz-bdr;
   //   border-color: $dz-bdr;

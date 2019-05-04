@@ -44,8 +44,9 @@ export default class TagsComponent extends Component {
           return <li onClick={() => this.handleClick(item)} key={i} className={item.optional ? "optional" : ""}>
             <div>
               <img src={currImg} alt="" />
-              {this.getDisplayName(item.full_name)}
-              <span onClick={() => this.handleRemove(item)}>{this.props.type === "default" && <span>&times;</span>}</span>
+              <span>{this.getDisplayName(item.full_name)}</span>              
+              {this.props.type === "default" && 
+              <img className="del-tag" onClick={() => this.handleRemove(item)} src="assets/delete-tag.svg" alt="" />}              
             </div>
           </li>
         })}

@@ -37,14 +37,25 @@ input.tag-inp{
 
 // For tags
 .tag-outer{
+  min-height: 112px;
   background: $bg-sc;
   padding: 10px;
-  border: 5px dashed $dz-bdr;
-  border-radius: 10px;
+  border: 4px dashed $dz-bdr;
+  border-radius: 6px;
   color: $sub-title;
   .no-tags-plh{
     text-align: center;
     padding: 10px 0;
+    .inner{
+      color: $sc;
+      display: flex;
+      flex-direction: column;
+      span{
+        line-height: 1.53;
+        font-size: 17px;
+        margin-top: 5px;
+      }
+    }
   }
 }
 
@@ -56,14 +67,14 @@ ul.tag-ctn{
   margin-bottom: 0;
   li{
     cursor: pointer;
-    display: inline-block;
-    padding: 5px 10px;
-    // background: $tagbg;
+    display: inline-block;    
+    padding: 0 10px;
     background: $bg-pr;
     color: $w;
     border-radius: 5px;
     margin-right: 5px;
     margin-bottom: 5px;  
+    height: 38px;
     &.optional{
       background: rgba($bg-pr, .7);
       img{
@@ -72,16 +83,18 @@ ul.tag-ctn{
     }
     div{
       @extend %j-s-b;
+      height: 100%;
     }
     img{
-      height: 35px;
-      margin-right: 10px;
+      height: 32px;
+      &.del-tag{
+        margin-left: 10px;
+        height: 7px;
+        width: 7px;
+      }
     }
     span{
-      opacity: .8;
-      font-size: 30px;
       margin-left: 10px;
-      margin-top: -7px;
     }
   }
   &.sug li{
@@ -203,10 +216,39 @@ ul.tag-ctn{
 }
 
 //  For the slider
-.rc-slider {
-  pointer-events: none;
-  .rc-slider-handle {
-    pointer-events: auto;
+// .rc-slider {
+//   pointer-events: none;
+//   .rc-slider-handle {
+//     pointer-events: auto;
+//   }
+// }
+
+.slider-outer{
+  position: relative;
+  width: 100%;
+  .slider-rail{
+    position: absolute;
+    width: 100%;
+    height: 4px;
+    border-radius: 5px;
+    background-color: $sl-bg;
+  }
+  .slider-handle{
+    position: absolute;
+    margin-left: -10px;
+    margin-top: -8px;
+    width: 20px;
+    height: 20px;
+    border: none;
+    text-align: center;
+    cursor: grab;
+    border-radius: 50%;
+    background-color: $bg-pr;
+  }
+  .slider-track{    
+    position: absolute;
+    height: 4px;
+    z-index: 0;
   }
 }
 
@@ -219,6 +261,7 @@ ul.tag-ctn{
 
 .sl-title{
   @extend %j-s-b;
+  width: 100%;
 }
 
 .att-inp{

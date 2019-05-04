@@ -110,7 +110,8 @@ export default class FileInputComponent extends Component {
       <div className="row">
         <div className="col-lg-6">
           <div ref={this.dropInput} className="dropzone">
-            <img src="assets/dz-img.png" alt=""/>
+            <img src="assets/dz-img.svg" alt=""/>
+            <span>Drag and drop</span>
             <input className="inputfile" id="file" type="file" multiple
               ref={this.fileInput}
               onChange={() => this.prepareForUpload(this.fileInput.current.files)}
