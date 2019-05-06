@@ -852,13 +852,15 @@ export default class ImageComponent extends Component {
     currCtnObj.controlPoints.forEach(sq => sq.visible = true)
     currCtnObj.deleteBtn.visible = true
     this.moveToTopLayer()
+    this.props.editing(true)
 
     //Disable delete on backspace if label was clicked
-    this.setState({ deleteOnBackspace }) 
+    this.setState({ deleteOnBackspace })
   }
 
   makeImmutable = () => {
     this.hideObjects()
+    this.props.editing(false)
     this.props.imageUpdated()
   }
 
@@ -1189,6 +1191,7 @@ export default class ImageComponent extends Component {
       }
     })
     ctnArr = tmpctnArr
+    this.props.editing(false)    
     this.props.imageUpdated(currCtnObj.labelData, "delete")
   }
   
@@ -1199,7 +1202,7 @@ export default class ImageComponent extends Component {
     if (method === "click") this.editLabel(option.name)
   } 
 
-  labelClicked = lbl => {    
+  labelClicked = lbl => {
     currCtnObj = ctnArr.filter(obj => obj.labelData === lbl)[0]
     this.makeMutable(false)
   }

@@ -232,6 +232,7 @@ ul.tag-ctn{
     height: 4px;
     border-radius: 5px;
     background-color: $sl-bg;
+    cursor: pointer;    
   }
   .slider-handle{
     position: absolute;
@@ -244,11 +245,23 @@ ul.tag-ctn{
     cursor: grab;
     border-radius: 50%;
     background-color: $bg-pr;
+    z-index: 1;
   }
   .slider-track{    
     position: absolute;
     height: 4px;
     z-index: 0;
+    cursor: pointer;    
+  }
+  .slider-separator{    
+    position: absolute;
+    height: 25px;
+    width: 6px;
+    background: #fef937;
+    border-radius: 10px;
+    left: 50%;
+    z-index: 0;
+    transform: translate(-55%, -43%);
   }
 }
 

@@ -1,17 +1,31 @@
 import React, { Component } from 'react'
-import { Slider, Handles, Tracks } from 'react-compound-slider'
+import { Slider, Rail, Handles, Tracks } from 'react-compound-slider'
 
 import { l } from '../helpers/common'
 
-const Track = ({ source, target }) => { // Track component
+const Track = ({ source, target, getTrackProps }) => { // Track component
+
+  const getStyle = source => {
+    let ret = {}
+    if(source.id === '$$-0'){
+      if(source.value < 0){
+        ret.left = `${source.percent}%`
+        ret.width = `${50 - source.percent}%`
+        ret.backgroundColor = '#ff4c43'
+      } else{
+        ret.left = `${50}%`
+        ret.width = `${source.percent - 50}%`
+        ret.backgroundColor = '#56d86c'
+      }
+    }
+    return ret
+  }
+
   return (
-    <div
+    <div 
       className="slider-track"
-      style={{
-        left: `${source.percent}%`,
-        width: `${target.percent - source.percent}%`,
-        backgroundColor: source.id === '$$-0' ? '#56d86c' : '#ff4c43',
-      }}
+      style={getStyle(source)}
+      {...getTrackProps()}
     />
   )
 }
@@ -20,20 +34,16 @@ const Handle = ({ handle: { id, percent }, getHandleProps }) => { // Handle comp
   return (
     <div
       className="slider-handle"
-      style={{
-        left: `${percent}%`,
-        zIndex: id === '$$-0' ? -1 : 1,
-        opacity: id === '$$-0' ? 0 : 1,        
-      }}
+      style={{ left: `${percent}%` }}
       {...getHandleProps(id)}
     />
   )
 }
 
-let rangeValues = [0, 0]
+let rangeValues = [0]
 
 export default class SliderComponentNew extends Component {
-  constructor(props) {    
+  constructor(props) {
     super(props)
     this.state = { 
       att: this.props.att
@@ -42,7 +52,7 @@ export default class SliderComponentNew extends Component {
   
   componentWillReceiveProps = nextProps => {
     // l("Attraction", nextProps)
-    rangeValues = [0, nextProps.att.manual]
+    rangeValues = [nextProps.att.manual]
     this.setState({ att: nextProps.att })
   }
 
@@ -58,25 +68,15 @@ export default class SliderComponentNew extends Component {
   }
 
   onSliderChange = value => {
-    // l(value)
-    let val
-    if (value[0] === 0) val = value[1] // Positive
-    else val = value[0]
-
     this.setState( state => ({
       att: {
         ...state.att,
-        manual: val
+        manual: value[0]
       }
-    }), this.props.changeAtt(val))
+    }), this.props.changeAtt(value[0]))
   }
 
-  resetAttr = () => {
-    if (this.state.att.auto > 0)
-      this.onSliderChange([0, this.state.att.auto])
-    else
-      this.onSliderChange([this.state.att.auto, 0])
-  }
+  resetAttr = () => this.onSliderChange([this.state.att.auto])
 
   render() {
     const attResetDisabled = this.state.att.manual === this.state.att.auto
@@ -101,7 +101,11 @@ export default class SliderComponentNew extends Component {
           values={rangeValues}
           onUpdate={this.onSliderChange}
         >
-          <div className="slider-rail"/>
+          <Rail>
+            {({ getRailProps }) => (  // adding the rail props sets up events on the rail
+              <div className="slider-rail" {...getRailProps()}/>              
+            )}
+          </Rail>
           <Handles>
             {({ handles, getHandleProps }) => (
               <div className="slider-handles">
@@ -115,19 +119,21 @@ export default class SliderComponentNew extends Component {
               </div>
             )}
           </Handles>
-          <Tracks left={false} right={false}>
-            {({ tracks }) => (
+          <Tracks>
+            {({ tracks, getTrackProps  }) => (
               <div className="slider-tracks">
                 {tracks.map(({ id, source, target }) => (
                   <Track
                     key={id}
                     source={source}
                     target={target}
+                    getTrackProps ={getTrackProps}                    
                   />
                 ))}
               </div>
             )}
           </Tracks>
+          <div className="slider-separator"></div>
         </Slider>
         <button className="btn-reset" disabled={attResetDisabled} onClick={this.resetAttr}>
           <img src="assets/rotate-ccw.svg" style={{ opacity: attResetDisabled ? .6 : 1 }} alt=""/>
