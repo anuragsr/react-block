@@ -11,7 +11,7 @@ import { faCaretRight } from '@fortawesome/free-solid-svg-icons'
 
 const checkId = rand(5)
 const checkId_r = rand(5)
-let suggestions = []
+let suggestions = [], timer
 
 export default class TagBlock extends Component {
   
@@ -187,6 +187,7 @@ export default class TagBlock extends Component {
   undo = () => {
     let params = { type: 'tag', id: this.state.lastTagId }
     l(params)
+    clearTimeout(timer)
     this.http
     .get('/api/v1/undo', params)
     .then(res => {
@@ -195,7 +196,8 @@ export default class TagBlock extends Component {
         showNotif: true, 
         notifType: "undo"
       })
-      setTimeout(() => {
+      
+      timer = setTimeout(() => {
         this.setState({
           allowAdd: true,
           showNotif: false,
@@ -211,8 +213,11 @@ export default class TagBlock extends Component {
   submit = () => {
     // l(this.state)
     if(this.state.tags.length){
+      clearTimeout(timer)
       this.setState({ 
         showAttr: false,
+        showNotif: false,
+        notifType: "submit",
         att: {
           manual: 0,
           auto: 0
@@ -247,7 +252,8 @@ export default class TagBlock extends Component {
           showNotif: true, 
           lastTagId: res.data.id 
         })
-        setTimeout(() => {
+
+        timer = setTimeout(() => {
           !this.state.tags.length &&
           this.setState({ 
             showAttr: false,

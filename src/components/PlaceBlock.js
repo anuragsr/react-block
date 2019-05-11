@@ -10,7 +10,7 @@ import { faCaretRight } from '@fortawesome/free-solid-svg-icons'
 
 const checkId = rand(5)
 const checkId_r = rand(5)
-let suggestions = []
+let suggestions = [], timer
 
 export default class PlaceBlock extends Component {
   
@@ -205,6 +205,8 @@ export default class PlaceBlock extends Component {
   undo = () => {
     let params = { type: 'place', id: this.state.lastPlaceId }
     l(params)
+
+    clearTimeout(timer)
     this.http
     .get('/api/v1/undo', params)
     .then(res => {
@@ -213,7 +215,7 @@ export default class PlaceBlock extends Component {
         showNotif: true, 
         notifType: "undo"
       })
-      setTimeout(() => {
+      timer = setTimeout(() => {
         this.setState({
           allowAdd: true,
           showNotif: false,
@@ -229,8 +231,12 @@ export default class PlaceBlock extends Component {
   submit = () => {
     // l(this.state)
     if(this.state.tags.length){
+
+      clearTimeout(timer)
       this.setState({
         showAttr: false,
+        showNotif: false,
+        notifType: "submit",
         att: {
           manual: 0,
           auto: 0
@@ -266,7 +272,8 @@ export default class PlaceBlock extends Component {
           showNotif: true, 
           lastPlaceId: res.data.id 
         })
-        setTimeout(() => {
+
+        timer = setTimeout(() => {
           !this.state.tags.length &&
           this.setState({
             showAttr: false,

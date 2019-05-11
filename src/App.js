@@ -1,4 +1,5 @@
 import React, { Component } from 'react'
+import Cookies from 'universal-cookie'
 import $ from 'jquery'
 import Popper from 'popper.js'
 import 'bootstrap/dist/js/bootstrap.bundle.min'
@@ -10,6 +11,8 @@ import { l, auth } from './helpers/common'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import './App.scss'
 
+const cookies = new Cookies()
+
 export default class App extends Component {
   constructor(){
     super()
@@ -17,6 +20,7 @@ export default class App extends Component {
     this.state = {
       username: "",
       password: "",
+      showNav: true,
       isAuth: false,
       showErr: false,
       perm: []
@@ -24,10 +28,21 @@ export default class App extends Component {
   }
 
   componentDidMount(){
-    // this.setState({
-    //   username: 'ml_page',
-    //   password: '}XhE9p2/FQjx9.e'
-    // }, this.signIn)
+    let ck = cookies.get("ml_app")
+    if(typeof ck !== "undefined"){
+      this.setState({
+        showNav: false,
+        username: ck.x_u,
+        password: ck.x_p
+      }, this.signIn)
+    }
+    // else{      
+    //   this.setState({
+    //     showNav: false,      
+    //     username: 'ml_page',
+    //     password: '}XhE9p2/FQjx9.e'
+    //   }, this.signIn)
+    // }
   }
 
   handleInputChange = event => {
@@ -55,11 +70,23 @@ export default class App extends Component {
       // res.data.permissions = ["place_block"] 
       // res.data.permissions = ["tag_block"]
 
-      this.setState({ isAuth: true, perm: res.data.permissions })
+      this.setState({ 
+        isAuth: true, 
+        showNav: true,        
+        perm: res.data.permissions 
+      })
 
       // Set auth user
       auth.username = this.state.username
       auth.password = this.state.password
+      
+      let ck = cookies.get("ml_app")
+      if(typeof ck === "undefined"){
+        cookies.set("ml_app", {
+          x_u: auth.username,
+          x_p: auth.password
+        }, { maxAge: 3600 })
+      }
       // l(auth)
     })
     .catch(err => {
@@ -72,6 +99,7 @@ export default class App extends Component {
   }
 
   logOut = () => {
+    cookies.remove("ml_app")
     this.setState({ 
       isAuth: false,
       perm: [],
@@ -81,8 +109,8 @@ export default class App extends Component {
   }
   
   render(){
-    return (<>
-      <nav className="navbar navbar-expand-lg navbar-dark">
+    return (<>        
+      {this.state.showNav && <nav className="navbar navbar-expand-lg navbar-dark">
         <div className="container-fluid p-0">
           <a className="navbar-brand" href="javascript:void(0)">
             <img src="assets/burger.svg" alt=""/>
@@ -109,15 +137,8 @@ export default class App extends Component {
               </li>
             </ul>}
           </div>
-          {/* <button className="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-            <span className="navbar-toggler-icon"></span>
-          </button>
-          <div className="collapse navbar-collapse" id="navbarSupportedContent">
-            <ul className="navbar-nav mr-auto">
-            </ul>
-          </div> */}
         </div>
-      </nav>
+      </nav>}
       {this.state.showErr &&
       <div className="error w-100 py-2 text-center">
         <span>Ooops…</span>Invalid email or password!

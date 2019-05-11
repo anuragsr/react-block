@@ -16,8 +16,8 @@ export const rand = length => {
 }
 export const withIndex = arr => arr.map((v,i) => ({value: v, index: i}))
 export const getFormattedTime = date => {
-  if(date === null)
-    return date
+  if(date === null || typeof date === "undefined")
+    return ""
   
   let arr = date.split('T')
   return [arr[0], arr[1].split("+")[0]].join(" ")  

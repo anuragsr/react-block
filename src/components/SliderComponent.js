@@ -24,13 +24,15 @@ const Track = ({ source, target, getTrackProps }) => { // Track component
   return (
     <div 
       className="slider-track"
-      style={getStyle(source)}
+      style={getStyle(source)}      
       {...getTrackProps()}
     />
   )
 }
 
 const Handle = ({ handle: { id, percent }, getHandleProps }) => { // Handle component
+  // l(percent)
+
   return (
     <div
       className="slider-handle"
@@ -45,8 +47,8 @@ let rangeValues = [0]
 export default class SliderComponentNew extends Component {
   constructor(props) {
     super(props)
-    this.state = { 
-      att: this.props.att
+    this.state = {
+      att: this.props.att, 
     }
   }
   
@@ -68,12 +70,14 @@ export default class SliderComponentNew extends Component {
   }
 
   onSliderChange = value => {
+    let val = value[0]
+
     this.setState( state => ({
       att: {
         ...state.att,
-        manual: value[0]
+        manual: val
       }
-    }), this.props.changeAtt(value[0]))
+    }), this.props.changeAtt(val))
   }
 
   resetAttr = () => this.onSliderChange([this.state.att.auto])
