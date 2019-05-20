@@ -10,12 +10,13 @@ import { faCaretRight } from '@fortawesome/free-solid-svg-icons'
 
 const checkId = rand(5)
 const checkId_r = rand(5)
-let suggestions = [], timer
+let suggestions = [], timer, placeRef
 
 export default class PlaceBlock extends Component {
   
   constructor(props) {
     super(props)
+    placeRef = React.createRef()
     this.http = new HttpService()
     this.state = {
       showNotif: false, 
@@ -120,7 +121,7 @@ export default class PlaceBlock extends Component {
 
   placeChanged = currPlace => {
     this.setState({ currPlace, tags:[], showAttr: false })
-    this.props.placeChanged({ currPlace })
+    this.props.placeChanged({ currPlace }, placeRef)
     this.getSuggTags(currPlace)
   } 
   
@@ -326,7 +327,7 @@ export default class PlaceBlock extends Component {
           </div>
         </div>}
       </div>}
-      <div className="block-content" tabIndex="0" onKeyUp={this.handleKey}>
+      <div className="block-content" tabIndex="0" onKeyUp={this.handleKey} ref={placeRef}>
         {this.state.places.length > 0 &&
           <div className="title row place">
           <div className="col-lg-5">

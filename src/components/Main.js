@@ -5,7 +5,11 @@ import { l } from '../helpers/common'
 export default class Main extends Component {
   constructor(props){
     super(props)
-    this.state = { blocks: [], placeObj: {} }
+    this.state = { 
+      blocks: [], 
+      placeObj: {},
+      placeRef: {}
+    }
   }
   
   componentDidMount(){
@@ -24,13 +28,14 @@ export default class Main extends Component {
     })
   }
 
-  handlePlaceChanged = place => {
+  handlePlaceChanged = (place, placeRef) => {
     // l(place)
     this.setState({ 
       placeObj: {
         ...this.state.placeObj,
         place: place.currPlace
-      }
+      },
+      placeRef
     })
   }
 
@@ -64,7 +69,8 @@ export default class Main extends Component {
               type={bl.type}
               placeChanged={this.handlePlaceChanged}
               handleToggle={this.handleToggle}
-              placeObj={this.state.placeObj} />:null
+              placeObj={this.state.placeObj} 
+              placeRef={this.state.placeRef} />:null
         })}
       </div>
     )

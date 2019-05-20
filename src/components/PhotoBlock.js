@@ -5,7 +5,7 @@ import AutoCompleteComponent from './AutoCompleteComponent'
 import FileInputComponent from './FileInputComponent'
 import FilePreviewComponent from './FilePreviewComponent'
 import HttpService from '../services/HttpService'
-import { l, auth, rand, getFormattedTime } from '../helpers/common'
+import { l, cl, auth, rand, getFormattedTime } from '../helpers/common'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCheck, faCaretRight, faTimes } from '@fortawesome/free-solid-svg-icons'
@@ -243,6 +243,27 @@ let randHex = () => {
 
   return returnVar
 }
+, getPosInBounds = (pos, side) => {
+  let width = imgInnerRef.current.clientWidth
+  , height = imgInnerRef.current.clientHeight
+  return {
+    x: Math.min(Math.max(0, pos.x), width) - side / 2,
+    y: Math.min(Math.max(0, pos.y), height) - side / 2
+  }
+}
+, checkIfInBounds = poly => {
+  let bgBounds = bg.getBounds()
+  , polyBounds = poly.getBounds()
+  , inBounds = true
+
+  if(polyBounds.x < 0 || polyBounds.y < 0) inBounds = false
+  else if(
+    polyBounds.x + polyBounds.width > bgBounds.width ||
+    polyBounds.y + polyBounds.height > bgBounds.height
+  ) inBounds = false
+
+  return inBounds
+}
 , blkRef
 , imgInnerRef
 , imgRef, bg
@@ -320,13 +341,14 @@ let randHex = () => {
 , suggestions = []
 , fromOptions = false
 , lastParams
+, plRect
+, placeBlockDiv
 
 export default class PhotoBlock extends Component {
   
   constructor(props) {
     super(props)
     // l(this.props)
-    blkRef = React.createRef()
     this.http = new HttpService()
     this.state = {
       categories: [],
@@ -349,6 +371,7 @@ export default class PhotoBlock extends Component {
       imgOrientation: "",
       deleteOnBackspace: false
     }
+    blkRef = React.createRef()
     imgRef = React.createRef()
     imgInnerRef = React.createRef()
   }
@@ -373,10 +396,15 @@ export default class PhotoBlock extends Component {
   }
 
   doApiCall = props => {
+    if(Object.keys(props.placeRef).length && props.placeRef.current !== null){      
+      placeBlockDiv = props.placeRef.current
+      plRect = placeBlockDiv.getBoundingClientRect()
+    }
+
     let placeId = null, canCall = false
 
     if (props.placeObj.withPlace) {
-      this.setState({ currPlace: {} })
+      this.setState({ currPlace: {}, showCityDropdown: false })
       if (!Object.keys(props.placeObj.place).length) {
         l("Wait for place selection")
       } else {
@@ -410,7 +438,7 @@ export default class PhotoBlock extends Component {
       let photos = res.data.results
       , currPhoto = {}, currCat = ""
 
-      if(photos.length){        
+      if(photos.length){  
         currPhoto = photos[0]
         currPhoto.labels.forEach(lbl => lbl.edit = false)
         currPhoto.key = Math.random()
@@ -421,8 +449,15 @@ export default class PhotoBlock extends Component {
 
         this.destroyCanvas()
       }
-      l(photos)
-      this.setState({ photos, currPhoto, currCat, imgOrientation: "" })        
+
+      l("Photos:", photos)
+      this.setState({ photos, currPhoto, currCat, imgOrientation: "" }, () => {        
+        // l(plRect)        
+        let currentOffset = plRect.top - window.pageYOffset
+
+        plRect = placeBlockDiv.getBoundingClientRect()
+        window.scrollTo(0, plRect.top - currentOffset)
+      })
     })
   }
 
@@ -432,7 +467,7 @@ export default class PhotoBlock extends Component {
     // For deleting current photo on 'Next' and fetching another
     let photos = this.state.photos
     , params = { limit: 1 }
-
+    
     photos.splice(0, 1)
 
     if(!afterSubmit){
@@ -716,6 +751,11 @@ export default class PhotoBlock extends Component {
     }
   }
 
+  handleMouseDownOutside = event => {
+    this.resetForAdding()
+    this.makeImmutable()
+  }
+
   // From Image Component
   imageLoaded = img => {
     // console.clear()
@@ -777,11 +817,14 @@ export default class PhotoBlock extends Component {
 
   addBackground = () => {
     let params, tempPoly
+    , width = imgInnerRef.current.clientWidth
+    , height = imgInnerRef.current.clientHeight
+
     bg = new PIXI.Graphics()
     bg
     .beginFill(0x000000, 0)
     .lineStyle(0, 0x000000)
-    .drawRect(0, 0, imgInnerRef.current.clientWidth, imgInnerRef.current.clientHeight)
+    .drawRect(0, 0, width, height)
     this.ctn.addChild(bg)
 
     bg.interactive = true
@@ -790,9 +833,6 @@ export default class PhotoBlock extends Component {
     bg.on('pointerdown', e => {
       let c = {...e.data.global}
 
-      if(tempCtn){
-        this.clearTempCtn()
-      }
 
       switch(this.state.adding){
         case 'rectangle':
@@ -802,6 +842,9 @@ export default class PhotoBlock extends Component {
         break
         
         case 'polygon':
+          if(tempCtn){
+            this.clearTempCtn()
+          }
           tempPointArr.push(c)
           params = {
             ...polyParams,
@@ -812,6 +855,7 @@ export default class PhotoBlock extends Component {
 
           tempPoly = this.drawShape(params)
           tempCtn.shape = tempPoly
+          tempCtn.inBounds = true
           tempCtn.boundingBox = this.drawBoundingBox(tempPoly)
           tempCtn.controlPoints = this.drawControlPoints(params.points, 'polygon')
           tempCtn.numberCtn = this.drawNumberLabel(tempPoly, tempColor)
@@ -878,7 +922,12 @@ export default class PhotoBlock extends Component {
         }
 
         if(this.drawingRect){
-          rectangleCoords.br = { x: p.x, y: p.y }
+          // rectangleCoords.br = { x: p.x, y: p.y }
+          let point = getPosInBounds(p, polyParams.pointSize)
+          rectangleCoords.br = {
+            x: point.x + polyParams.pointSize / 2,
+            y: point.y + polyParams.pointSize / 2,
+          }
           params = {
             ...polyParams,
             type: 'rectangle',
@@ -888,6 +937,7 @@ export default class PhotoBlock extends Component {
 
           tempPoly = this.drawShape(params)
           tempCtn.shape = tempPoly
+          tempCtn.inBounds = true
           tempCtn.boundingBox = this.drawBoundingBox(tempPoly)
           tempCtn.controlPoints = this.drawControlPoints(params.points, 'rectangle')
           tempCtn.numberCtn = this.drawNumberLabel(tempPoly, tempColor)
@@ -896,7 +946,6 @@ export default class PhotoBlock extends Component {
 
         }else if(this.drawingCirc){
           rectangleCoords.br = { x: p.x, y: p.y }
-
           params = {
             ...polyParams,
             type: 'circle',
@@ -906,6 +955,9 @@ export default class PhotoBlock extends Component {
 
           tempPoly = this.drawShape(params)
           tempCtn.shape = tempPoly
+          tempCtn.inBounds = checkIfInBounds(tempPoly)
+          // cl()
+          // l("While drawing:", tempCtn.inBounds)
         }
       }
     })
@@ -921,6 +973,7 @@ export default class PhotoBlock extends Component {
       lastSqPosArr: [],
       labelData: { active: true } 
     }
+    currCtnObj = null
   }
 
   resetForAdding = e => {
@@ -942,17 +995,22 @@ export default class PhotoBlock extends Component {
 
   doneAdding = (e, type) => {
     typeof e !== "undefined" && e.stopPropagation()
-    let ld = currCtnObj.labelData
-    ld.active = false
-    ld.edit = false
-    ld.form = type
-    ld.id = 0
-    ld.label = {
-      id: 0,
-      name: "new label",
-      tag: null
+
+    if(currCtnObj === null){
+      this.resetForAdding()
+    }else{
+      let ld = currCtnObj.labelData
+      ld.active = false
+      ld.edit = false
+      ld.form = type
+      ld.id = 0
+      ld.label = {
+        id: 0,
+        name: "new label",
+        tag: null
+      }
+      this.addLabel()
     }
-    this.addLabel()
   }
 
   drawObjects = () => {
@@ -1111,7 +1169,7 @@ export default class PhotoBlock extends Component {
   }
 
   showObjects = () => {
-    // l(ctnArr)
+    l(ctnArr)
     ctnArr.forEach(ctnObj => {
       ctnObj.shape.visible = true
       ctnObj.numberCtn.visible = true          
@@ -1230,15 +1288,6 @@ export default class PhotoBlock extends Component {
       }
     }
 
-    function getPosInBounds(pos, side){
-      let width = imgInnerRef.current.clientWidth
-      , height = imgInnerRef.current.clientHeight
-      return {
-        x: Math.min(Math.max(0, pos.x), width) - side / 2,
-        y: Math.min(Math.max(0, pos.y), height) - side / 2
-      }
-    }
-
     function onDragStart(e){
       currCtnObj = this.ctnObj
       if (!currCtnObj.labelData.active) {
@@ -1337,31 +1386,38 @@ export default class PhotoBlock extends Component {
           break
 
           default:   
-            // console.clear()
+            // cl()
             let e = this.data.originalEvent
             , grB = gr.getBounds()
-            , bgB = bg.getBounds()
+            , bgB = bg.getBounds()            
 
-            if( // If shape's bounding box is within image bounds
-              grB.x > 0 && grB.y > 0 &&
-              grB.x + grB.width < bgB.width &&
-              grB.y + grB.height < bgB.height
-            ) {
-              inBounds = true
-              // Capture last good positions
-              currCtnObj.lastSqPosArr = []
-              sq.forEach(s => currCtnObj.lastSqPosArr.push({ x: s.x, y: s.y }))
-              // l(currCtnObj.lastSqPosArr)
+            // For circle: check if already out of bounds
+            if(currCtnObj.inBounds){              
+              if( // If shape's bounding box is within image bounds
+                grB.x > 0 && grB.y > 0 &&
+                grB.x + grB.width < bgB.width &&
+                grB.y + grB.height < bgB.height
+              ) {
+                inBounds = true
+                // Capture last good positions
+                currCtnObj.lastSqPosArr = []
+                sq.forEach(s => currCtnObj.lastSqPosArr.push({ x: s.x, y: s.y }))
+                // l(currCtnObj.lastSqPosArr)
+              }
+              else {
+                inBounds = false
+                // l("Last good positions: ", currCtnObj.lastSqPosArr)
+                // Restore from last good positions
+                sq.forEach((s, idx) => s.position.set(
+                  currCtnObj.lastSqPosArr[idx].x, 
+                  currCtnObj.lastSqPosArr[idx].y
+                ))
+              }
+            } else{
+              currCtnObj.inBounds = checkIfInBounds(gr)
+              // l("While moving:", currCtnObj.inBounds)
             }
-            else {
-              inBounds = false
-              // l("Last good positions: ", currCtnObj.lastSqPosArr)
-              // Restore from last good positions
-              sq.forEach((s, idx) => s.position.set(
-                currCtnObj.lastSqPosArr[idx].x, 
-                currCtnObj.lastSqPosArr[idx].y
-              ))
-            }
+
             
             // l("Within Bounds: ", inBounds)
             sq.forEach(s => {
@@ -1478,14 +1534,18 @@ export default class PhotoBlock extends Component {
     this.setState({ 
       tempLblName: currCtnObj.labelData.label.name 
     }, () => {
-      // l(currCtnObj.labelData.ref)
-      let input = currCtnObj
-        .labelData.ref.current
-        .children[1]
-        .children[0]
-        .children[0].children[0]
-      // l(input)
-      input.focus()
+      // l(currCtnObj.labelData.ref.current)
+      let currLblEl = currCtnObj.labelData.ref.current
+      l(currCtnObj.labelData.edit)
+
+      currLblEl
+      .children[1]
+      .children[0]
+      .children[0]
+      .children[0]
+      .focus()        
+      // if(typeof currLblEl !== "undefined"){
+      // }
     })
   }
 
@@ -1598,9 +1658,11 @@ export default class PhotoBlock extends Component {
     if (method === "click") this.editLabel(option.name)
   } 
 
-  labelClicked = lbl => {
+  labelClicked = (e, lbl) => {
+    e.stopPropagation()
+    this.setState({ deleteOnBackspace: false })
     currCtnObj = ctnArr.filter(obj => obj.labelData === lbl)[0]
-    this.makeMutable(false)
+    if(!currCtnObj.labelData.active) this.makeMutable()
   }
 
   render() {
@@ -1611,6 +1673,8 @@ export default class PhotoBlock extends Component {
     , currPhotoIdx = this.state.currPhotoIdx
     , showingUploaded = this.state.showingUploaded
     
+    let cursorCity = this.props.placeObj.withPlace ? "not-allowed" : "pointer"
+
     let cursorImg = "default", inputSize = 1
     
     if(this.state.adding === "polygon"){
@@ -1621,7 +1685,15 @@ export default class PhotoBlock extends Component {
       cursorImg = "url('assets/cursor-circle.svg') 9 14.5, auto"
     }
 
-    if (this.state.tempLblName !== "") inputSize = this.state.tempLblName.length
+    if (this.state.tempLblName.length > 1){    
+      let spaceArr = this.state.tempLblName.match(/\s/g)
+      , spaceCount = spaceArr !== null ? spaceArr.length : 0 
+
+      inputSize = this.state.tempLblName.length - Math.round(spaceCount/2) - 1
+      if(inputSize <= 0) inputSize = 1 
+      
+      // l(spaceCount, inputSize)
+    }
 
     return (
       <div ref={blkRef} className="block-content" tabIndex="0" onKeyUp={this.handleKey}>
@@ -1670,12 +1742,16 @@ export default class PhotoBlock extends Component {
               No Photos available.
             </div>}
           </div>
-          <div className="body">           
+          <div className="body">
             <div className="row">
               <div className="col-lg-12 photo-sb">                  
                   
                 {!this.state.showCityDropdown && 
-                <div className="ctn-icon" onClick={this.toggleChooseCity}>
+                <div 
+                  className="ctn-icon" 
+                  onClick={this.toggleChooseCity}
+                  style={{ cursor: cursorCity }}
+                  >
                   <img src="assets/map-pin.svg" alt=""/>
                   <div className="up-link">
                     {Object.keys(this.state.currPlace).length?
@@ -1773,7 +1849,7 @@ export default class PhotoBlock extends Component {
                     </div>        
                   </div>
                 </div>
-                <div className="col-lg-3 col-xl-4 ctn-cat">
+                <div className="col-lg-3 col-xl-4 ctn-cat" onClick={this.handleMouseDownOutside}>
                   <div>Photo category</div>
                   {categories.length > 0 &&
                   <select 
@@ -1797,7 +1873,7 @@ export default class PhotoBlock extends Component {
                       return (
                         <div 
                           ref={lbl.ref}
-                          onClick={() => this.labelClicked(lbl)}
+                          onClick={e => this.labelClicked(e, lbl)}
                           className="lbl-item" 
                           key={idx} 
                           style={{ 
@@ -1835,6 +1911,7 @@ export default class PhotoBlock extends Component {
                               inputProps={{
                                 className: 'lbl-input',
                                 size: inputSize,
+                                // style:{width: inputWidth},
                                 value: this.state.tempLblName
                               }}
                               type="label"
@@ -1843,7 +1920,7 @@ export default class PhotoBlock extends Component {
                               getCurrSugg={this.handleSuggestions}                      
                             />
                           </div>}
-                          {!lbl.edit && <span className="lbl-name">{(idx + 1) + ". " + lbl.label.name}</span>}
+                          {!lbl.edit && <span className="lbl-name">{(idx + 1) + ". " + lbl.label.name.replace(/ /g, "\u00a0")}</span>}
                         </div>
                       )
                     })}
@@ -1860,7 +1937,6 @@ export default class PhotoBlock extends Component {
                 </div>
               </div>
             </>}
-
           </div>
         </div>
 

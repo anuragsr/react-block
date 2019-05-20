@@ -20,7 +20,7 @@ export default class Block extends Component {
       this.props.handleToggle(show, this.props.idx)
   }
 
-  handlePlaceChanged = place => this.props.placeChanged(place)
+  handlePlaceChanged = (place, placeRef) => this.props.placeChanged(place, placeRef)
 
   render() {
     return (
@@ -45,7 +45,7 @@ export default class Block extends Component {
           (
             this.props.type === "Place"?<PlaceBlock placeChanged={this.handlePlaceChanged}/>
             :this.props.type === "Tag"?<TagBlock/>
-            :<PhotoBlock placeObj={this.props.placeObj}/>
+            :<PhotoBlock placeObj={this.props.placeObj} placeRef={this.props.placeRef}/>
           )
         }
       </div>      

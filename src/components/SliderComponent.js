@@ -44,7 +44,7 @@ const Handle = ({ handle: { id, percent }, getHandleProps }) => { // Handle comp
 
 let rangeValues = [0]
 
-export default class SliderComponentNew extends Component {
+export default class SliderComponent extends Component {
   constructor(props) {
     super(props)
     this.state = {
@@ -60,13 +60,14 @@ export default class SliderComponentNew extends Component {
 
   onManualChange = e => {
     let val = parseInt(e.target.value)
+    if(isNaN(val)) val = 0
 
     this.setState( state => ({
       att: {
         ...state.att,
         manual: val
       }
-    }), this.props.changeAtt(val))    
+    }), this.props.changeAtt(val))
   }
 
   onSliderChange = value => {
