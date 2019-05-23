@@ -343,6 +343,7 @@ let randHex = () => {
 , lastParams
 , plRect
 , placeBlockDiv
+, isAdding = false
 
 export default class PhotoBlock extends Component {
   
@@ -452,7 +453,7 @@ export default class PhotoBlock extends Component {
 
       l("Photos:", photos)
       this.setState({ photos, currPhoto, currCat, imgOrientation: "" }, () => {        
-        // l(plRect)        
+        l(plRect)        
         let currentOffset = plRect.top - window.pageYOffset
 
         plRect = placeBlockDiv.getBoundingClientRect()
@@ -752,8 +753,20 @@ export default class PhotoBlock extends Component {
   }
 
   handleMouseDownOutside = event => {
-    this.resetForAdding()
-    this.makeImmutable()
+    let target = event.target, classList
+    // l("Outside", target)
+    if(target.tagName === "DIV"){
+      classList = target.classList.value
+      // l("DIV", classList)
+      if(
+        !isAdding && 
+        classList !== "obj-sel" && 
+        classList !== "obj-sel active"
+      ){
+        this.resetForAdding()
+        this.makeImmutable()
+      }
+    }
   }
 
   // From Image Component
@@ -985,7 +998,8 @@ export default class PhotoBlock extends Component {
     this.setState({ adding: "", addingObject: false })
   }
 
-  startAdding = type => {
+  startAdding = (e, type) => {
+    e && e.stopPropagation()
     bg.visible = true
     tempColor = randHex()
     this.hideObjects(true)
@@ -995,6 +1009,7 @@ export default class PhotoBlock extends Component {
 
   doneAdding = (e, type) => {
     typeof e !== "undefined" && e.stopPropagation()
+    this.setState({ adding: "", addingObject: false })
 
     if(currCtnObj === null){
       this.resetForAdding()
@@ -1169,7 +1184,7 @@ export default class PhotoBlock extends Component {
   }
 
   showObjects = () => {
-    l(ctnArr)
+    // l(ctnArr)
     ctnArr.forEach(ctnObj => {
       ctnObj.shape.visible = true
       ctnObj.numberCtn.visible = true          
@@ -1571,6 +1586,8 @@ export default class PhotoBlock extends Component {
   }
 
   addLabel = () => {
+    isAdding = true
+
     let ld = currCtnObj.labelData
 
     this.http
@@ -1588,9 +1605,11 @@ export default class PhotoBlock extends Component {
       currCtnObj.numberCtn.children[1].text = ctnArr.length
 
       currCtnObj.labelData.ref = React.createRef()
+      
+      isAdding = false
+
       this.resetForAdding()
       this.drawAllObjects()
-
       // l(this.ctn.children.length)   
     })
   }
@@ -1696,7 +1715,7 @@ export default class PhotoBlock extends Component {
     }
 
     return (
-      <div ref={blkRef} className="block-content" tabIndex="0" onKeyUp={this.handleKey}>
+      <div ref={blkRef} className="block-content" tabIndex="0" onKeyUp={this.handleKey}  onClick={this.handleMouseDownOutside}>
         <div style={{ display: !this.state.showUpload ? "block" : "none" }}>
           <div className="title row pb-0">
             {photos.length > 0 ?  <>
@@ -1790,21 +1809,21 @@ export default class PhotoBlock extends Component {
                 <div className="col-lg-9 col-xl-8">
                   <div className="row pb-0">
                    <div className="col-1">
-                     <div className={"obj-sel " + (this.state.adding === "polygon"?"active":"")} onClick={() => this.startAdding('polygon')}>
+                     <div className={"obj-sel " + (this.state.adding === "polygon"?"active":"")} onClick={e => this.startAdding(e, 'polygon')}>
                        <img src="assets/poly.svg" alt=""/>
                        {this.state.adding === 'polygon' && <div className="ctn-add-action">
                          <FontAwesomeIcon onClick={e => this.doneAdding(e, 'Polygon')} icon={faCheck} style={{ color: 'green' }} />
                          <FontAwesomeIcon onClick={e => this.resetForAdding(e)} icon={faTimes} style={{ color: 'red' }} />
                        </div>}
                      </div>
-                     <div className={"obj-sel " + (this.state.adding === "rectangle"?"active":"")} onClick={() => this.startAdding('rectangle')}>
+                     <div className={"obj-sel " + (this.state.adding === "rectangle"?"active":"")} onClick={e => this.startAdding(e, 'rectangle')}>
                        <img src="assets/square.svg" alt=""/>
                        {this.state.adding === 'rectangle' && <div className="ctn-add-action">
                          <FontAwesomeIcon onClick={e => this.doneAdding(e, 'Rectangle')} icon={faCheck} style={{ color: 'green' }} />
                          <FontAwesomeIcon onClick={e => this.resetForAdding(e)} icon={faTimes} style={{ color: 'red' }} />
                        </div>}
                      </div>
-                     <div className={"obj-sel " + (this.state.adding === "circle"?"active":"")} onClick={() => this.startAdding('circle')}>
+                     <div className={"obj-sel " + (this.state.adding === "circle"?"active":"")} onClick={e => this.startAdding(e, 'circle')}>
                        <img src="assets/circle.svg" alt=""/>
                        {this.state.adding === 'circle' && <div className="ctn-add-action">
                          <FontAwesomeIcon onClick={e => this.doneAdding(e, 'Circle')} icon={faCheck} style={{ color: 'green' }} />
@@ -1849,7 +1868,7 @@ export default class PhotoBlock extends Component {
                     </div>        
                   </div>
                 </div>
-                <div className="col-lg-3 col-xl-4 ctn-cat" onClick={this.handleMouseDownOutside}>
+                <div className="col-lg-3 col-xl-4 ctn-cat">
                   <div>Photo category</div>
                   {categories.length > 0 &&
                   <select 
