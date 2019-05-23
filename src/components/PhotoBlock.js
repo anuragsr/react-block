@@ -349,7 +349,7 @@ export default class PhotoBlock extends Component {
   
   constructor(props) {
     super(props)
-    // l(this.props)
+    l(this.props)
     this.http = new HttpService()
     this.state = {
       categories: [],
@@ -990,11 +990,13 @@ export default class PhotoBlock extends Component {
   }
 
   resetForAdding = e => {
-    typeof e !== "undefined" && e.stopPropagation()
-    bg.visible = false
-    tempPointArr.length = 0
-    this.clearTempCtn()
-    this.showObjects()
+    e && e.stopPropagation()
+    tempPointArr.length = 0    
+    if(this.ctn) {
+      bg.visible = false
+      this.clearTempCtn()
+      this.showObjects()
+    }
     this.setState({ adding: "", addingObject: false })
   }
 
@@ -1008,7 +1010,7 @@ export default class PhotoBlock extends Component {
   }
 
   doneAdding = (e, type) => {
-    typeof e !== "undefined" && e.stopPropagation()
+    e && e.stopPropagation()
     this.setState({ adding: "", addingObject: false })
 
     if(currCtnObj === null){

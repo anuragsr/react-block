@@ -53,6 +53,14 @@ export default class App extends Component {
     })
   }
 
+  handleClick = event => {
+    // l("App", event.target, this.child)
+    // Call main->block->photoblock function
+    let pb = this.child.childBlock[0].photoBlock
+    pb.resetForAdding()
+    pb.makeImmutable()
+  }
+
   signIn = e => {
     e && e.preventDefault()
     // Login rest call
@@ -109,42 +117,47 @@ export default class App extends Component {
   }
   
   render(){
-    return (<>        
-      {this.state.showNav && <nav className="navbar navbar-expand-lg navbar-dark">
-        <div className="container-fluid p-0">
-          <a className="navbar-brand" href="javascript:void(0)">
-            <img src="assets/burger.svg" alt=""/>
-          </a>
-          <div className="ml-auto">
-          {!this.state.isAuth &&
-            <form className="form-inline" onSubmit={this.signIn}>
-              <input name="username" value={this.state.username} onChange={this.handleInputChange} className="form-control mr-sm-2" type="text" placeholder="Login" />
-              <input name="password" value={this.state.password} onChange={this.handleInputChange} className="form-control mr-sm-2" type="password" placeholder="Password" />
-              <button className="btn btn-accent" type="submit">Sign In</button>
-            </form>}
-          {this.state.isAuth &&
-            <ul className="navbar-nav logged-in">
-              <li className="nav-item">
-                <img src="assets/user-icon.png" alt="" />
-                <span className="mx-3">{this.state.username}</span>
-              </li>
-              <li className="nav-item dropdown">
-                <a className="nav-link dropdown-toggle" href="javascript:void(0)" data-toggle="dropdown">
-                </a>
-                <div className="dropdown-menu">
-                  <a className="dropdown-item" onClick={this.logOut} href="javascript:void(0)">Logout</a>
-                </div>
-              </li>
-            </ul>}
+    return (
+      <div className="app-outer" onClick={this.handleClick}>
+        {this.state.showNav && <nav className="navbar navbar-expand-lg navbar-dark">
+          <div className="container-fluid p-0">
+            <a className="navbar-brand" href="javascript:void(0)">
+              <img src="assets/burger.svg" alt=""/>
+            </a>
+            <div className="ml-auto">
+            {!this.state.isAuth &&
+              <form className="form-inline" onSubmit={this.signIn}>
+                <input name="username" value={this.state.username} onChange={this.handleInputChange} className="form-control mr-sm-2" type="text" placeholder="Login" />
+                <input name="password" value={this.state.password} onChange={this.handleInputChange} className="form-control mr-sm-2" type="password" placeholder="Password" />
+                <button className="btn btn-accent" type="submit">Sign In</button>
+              </form>}
+            {this.state.isAuth &&
+              <ul className="navbar-nav logged-in">
+                <li className="nav-item">
+                  <img src="assets/user-icon.png" alt="" />
+                  <span className="mx-3">{this.state.username}</span>
+                </li>
+                <li className="nav-item dropdown">
+                  <a className="nav-link dropdown-toggle" href="javascript:void(0)" data-toggle="dropdown">
+                  </a>
+                  <div className="dropdown-menu">
+                    <a className="dropdown-item" onClick={this.logOut} href="javascript:void(0)">Logout</a>
+                  </div>
+                </li>
+              </ul>}
+            </div>
           </div>
-        </div>
-      </nav>}
-      {this.state.showErr &&
-      <div className="error w-100 py-2 text-center">
-        <span>Ooops…</span>Invalid email or password!
-      </div>}
-      {this.state.isAuth && 
-      <Main blocks={this.state.perm}/>}
-    </>)
+        </nav>}
+        {this.state.showErr &&
+        <div className="error w-100 py-2 text-center">
+          <span>Ooops…</span>Invalid email or password!
+        </div>}
+        {this.state.isAuth && 
+        <Main 
+          blocks={this.state.perm}
+          ref={instance => { this.child = instance }}        
+        />}
+      </div>
+    )
   }
 }

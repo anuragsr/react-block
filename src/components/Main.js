@@ -8,11 +8,13 @@ export default class Main extends Component {
     this.state = { 
       blocks: [], 
       placeObj: {},
-      placeRef: {}
+      placeRef: {},
+      photoBlockInstance: {}
     }
   }
   
   componentDidMount(){
+    this.childBlock = []
     // l(this.props)
     let b = this.props.blocks
     this.setState({
@@ -58,20 +60,37 @@ export default class Main extends Component {
     })
   }
   
+  handleClick = (event, type) => {
+    event && event.stopPropagation()
+    // l("Block from main", event.target, type)
+    if(type === "Tag" || type === "Place"){
+      // l("Deselect")
+      // Call block->photoblock function
+      let pb = this.childBlock[0].photoBlock
+      pb.resetForAdding()
+      pb.makeImmutable()
+    }
+  }
+
   render(){
     return (
       <div className="container">
         {this.state.blocks.map((bl, i) => {
           return bl.toRender?
-            <Block 
-              key={i} idx={i}
-              show={bl.show}
-              type={bl.type}
-              placeChanged={this.handlePlaceChanged}
-              handleToggle={this.handleToggle}
-              placeObj={this.state.placeObj} 
-              placeRef={this.state.placeRef} />:null
-        })}
+            <div key={i} onClick={e => this.handleClick(e, bl.type)}>
+              <Block
+                key={i} idx={i}
+                show={bl.show}
+                type={bl.type}
+                placeChanged={this.handlePlaceChanged}
+                handleToggle={this.handleToggle}
+                placeObj={this.state.placeObj} 
+                placeRef={this.state.placeRef} 
+                ref={instance => { this.childBlock[i] = instance }}
+              />                
+            </div>:null
+          }
+        )}
       </div>
     )
   }

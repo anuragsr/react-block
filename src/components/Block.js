@@ -45,7 +45,11 @@ export default class Block extends Component {
           (
             this.props.type === "Place"?<PlaceBlock placeChanged={this.handlePlaceChanged}/>
             :this.props.type === "Tag"?<TagBlock/>
-            :<PhotoBlock placeObj={this.props.placeObj} placeRef={this.props.placeRef}/>
+            :<PhotoBlock 
+              placeObj={this.props.placeObj} 
+              placeRef={this.props.placeRef}
+              ref={instance => { this.photoBlock = instance }}
+            />
           )
         }
       </div>      
