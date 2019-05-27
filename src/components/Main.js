@@ -8,8 +8,7 @@ export default class Main extends Component {
     this.state = { 
       blocks: [], 
       placeObj: {},
-      placeRef: {},
-      photoBlockInstance: {}
+      placeRef: {}
     }
   }
   
@@ -67,8 +66,11 @@ export default class Main extends Component {
       // l("Deselect")
       // Call block->photoblock function
       let pb = this.childBlock[0].photoBlock
-      pb.resetForAdding()
-      pb.makeImmutable()
+      // l(pb.state.adding)
+      if(pb.state.adding === ""){
+        // pb.resetForAdding()
+        pb.makeImmutable()
+      }
     }
   }
 
@@ -77,7 +79,7 @@ export default class Main extends Component {
       <div className="container">
         {this.state.blocks.map((bl, i) => {
           return bl.toRender?
-            <div key={i} onClick={e => this.handleClick(e, bl.type)}>
+            <div key={i} onMouseDown={e => this.handleClick(e, bl.type)}>
               <Block
                 key={i} idx={i}
                 show={bl.show}

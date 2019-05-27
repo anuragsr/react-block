@@ -264,6 +264,7 @@ let randHex = () => {
 
   return inBounds
 }
+, lerp = (a, b, x) => a + x * (b - a)
 , blkRef
 , imgInnerRef
 , imgRef, bg
@@ -754,7 +755,7 @@ export default class PhotoBlock extends Component {
 
   handleMouseDownOutside = event => {
     let target = event.target, classList
-    // l("Outside", target)
+    // l("Click Handling", target)
     if(target.tagName === "DIV"){
       classList = target.classList.value
       // l("DIV", classList)
@@ -763,8 +764,11 @@ export default class PhotoBlock extends Component {
         classList !== "obj-sel" && 
         classList !== "obj-sel active"
       ){
-        this.resetForAdding()
-        this.makeImmutable()
+        if(this.state.adding === ""){
+          l("handleMouseDownOutside")
+          // this.resetForAdding()
+          this.makeImmutable()
+        }
       }
     }
   }
@@ -832,6 +836,24 @@ export default class PhotoBlock extends Component {
     let params, tempPoly
     , width = imgInnerRef.current.clientWidth
     , height = imgInnerRef.current.clientHeight
+    , getPointAsSquare = (startPoint, pos) => {
+      let line = {
+        x0: startPoint.x,
+        y0: startPoint.y,
+        x1: startPoint.x + 5,
+        y1: startPoint.y + 5
+      } // Line joining the 2 points
+
+      let dx = line.x1 - line.x0
+        , dy = line.y1 - line.y0
+        , t = ((pos.x - line.x0) * dx + (pos.y - line.y0) * dy) / (dx * dx + dy * dy)
+
+      return {
+        x: lerp(line.x0, line.x1, t),
+        y: lerp(line.y0, line.y1, t),
+        // p: t
+      }
+    }
 
     bg = new PIXI.Graphics()
     bg
@@ -887,40 +909,6 @@ export default class PhotoBlock extends Component {
 
     bg.on('pointerup', e => {
       // l("Done Creating")
-      if(this.drawingCirc && typeof rectangleCoords.br !== "undefined"){
-
-        // console.clear()
-        // l("Clicked on BG", rectangleCoords)
-
-        tempCtn.boundingBox = this.drawBoundingBox(tempPoly)
-        let bb = tempPoly.getBounds()
-        , points = [
-          { x: bb.x, y: bb.y },
-          { x: bb.x + bb.width, y: bb.y },
-          { x: bb.x + bb.width, y: bb.y + bb.height },
-          { x: bb.x, y: bb.y + bb.height },
-        ]
-        tempCtn.controlPoints = this.drawControlPoints(points, 'circle')
-        tempCtn.numberCtn = this.drawNumberLabel(tempPoly, tempColor)
-        tempCtn.deleteBtn = this.drawDeleteButton(tempPoly)
-
-        let height = imgInnerRef.current.clientHeight
-        , width = imgInnerRef.current.clientWidth
-        , size = polyParams.pointSize
-        , newPos = tempCtn.controlPoints.map(s => {
-          return { x: s.x, y: s.y }
-        })
-        
-        tempCtn.labelData.object_coords = [
-          (newPos[0].x + size / 2) / width,
-          (newPos[0].y + size / 2) / height,
-          (newPos[2].x + size / 2) / width,
-          (newPos[2].y + size / 2) / height,
-        ].map(x => x.toString())  
-
-        currCtnObj = tempCtn
-      }
-      rectangleCoords = {}
       this.data = null
       this.drawingRect = false
       this.drawingCirc = false      
@@ -935,12 +923,12 @@ export default class PhotoBlock extends Component {
         }
 
         if(this.drawingRect){
-          // rectangleCoords.br = { x: p.x, y: p.y }
           let point = getPosInBounds(p, polyParams.pointSize)
           rectangleCoords.br = {
             x: point.x + polyParams.pointSize / 2,
             y: point.y + polyParams.pointSize / 2,
           }
+
           params = {
             ...polyParams,
             type: 'rectangle',
@@ -948,30 +936,37 @@ export default class PhotoBlock extends Component {
             points: getCoords(rectangleCoords, 'rectangle', ''),
           }
 
-          tempPoly = this.drawShape(params)
-          tempCtn.shape = tempPoly
-          tempCtn.inBounds = true
-          tempCtn.boundingBox = this.drawBoundingBox(tempPoly)
-          tempCtn.controlPoints = this.drawControlPoints(params.points, 'rectangle')
-          tempCtn.numberCtn = this.drawNumberLabel(tempPoly, tempColor)
-          tempCtn.deleteBtn = this.drawDeleteButton(tempPoly)
-          currCtnObj = tempCtn
+        } else if(this.drawingCirc){
+          let sqPoint = getPointAsSquare(rectangleCoords.tl, p)
+          if (sqPoint.x > 0 && sqPoint.y > 0 && sqPoint.x < width && sqPoint.y < height){
+            let point = getPosInBounds(sqPoint, polyParams.pointSize)
+            rectangleCoords.br = {
+              x: point.x + polyParams.pointSize / 2,
+              y: point.y + polyParams.pointSize / 2,
+            }
+            // l("Inside")  
+          } else {
+            // l("outside")
+          }
 
-        }else if(this.drawingCirc){
-          rectangleCoords.br = { x: p.x, y: p.y }
           params = {
             ...polyParams,
             type: 'circle',
             color: tempColor,
             points: getCoords(rectangleCoords, 'rectangle', ''),
           }
-
-          tempPoly = this.drawShape(params)
-          tempCtn.shape = tempPoly
-          tempCtn.inBounds = checkIfInBounds(tempPoly)
-          // cl()
-          // l("While drawing:", tempCtn.inBounds)
         }
+
+        tempPoly = this.drawShape(params)
+        tempCtn.shape = tempPoly
+        tempCtn.inBounds = true
+        tempCtn.boundingBox = this.drawBoundingBox(tempPoly)
+        tempCtn.controlPoints = this.drawControlPoints(params.points, 'rectangle')
+        tempCtn.numberCtn = this.drawNumberLabel(tempPoly, tempColor)
+        tempCtn.deleteBtn = this.drawDeleteButton(tempPoly)
+        currCtnObj = tempCtn
+        // cl()
+        // l("While drawing:", tempCtn.inBounds)
       }
     })
   }
@@ -993,6 +988,7 @@ export default class PhotoBlock extends Component {
     e && e.stopPropagation()
     tempPointArr.length = 0    
     if(this.ctn) {
+      bg.emit('pointerup')  
       bg.visible = false
       this.clearTempCtn()
       this.showObjects()
@@ -1035,9 +1031,8 @@ export default class PhotoBlock extends Component {
     let labels = this.state.currPhoto.labels
     
     labels.forEach((lbl, idx) => {
-      tempCtn = { id: rand(7), lastSqPosArr: [] }
-
-      let form = lbl.form.toLowerCase()
+      let tempCtn = { id: rand(7), lastSqPosArr: [] }
+      , form = lbl.form.toLowerCase()
       , tempPoly
       , params = {
         ...polyParams,
@@ -1088,20 +1083,25 @@ export default class PhotoBlock extends Component {
 
   addObject = ctnObj => {
     ctnObj.shape.visible = true
+    ctnObj.shape.ctnObj = ctnObj
     this.ctn.addChild(ctnObj.shape)
   
     ctnObj.boundingBox.visible = false
+    ctnObj.boundingBox.ctnObj = ctnObj
     this.ctn.addChild(ctnObj.boundingBox)
     
     ctnObj.controlPoints.forEach(sq => {
       sq.visible = false
+      sq.ctnObj = ctnObj
       this.ctn.addChild(sq)
     })
     
     ctnObj.numberCtn.visible = true
+    ctnObj.numberCtn.ctnObj = ctnObj
     this.ctn.addChild(ctnObj.numberCtn)
     
     ctnObj.deleteBtn.visible = false
+    ctnObj.deleteBtn.ctnObj = ctnObj
     this.ctn.addChild(ctnObj.deleteBtn)
   }
 
@@ -1170,6 +1170,7 @@ export default class PhotoBlock extends Component {
   }
 
   hideObjects = forAdding => {
+    // l("hideObjects")
     // l(ctnArr)
     ctnArr.forEach(ctnObj => {
       ctnObj.labelData.active = false
@@ -1187,6 +1188,8 @@ export default class PhotoBlock extends Component {
 
   showObjects = () => {
     // l(ctnArr)
+    // l(this.ctn) -> Helpful line
+    // l("showObjects")
     ctnArr.forEach(ctnObj => {
       ctnObj.shape.visible = true
       ctnObj.numberCtn.visible = true          
@@ -1268,10 +1271,6 @@ export default class PhotoBlock extends Component {
           sq[0].position.x = pos.x
           break
       }
-    }
-
-    function lerp(a, b, x) {
-      return a + x * (b - a)
     }
     
     function getClosestPointOnLine(center, idx, pos){
@@ -1567,6 +1566,7 @@ export default class PhotoBlock extends Component {
   }
 
   makeMutable = deleteOnBackspace => {
+    // l("makeMutable")
     this.hideObjects()
     currCtnObj.labelData.edit = true
     currCtnObj.labelData.active = true
@@ -1583,6 +1583,7 @@ export default class PhotoBlock extends Component {
   }
 
   makeImmutable = () => {
+    // l("makeImmutable")
     this.hideObjects()
     this.setState({ addingObject: false })
   }
@@ -1717,7 +1718,7 @@ export default class PhotoBlock extends Component {
     }
 
     return (
-      <div ref={blkRef} className="block-content" tabIndex="0" onKeyUp={this.handleKey}  onClick={this.handleMouseDownOutside}>
+      <div ref={blkRef} className="block-content" tabIndex="0" onKeyUp={this.handleKey} onMouseDown={this.handleMouseDownOutside}>
         <div style={{ display: !this.state.showUpload ? "block" : "none" }}>
           <div className="title row pb-0">
             {photos.length > 0 ?  <>

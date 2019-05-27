@@ -54,11 +54,15 @@ export default class App extends Component {
   }
 
   handleClick = event => {
+    event && event.stopPropagation()    
     // l("App", event.target, this.child)
     // Call main->block->photoblock function
     let pb = this.child.childBlock[0].photoBlock
-    pb.resetForAdding()
-    pb.makeImmutable()
+    // l(pb.state.adding)
+    if(pb.state.adding === ""){
+      // pb.resetForAdding()
+      pb.makeImmutable()
+    }
   }
 
   signIn = e => {
@@ -118,7 +122,7 @@ export default class App extends Component {
   
   render(){
     return (
-      <div className="app-outer" onClick={this.handleClick}>
+      <div className="app-outer" onMouseDown={this.handleClick}>
         {this.state.showNav && <nav className="navbar navbar-expand-lg navbar-dark">
           <div className="container-fluid p-0">
             <a className="navbar-brand" href="javascript:void(0)">
