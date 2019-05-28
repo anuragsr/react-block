@@ -477,11 +477,11 @@ export default class PhotoBlock extends Component {
 
       l("Photos:", photos)
       this.setState({ photos, currPhoto, currCat, imgOrientation: "" }, () => {        
-//         l(plRect)        
-//         let currentOffset = plRect.top - window.pageYOffset
-// 
-//         plRect = placeBlockDiv.getBoundingClientRect()
-//         window.scrollTo(0, plRect.top - currentOffset)
+        l(plRect)        
+        let currentOffset = plRect.top - window.pageYOffset
+
+        plRect = placeBlockDiv.getBoundingClientRect()
+        window.scrollTo(0, plRect.top - currentOffset)
       })
     })
   }

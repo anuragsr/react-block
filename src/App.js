@@ -36,13 +36,13 @@ export default class App extends Component {
         password: ck.x_p
       }, this.signIn)
     }
-    else{      
-      this.setState({
-        showNav: false,      
-        username: 'ml_page',
-        password: '}XhE9p2/FQjx9.e'
-      }, this.signIn)
-    }
+    // else{      
+    //   this.setState({
+    //     showNav: false,      
+    //     username: 'ml_page',
+    //     password: '}XhE9p2/FQjx9.e'
+    //   }, this.signIn)
+    // }
   }
 
   handleInputChange = event => {
@@ -78,7 +78,7 @@ export default class App extends Component {
       l(res)
       // res.data.permissions = ["photo_block", "place_block", "tag_block"] 
       // res.data.permissions = ["photo_block", "tag_block"] 
-      res.data.permissions = ["photo_block"] 
+      // res.data.permissions = ["photo_block"] 
       // res.data.permissions = ["place_block"] 
       // res.data.permissions = ["tag_block"]
 
