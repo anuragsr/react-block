@@ -477,11 +477,13 @@ export default class PhotoBlock extends Component {
 
       l("Photos:", photos)
       this.setState({ photos, currPhoto, currCat, imgOrientation: "" }, () => {        
-        l(plRect)        
-        let currentOffset = plRect.top - window.pageYOffset
+        l(plRect)
+        if(typeof plRect !== "undefined") {
+          let currentOffset = plRect.top - window.pageYOffset
 
-        plRect = placeBlockDiv.getBoundingClientRect()
-        window.scrollTo(0, plRect.top - currentOffset)
+          plRect = placeBlockDiv.getBoundingClientRect()
+          window.scrollTo(0, plRect.top - currentOffset)
+        }
       })
     })
   }
@@ -759,7 +761,7 @@ export default class PhotoBlock extends Component {
       // l(currCtnObj)
       // let lbl = getActive(lbls)
       // if (lbl){
-      if (currCtnObj.labelData.active){
+      if (currCtnObj != null && currCtnObj.labelData.active){
         this.editLabel(this.state.tempLblName)
       }else{
         this.submit()
@@ -1626,7 +1628,9 @@ export default class PhotoBlock extends Component {
   makeImmutable = () => {
     // l("makeImmutable")
     this.hideObjects()
-    this.setState({ adding: "" })
+    this.setState({ adding: "" }, () => {
+      currCtnObj = null
+    })
   }
 
   addLabel = () => {
@@ -1703,6 +1707,8 @@ export default class PhotoBlock extends Component {
         this.deleteObject(ctnObj)
       } else {
         ctnObj.numberCtn.children[1].text = i
+        ctnObj.labelData.edit = false
+        ctnObj.labelData.active = false
         tmpctnArr.push(ctnObj)
         i++
       }
