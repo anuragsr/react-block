@@ -67,7 +67,7 @@ export default class Main extends Component {
       // Call block->photoblock function
       let pb = this.childBlock[0].photoBlock
       // l(pb.state.adding)
-      if(pb.state.adding === ""){
+      if(pb.state.adding === "" || pb.state.adding === "editing-shape"){
         // pb.resetForAdding()
         pb.makeImmutable()
       }

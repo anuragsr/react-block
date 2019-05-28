@@ -11,16 +11,16 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCheck, faCaretRight, faTimes } from '@fortawesome/free-solid-svg-icons'
 
 const checkId = rand(5)
-const getActive = arr => {
-  let tmp = false
-  for(let i = 0; i < arr.length; i++){
-    if(arr[i].active){
-      tmp = arr[i]
-      break
-    }
-  }
-  return tmp
-}
+// const getActive = arr => {
+//   let tmp = false
+//   for(let i = 0; i < arr.length; i++){
+//     if(arr[i].active){
+//       tmp = arr[i]
+//       break
+//     }
+//   }
+//   return tmp
+// }
 
 // From Image Component
 PIXI.Graphics.prototype.drawDashedBorder = function(points, dash, gap){
@@ -265,6 +265,30 @@ let randHex = () => {
   return inBounds
 }
 , lerp = (a, b, x) => a + x * (b - a)
+, sortPointsClockwise = points => {
+
+  points.sort((a,b) => a.y - b.y)
+  const cy = (points[0].y + points[points.length -1].y) / 2
+  points.sort((a,b) => b.x - a.x)
+
+  const cx = (points[0].x + points[points.length -1].x) / 2
+  , center = {x:cx, y:cy}
+
+  let startAng
+  points.forEach(point => {
+    let ang = Math.atan2(point.y - center.y,point.x - center.x)
+    if(!startAng){ startAng = ang }
+    else if(ang < startAng){  
+      // ensure that all points are clockwise of the start point
+      ang += Math.PI * 2
+    }    
+    point.angle = ang
+  })
+
+  points
+  .sort((a,b)=> a.angle - b.angle)
+  .unshift(points.pop())
+}
 , blkRef
 , imgInnerRef
 , imgRef, bg
@@ -365,7 +389,6 @@ export default class PhotoBlock extends Component {
       uploadedFiles: [],
       loadUrl: "",
       showCityDropdown: false,
-      addingObject: false,
       // From Image Component
       currCat: "",
       tempLblName: "",
@@ -454,11 +477,11 @@ export default class PhotoBlock extends Component {
 
       l("Photos:", photos)
       this.setState({ photos, currPhoto, currCat, imgOrientation: "" }, () => {        
-        l(plRect)        
-        let currentOffset = plRect.top - window.pageYOffset
-
-        plRect = placeBlockDiv.getBoundingClientRect()
-        window.scrollTo(0, plRect.top - currentOffset)
+//         l(plRect)        
+//         let currentOffset = plRect.top - window.pageYOffset
+// 
+//         plRect = placeBlockDiv.getBoundingClientRect()
+//         window.scrollTo(0, plRect.top - currentOffset)
       })
     })
   }
@@ -733,13 +756,15 @@ export default class PhotoBlock extends Component {
     let lbls = this.state.currPhoto.labels
     if(event.keyCode === 13){
       // Enter Key
-      let lbl = getActive(lbls)
-      if (lbl){
+      // l(currCtnObj)
+      // let lbl = getActive(lbls)
+      // if (lbl){
+      if (currCtnObj.labelData.active){
         this.editLabel(this.state.tempLblName)
       }else{
         this.submit()
       }
-    } else if (event.keyCode === 8){
+    } else if (event.keyCode === 8 && this.state.adding === "editing-shape"){
       // Backspace
       if(this.state.deleteOnBackspace) this.deleteLabel()
     }
@@ -764,7 +789,7 @@ export default class PhotoBlock extends Component {
         classList !== "obj-sel" && 
         classList !== "obj-sel active"
       ){
-        if(this.state.adding === ""){
+        if(this.state.adding === "" || this.state.adding === "editing-shape"){
           l("handleMouseDownOutside")
           // this.resetForAdding()
           this.makeImmutable()
@@ -836,17 +861,30 @@ export default class PhotoBlock extends Component {
     let params, tempPoly
     , width = imgInnerRef.current.clientWidth
     , height = imgInnerRef.current.clientHeight
-    , getPointAsSquare = (startPoint, pos) => {
-      let line = {
-        x0: startPoint.x,
-        y0: startPoint.y,
-        x1: startPoint.x + 5,
-        y1: startPoint.y + 5
-      } // Line joining the 2 points
+    , getPointAsSquare = (start, end) => {
+      let x0 = start.x
+      , y0 = start.y
+      , x1 = end.x
+      , y1 = end.y
+      , line = {
+        x0: start.x,
+        y0: start.y,
+        x1: start.x + 5,
+        y1: start.y + 5
+      }
+
+      if ((x0 < x1 && y0 > y1) || (x0 > x1 && y0 < y1)) {
+        line = {
+          x0: start.x,
+          y0: start.y,
+          x1: start.x + 5,
+          y1: start.y - 5
+        }
+      }
 
       let dx = line.x1 - line.x0
         , dy = line.y1 - line.y0
-        , t = ((pos.x - line.x0) * dx + (pos.y - line.y0) * dy) / (dx * dx + dy * dy)
+        , t = ((end.x - line.x0) * dx + (end.y - line.y0) * dy) / (dx * dx + dy * dy)
 
       return {
         x: lerp(line.x0, line.x1, t),
@@ -957,11 +995,11 @@ export default class PhotoBlock extends Component {
           }
         }
 
-        tempPoly = this.drawShape(params)
+        tempPoly = this.drawShape(params)        
         tempCtn.shape = tempPoly
         tempCtn.inBounds = true
         tempCtn.boundingBox = this.drawBoundingBox(tempPoly)
-        tempCtn.controlPoints = this.drawControlPoints(params.points, 'rectangle')
+        tempCtn.controlPoints = this.drawControlPoints(params.points, params.type)
         tempCtn.numberCtn = this.drawNumberLabel(tempPoly, tempColor)
         tempCtn.deleteBtn = this.drawDeleteButton(tempPoly)
         currCtnObj = tempCtn
@@ -993,7 +1031,7 @@ export default class PhotoBlock extends Component {
       this.clearTempCtn()
       this.showObjects()
     }
-    this.setState({ adding: "", addingObject: false })
+    this.setState({ adding: "" })
   }
 
   startAdding = (e, type) => {
@@ -1002,12 +1040,12 @@ export default class PhotoBlock extends Component {
     tempColor = randHex()
     this.hideObjects(true)
     this.clearTempCtn()
-    this.setState({ adding: type, addingObject: true })
+    this.setState({ adding: type })
   }
 
   doneAdding = (e, type) => {
     e && e.stopPropagation()
-    this.setState({ adding: "", addingObject: false })
+    this.setState({ adding: "" })
 
     if(currCtnObj === null){
       this.resetForAdding()
@@ -1234,7 +1272,7 @@ export default class PhotoBlock extends Component {
     if(eventType === 'shape'){
       graphic.buttonMode  = true
     }else if(eventType === 'point'){
-      if(graphic.type !== 'polygon')
+      if(graphic.type === 'circle')
         graphic.cursor = graphic.idx % 2 ? "nesw-resize" : "nwse-resize"
       else
         graphic.cursor = "move"
@@ -1476,7 +1514,10 @@ export default class PhotoBlock extends Component {
 
   drawControlPoints = (points, type) => {
     let sqArr = []
-    
+
+    // Here we set the points in clockwise dir, starting from top left
+    if(type === 'circle') sortPointsClockwise(points)
+
     for(let i = 0; i < points.length; i++){
       let sq = new Square(polyParams.pointSize, 0xe5e5e5, 1)
       sq.position.set(
@@ -1576,7 +1617,7 @@ export default class PhotoBlock extends Component {
     this.moveToTopLayer()
 
     this.setState({ 
-      addingObject: true, 
+      adding: "editing-shape", 
       //Disable delete on backspace if label was clicked
       deleteOnBackspace
     })
@@ -1585,7 +1626,7 @@ export default class PhotoBlock extends Component {
   makeImmutable = () => {
     // l("makeImmutable")
     this.hideObjects()
-    this.setState({ addingObject: false })
+    this.setState({ adding: "" })
   }
 
   addLabel = () => {
@@ -1624,7 +1665,6 @@ export default class PhotoBlock extends Component {
       alert('Please enter a keyword value!')
       return
     }
-
 
     // If selected from list, PUT else POST
     if(fromOptions){
@@ -1669,7 +1709,7 @@ export default class PhotoBlock extends Component {
     })
     ctnArr = tmpctnArr
     // this.props.editing(false)    
-    this.setState({ addingObject: false })    
+    this.setState({ adding: "" })    
     this.imageUpdated(currCtnObj.labelData, "delete")
   }
 
@@ -1682,9 +1722,11 @@ export default class PhotoBlock extends Component {
 
   labelClicked = (e, lbl) => {
     e.stopPropagation()
-    this.setState({ deleteOnBackspace: false })
-    currCtnObj = ctnArr.filter(obj => obj.labelData === lbl)[0]
-    if(!currCtnObj.labelData.active) this.makeMutable()
+    if(this.state.adding === "" || this.state.adding === "editing-shape"){      
+      this.setState({ deleteOnBackspace: false })
+      currCtnObj = ctnArr.filter(obj => obj.labelData === lbl)[0]
+      if(!currCtnObj.labelData.active) this.makeMutable()
+    }
   }
 
   render() {
@@ -1750,13 +1792,13 @@ export default class PhotoBlock extends Component {
               <div className="col-lg-3 text-right">
                 <button onClick={() => this.nextPhoto(false)} 
                   className="btn btn-accent-outline"
-                  disabled={this.state.addingObject}
+                  disabled={this.state.adding !== ""}
                 >
                   Next&nbsp;&nbsp;<FontAwesomeIcon icon={faCaretRight} />
                 </button>
                 <button onClick={this.submit} 
                   className="ml-3 btn btn-accent"
-                  disabled={this.state.addingObject}
+                  disabled={this.state.adding !== ""}
                 >Submit</button>
               </div>
             </>:
@@ -1814,23 +1856,23 @@ export default class PhotoBlock extends Component {
                    <div className="col-1">
                      <div className={"obj-sel " + (this.state.adding === "polygon"?"active":"")} onClick={e => this.startAdding(e, 'polygon')}>
                        <img src="assets/poly.svg" alt=""/>
-                       {this.state.adding === 'polygon' && <div className="ctn-add-action">
-                         <FontAwesomeIcon onClick={e => this.doneAdding(e, 'Polygon')} icon={faCheck} style={{ color: 'green' }} />
-                         <FontAwesomeIcon onClick={e => this.resetForAdding(e)} icon={faTimes} style={{ color: 'red' }} />
+                       {this.state.adding === 'polygon' && <div className="ctn-add-action" onClick={e => e.stopPropagation()}>
+                         <FontAwesomeIcon onClick={e => this.doneAdding(e, 'Polygon')} icon={faCheck} style={{ cursor: 'pointer', color: 'green' }} />
+                         <FontAwesomeIcon onClick={e => this.resetForAdding(e)} icon={faTimes} style={{ cursor: 'pointer', color: 'red' }} />
                        </div>}
                      </div>
                      <div className={"obj-sel " + (this.state.adding === "rectangle"?"active":"")} onClick={e => this.startAdding(e, 'rectangle')}>
                        <img src="assets/square.svg" alt=""/>
-                       {this.state.adding === 'rectangle' && <div className="ctn-add-action">
-                         <FontAwesomeIcon onClick={e => this.doneAdding(e, 'Rectangle')} icon={faCheck} style={{ color: 'green' }} />
-                         <FontAwesomeIcon onClick={e => this.resetForAdding(e)} icon={faTimes} style={{ color: 'red' }} />
+                       {this.state.adding === 'rectangle' && <div className="ctn-add-action" onClick={e => e.stopPropagation()}>
+                         <FontAwesomeIcon onClick={e => this.doneAdding(e, 'Rectangle')} icon={faCheck} style={{ cursor: 'pointer', color: 'green' }} />
+                         <FontAwesomeIcon onClick={e => this.resetForAdding(e)} icon={faTimes} style={{ cursor: 'pointer', color: 'red' }} />
                        </div>}
                      </div>
                      <div className={"obj-sel " + (this.state.adding === "circle"?"active":"")} onClick={e => this.startAdding(e, 'circle')}>
                        <img src="assets/circle.svg" alt=""/>
-                       {this.state.adding === 'circle' && <div className="ctn-add-action">
-                         <FontAwesomeIcon onClick={e => this.doneAdding(e, 'Circle')} icon={faCheck} style={{ color: 'green' }} />
-                         <FontAwesomeIcon onClick={e => this.resetForAdding(e)} icon={faTimes} style={{ color: 'red' }} />
+                       {this.state.adding === 'circle' && <div className="ctn-add-action" onClick={e => e.stopPropagation()}>
+                         <FontAwesomeIcon onClick={e => this.doneAdding(e, 'Circle')} icon={faCheck} style={{ cursor: 'pointer', color: 'green' }} />
+                         <FontAwesomeIcon onClick={e => this.resetForAdding(e)} icon={faTimes} style={{ cursor: 'pointer', color: 'red' }} />
                        </div>}
                      </div>
                    </div>
