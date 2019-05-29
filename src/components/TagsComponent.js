@@ -1,17 +1,22 @@
 import React, { Component } from 'react'
+import AutoCompleteComponent from './AutoCompleteComponent'
 import { l } from '../helpers/common'
 
 export default class TagsComponent extends Component {
   constructor(props) {
     super(props)
     this.state = {
-      items: this.props.tags
+      items: this.props.tags,
+      showAuto: this.props.showAuto,
+      mainChosen: this.props.mainChosen,
     }
   }
 
   componentWillReceiveProps = nextProps => {
     this.setState({ 
-      items: nextProps.tags    
+      items: nextProps.tags,      
+      showAuto: nextProps.showAuto,
+      mainChosen: nextProps.mainChosen      
     }) 
   }
 
@@ -22,13 +27,22 @@ export default class TagsComponent extends Component {
   }
 
   handleClick = item => {
-    // l(item)
     if(this.props.clickedTag) 
       this.props.clickedTag(item)
   }
 
   handleRemove = item => {
     this.props.removeTag(item)
+  }
+
+  handleAdd = tag => {
+    tag.isMain = true
+    this.props.addTag(tag)
+  }
+
+  toggleMainAutosuggest = () => {
+    let showAuto = !this.state.showAuto
+    this.setState({ showAuto })
   }
 
   render(){
@@ -41,15 +55,47 @@ export default class TagsComponent extends Component {
           } else{
             currImg = item.image !== null ? item.image : "assets/tag-plh-sug.png"
           }
-          return <li onClick={() => this.handleClick(item)} key={i} className={item.optional ? "optional" : ""}>
+
+          let itemClass = ""
+          if(item.optional) itemClass+= "optional"
+          else if(item.isMain) itemClass+= "main"
+
+          return (
+            <li 
+              onClick={() => this.handleClick(item)} key={i} 
+              className={itemClass}
+            >
             <div>
               <img src={currImg} alt="" />
-              <span>{this.getDisplayName(item.full_name)}</span>              
+              <span className="tag-name">{this.getDisplayName(item.full_name)}</span>              
               {this.props.type === "default" && 
               <img className="del-tag" onClick={() => this.handleRemove(item)} src="assets/delete-tag.svg" alt="" />}              
             </div>
-          </li>
+          </li>)
         })}
+
+        {(
+          this.state.items.length && 
+          !this.state.mainChosen && 
+          this.props.isGroup
+        )?<li className="tag-main">
+            <div><img onClick={this.toggleMainAutosuggest} src="assets/rectangle.svg"/></div>
+            {this.state.showAuto && <div className="ctn-auto">
+              <div className="arrow-box">
+                <AutoCompleteComponent
+                  inputProps={{
+                    className: 'tag-inp',
+                    placeholder: 'Find the tag for Expectation Block ..',
+                  }}
+                  type="tag"
+                  parent="tag"
+                  optionSelected={this.handleAdd}
+                />
+                <img onClick={this.toggleMainAutosuggest} src="assets/bounds.svg" alt=""/>
+              </div>
+            </div>}
+          </li>
+        :""}
       </ul>
     )
   }

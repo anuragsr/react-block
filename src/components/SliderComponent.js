@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import { Slider, Rail, Handles, Tracks } from 'react-compound-slider'
 
-import { l } from '../helpers/common'
+// import { l } from '../helpers/common'
 
 const Track = ({ source, target, getTrackProps }) => { // Track component
 

@@ -85,7 +85,7 @@ export default class TagBlock extends Component {
     .get('/api/v1/suggested_tags')
     .then(res => {
       let suggTags = res.data.results
-      l(suggTags)
+      // l(suggTags)
       this.setState({ 
         showSugTags: true, 
         suggTags 
@@ -135,7 +135,6 @@ export default class TagBlock extends Component {
     setTimeout(() => {
       suggestions.length = 0
     }, 200)
-    // this.tagsChanged()
   }
 
   tagRemoved = tag => {
@@ -152,13 +151,13 @@ export default class TagBlock extends Component {
 
   tagsChanged = () => {
     if(this.state.tags.length && this.state.ml){
-      l("Call ML with list of tags if ML on")
+      // l("Call ML with list of tags if ML on")
       this.http
       .post('/api/v1/get_attraction_for_tags', { 
         tags_ids: this.state.tags.map(x => x.id) 
       })
       .then(res => {
-        l(res.data)
+        // l(res.data)
         let attr = res.data.attraction?res.data.attraction:0
         this.setState( state => ({
           att: {
@@ -186,7 +185,7 @@ export default class TagBlock extends Component {
 
   undo = () => {
     let params = { type: 'tag', id: this.state.lastTagId }
-    l(params)
+    // l(params)
     clearTimeout(timer)
     this.http
     .get('/api/v1/undo', params)
@@ -240,7 +239,7 @@ export default class TagBlock extends Component {
         editor_id: 1,
         bot_id: this.state.currBot.id,
       }
-      l(request)
+      // l(request)
   
       this.http
       .post('/api/v1/send_attraction_for_tags', request, auth)
@@ -274,7 +273,7 @@ export default class TagBlock extends Component {
 
   handleKey = event => {
     event.preventDefault()
-    l(event.keyCode, "Tag Block")
+    // l(event.keyCode, "Tag Block")
     if (event.keyCode === 13) {
       // Enter Key
       l(suggestions)

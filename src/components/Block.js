@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import Switch from 'react-switch'
 import TagBlock from './TagBlock'
+import TagGroupBlock from './TagGroupBlock'
 import PlaceBlock from './PlaceBlock'
 import PhotoBlock from './PhotoBlock'
 import { l } from '../helpers/common'
@@ -16,7 +17,7 @@ export default class Block extends Component {
   
   toggled = show => {
     this.setState({ show })
-    if (this.props.type !== "Tag")
+    if (this.props.type !== "Tag" && this.props.type !== "Tag Group")
       this.props.handleToggle(show, this.props.idx)
   }
 
@@ -45,6 +46,7 @@ export default class Block extends Component {
           (
             this.props.type === "Place"?<PlaceBlock placeChanged={this.handlePlaceChanged}/>
             :this.props.type === "Tag"?<TagBlock/>
+            :this.props.type === "Tag Group"?<TagGroupBlock/>
             :<PhotoBlock 
               placeObj={this.props.placeObj} 
               placeRef={this.props.placeRef}

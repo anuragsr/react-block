@@ -101,7 +101,7 @@ export default class AutoCompleteComponent extends Component {
     .then(res => {
       const currRes = res.data.results
       let suggestions      
-      l("Total API Results:", currRes)
+      // l("Total API Results:", currRes)
 
       if(this.props.type === "tag"){
         suggestions = currRes.filter(x => x.full_name.toLowerCase().includes(value.toLowerCase()))      
@@ -112,7 +112,7 @@ export default class AutoCompleteComponent extends Component {
       }else if(this.props.type === "label"){
         suggestions = currRes.filter(x => x.name.toLowerCase().includes(value.toLowerCase()))      
       }  
-      l("Results containing current query:", suggestions)
+      // l("Results containing current query:", suggestions)
       
       showAnim = false
       showAttr = true

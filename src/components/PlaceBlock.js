@@ -54,7 +54,7 @@ export default class PlaceBlock extends Component {
       }, auth)
       .then(res => {
         let places = res.data.results
-        l(places)
+        // l(places)
         this.setState({ places })
         this.placeChanged(places[0])
       })
@@ -94,7 +94,7 @@ export default class PlaceBlock extends Component {
     .get('/api/v1/suggested_tags', params)
     .then(res => {
       let suggTags = res.data.results
-      l(suggTags)
+      // l(suggTags)
       this.setState({ 
         allowAdd: true,
         showSugTags: true, 
@@ -154,7 +154,6 @@ export default class PlaceBlock extends Component {
     setTimeout(() => {
       suggestions.length = 0
     }, 200)
-    // this.tagsChanged()
   }
 
   tagRemoved = tag => {
@@ -170,14 +169,14 @@ export default class PlaceBlock extends Component {
 
   tagsChanged = () => {
     if(this.state.tags.length && this.state.ml){
-      l("Call ML with list of tags and place if ML on")
+      // l("Call ML with list of tags and place if ML on")
       this.http
       .post('/api/v1/get_attraction_for_place', { 
         tags_ids: this.state.tags.map(x => x.id),
         place_id: this.state.currPlace.id
       })
       .then(res => {
-        l(res.data)
+        // l(res.data)
         let attr = res.data.attraction?res.data.attraction:0
         this.setState( state => ({
           att: {
@@ -205,13 +204,13 @@ export default class PlaceBlock extends Component {
 
   undo = () => {
     let params = { type: 'place', id: this.state.lastPlaceId }
-    l(params)
+    // l(params)
 
     clearTimeout(timer)
     this.http
     .get('/api/v1/undo', params)
     .then(res => {
-      l(res)
+      // l(res)
       this.setState({
         showNotif: true, 
         notifType: "undo"
@@ -261,7 +260,7 @@ export default class PlaceBlock extends Component {
         bot_id: this.state.currBot.id,
         place_id: this.state.currPlace.id
       }
-      l(request)
+      // l(request)
   
       this.http
       .post('/api/v1/send_attraction_for_place', request, auth)
@@ -295,7 +294,7 @@ export default class PlaceBlock extends Component {
 
   handleKey = event => {
     event.preventDefault()
-    l(event.keyCode, "Place Block")
+    // l(event.keyCode, "Place Block")
     if (event.keyCode === 13) {
       // Enter Key
       l(suggestions)

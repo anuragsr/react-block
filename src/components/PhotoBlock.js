@@ -11,16 +11,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCheck, faCaretRight, faTimes } from '@fortawesome/free-solid-svg-icons'
 
 const checkId = rand(5)
-// const getActive = arr => {
-//   let tmp = false
-//   for(let i = 0; i < arr.length; i++){
-//     if(arr[i].active){
-//       tmp = arr[i]
-//       break
-//     }
-//   }
-//   return tmp
-// }
 
 // From Image Component
 PIXI.Graphics.prototype.drawDashedBorder = function(points, dash, gap){
@@ -120,7 +110,6 @@ class Square extends PIXI.Graphics {
 class Circle extends PIXI.Graphics {
   constructor(params) {
     super()
-    // this.r = params.circleData.r || 1
     this.c = {}
     this.lw = params.edgeSize || 1
     this.co = params.color || 0x000000
@@ -161,8 +150,6 @@ class Circle extends PIXI.Graphics {
     .closePath()
     .lineStyle(this.lw, this.co, 1)
     .drawDashedBorder(points, 8, 7)
-    // if (bounds.width > 50 && bounds.width === bounds.height){
-    // }
   }
 }
 
@@ -308,61 +295,61 @@ let randHex = () => {
 }
 , currCtnObj = null
 , inBounds = true
-, dummyLabels = [
-  {
-    form: "Rectangle",
-    id: 396,
-    label: {
-      id: 7738,
-      name: "fashion accessory",
-      tag: null,
-    },
-    object_coords: [
-      "0.3132956922054291",
-      "0.27638623118400574",
-      "0.9963658452033997",
-      "0.8171226382255554",
-    ]
-  },
-  {
-    form: "Circle",
-    id: 39601,
-    label: {
-      id: 77381,
-      name: "circle",
-      tag: null,
-    },
-    object_coords: [
-      "0.2660536421530819",
-      "0.03249433527307487",
-      "0.6242626535534694",
-      "0.7778712830904767"
-    ]
-  },
-  {
-    form: "Polygon",
-    id: 396012,
-    label: {
-      id: 773812,
-      name: "poly",
-      tag: null,
-    },
-    object_coords: [
-      "0.050795250896057347", 
-      "0.1671309192200557", 
-      "0.06334005376344086", 
-      "0.7158774373259053", 
-      "0.25509632616487454", 
-      "0.8579387186629527", 
-      "0.32857302867383514", 
-      "0.6295264623955432", 
-      "0.28377016129032256", 
-      "0.21727019498607242", 
-      "0.19058019713261648", 
-      "0.03064066852367688"
-    ]
-  }
-]
+// , dummyLabels = [
+//   {
+//     form: "Rectangle",
+//     id: 396,
+//     label: {
+//       id: 7738,
+//       name: "fashion accessory",
+//       tag: null,
+//     },
+//     object_coords: [
+//       "0.3132956922054291",
+//       "0.27638623118400574",
+//       "0.9963658452033997",
+//       "0.8171226382255554",
+//     ]
+//   },
+//   {
+//     form: "Circle",
+//     id: 39601,
+//     label: {
+//       id: 77381,
+//       name: "circle",
+//       tag: null,
+//     },
+//     object_coords: [
+//       "0.2660536421530819",
+//       "0.03249433527307487",
+//       "0.6242626535534694",
+//       "0.7778712830904767"
+//     ]
+//   },
+//   {
+//     form: "Polygon",
+//     id: 396012,
+//     label: {
+//       id: 773812,
+//       name: "poly",
+//       tag: null,
+//     },
+//     object_coords: [
+//       "0.050795250896057347", 
+//       "0.1671309192200557", 
+//       "0.06334005376344086", 
+//       "0.7158774373259053", 
+//       "0.25509632616487454", 
+//       "0.8579387186629527", 
+//       "0.32857302867383514", 
+//       "0.6295264623955432", 
+//       "0.28377016129032256", 
+//       "0.21727019498607242", 
+//       "0.19058019713261648", 
+//       "0.03064066852367688"
+//     ]
+//   }
+// ]
 , suggestions = []
 , fromOptions = false
 , lastParams
@@ -374,7 +361,7 @@ export default class PhotoBlock extends Component {
   
   constructor(props) {
     super(props)
-    l(this.props)
+    // l(this.props)
     this.http = new HttpService()
     this.state = {
       categories: [],
@@ -430,11 +417,11 @@ export default class PhotoBlock extends Component {
 
     if (props.placeObj.withPlace) {
       this.setState({ currPlace: {}, showCityDropdown: false })
-      if (!Object.keys(props.placeObj.place).length) {
-        l("Wait for place selection")
-      } else {
+      if (Object.keys(props.placeObj.place).length) {
         placeId = props.placeObj.place.id
         canCall = true
+      } else {
+        // l("Wait for place selection")
       }
     } else {
       canCall = true
@@ -475,9 +462,9 @@ export default class PhotoBlock extends Component {
         this.destroyCanvas()
       }
 
-      l("Photos:", photos)
+      // l("Photos:", photos)
       this.setState({ photos, currPhoto, currCat, imgOrientation: "" }, () => {        
-        l(plRect)
+        // l(plRect)
         if(typeof plRect !== "undefined") {
           let currentOffset = plRect.top - window.pageYOffset
 
@@ -547,7 +534,7 @@ export default class PhotoBlock extends Component {
       this.setState({ showingUploaded: false })
       this.doApiCall(this.props)
     }
-    l(photos)
+    // l(photos)
     this.setState({ photos, currPhoto, currCat, imgOrientation: "" })
   }
 
@@ -686,7 +673,6 @@ export default class PhotoBlock extends Component {
     currPhoto.category = { name: currCat }
 
     this.setState({ currCat, currPhoto })
-    // this.props.catUpdated(currCat)
   }
 
   tempLblNameChanged = value => this.setState({ tempLblName: value })
@@ -754,13 +740,10 @@ export default class PhotoBlock extends Component {
 
   handleKey = event => {
     event.preventDefault()
-    l(event.keyCode, "Photo Block")
-    let lbls = this.state.currPhoto.labels
+    // l(event.keyCode, "Photo Block")    
     if(event.keyCode === 13){
       // Enter Key
       // l(currCtnObj)
-      // let lbl = getActive(lbls)
-      // if (lbl){
       if (currCtnObj != null && currCtnObj.labelData.active){
         this.editLabel(this.state.tempLblName)
       }else{
@@ -792,8 +775,7 @@ export default class PhotoBlock extends Component {
         classList !== "obj-sel active"
       ){
         if(this.state.adding === "" || this.state.adding === "editing-shape"){
-          l("handleMouseDownOutside")
-          // this.resetForAdding()
+          // l("handleMouseDownOutside")
           this.makeImmutable()
         }
       }
@@ -801,9 +783,8 @@ export default class PhotoBlock extends Component {
   }
 
   // From Image Component
-  imageLoaded = img => {
-    // console.clear()
-    l("Image loaded: ", img.width, img.height)
+  imageLoaded = img => {    
+    // l("Image loaded: ", img.width, img.height)
 
     let ctnWidth = imgRef.current.clientWidth
     , ctnHeight = imgRef.current.clientHeight
@@ -908,14 +889,7 @@ export default class PhotoBlock extends Component {
     bg.on('pointerdown', e => {
       let c = {...e.data.global}
 
-
-      switch(this.state.adding){
-        case 'rectangle':
-          this.data = e.data
-          this.drawingRect = true
-          rectangleCoords.tl = { x: c.x, y: c.y }
-        break
-        
+      switch(this.state.adding){        
         case 'polygon':
           if(tempCtn){
             this.clearTempCtn()
@@ -936,9 +910,14 @@ export default class PhotoBlock extends Component {
           tempCtn.numberCtn = this.drawNumberLabel(tempPoly, tempColor)
           tempCtn.deleteBtn = this.drawDeleteButton(tempPoly)
           currCtnObj = tempCtn
-
         break
         
+        case 'rectangle':
+          this.data = e.data
+          this.drawingRect = true
+          rectangleCoords.tl = { x: c.x, y: c.y }
+        break
+
         default:
           this.data = e.data
           this.drawingCirc = true
@@ -1595,16 +1574,14 @@ export default class PhotoBlock extends Component {
     }, () => {
       // l(currCtnObj.labelData.ref.current)
       let currLblEl = currCtnObj.labelData.ref.current
-      l(currCtnObj.labelData.edit)
+      // l(currCtnObj.labelData.edit)
 
       currLblEl
       .children[1]
       .children[0]
       .children[0]
       .children[0]
-      .focus()        
-      // if(typeof currLblEl !== "undefined"){
-      // }
+      .focus()
     })
   }
 
@@ -1658,7 +1635,6 @@ export default class PhotoBlock extends Component {
 
       this.resetForAdding()
       this.drawAllObjects()
-      // l(this.ctn.children.length)   
     })
   }
 
@@ -1714,7 +1690,6 @@ export default class PhotoBlock extends Component {
       }
     })
     ctnArr = tmpctnArr
-    // this.props.editing(false)    
     this.setState({ adding: "" })    
     this.imageUpdated(currCtnObj.labelData, "delete")
   }

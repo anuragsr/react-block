@@ -14,8 +14,8 @@ import './App.scss'
 const cookies = new Cookies()
 
 export default class App extends Component {
-  constructor(){
-    super()
+  constructor(props){
+    super(props)
     this.http = new HttpService()
     this.state = {
       username: "",
@@ -57,11 +57,11 @@ export default class App extends Component {
     event && event.stopPropagation()    
     // l("App", event.target, this.child)
     // Call main->block->photoblock function
-    let pb = this.child.childBlock[0].photoBlock
-    // l(pb.state.adding)
-    if(pb.state.adding === "" || pb.state.adding === "editing-shape"){
-      // pb.resetForAdding()
-      pb.makeImmutable()
+    if(this.child && this.child.childBlock[0]){      
+      let pb = this.child.childBlock[0].photoBlock
+      if(pb.state.adding === "" || pb.state.adding === "editing-shape"){
+        pb.makeImmutable()
+      }
     }
   }
 
@@ -122,7 +122,7 @@ export default class App extends Component {
   
   render(){
     return (
-      <div className="app-outer" onMouseDown={this.handleClick}>
+      <div className="app-outer" onMouseDown={e => this.handleClick(e)}>
         {this.state.showNav && <nav className="navbar navbar-expand-lg navbar-dark">
           <div className="container-fluid p-0">
             <a className="navbar-brand" href="javascript:void(0)">

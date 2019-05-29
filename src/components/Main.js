@@ -21,6 +21,7 @@ export default class Main extends Component {
         { type: "Photo", show: true, toRender: b.includes("photo_block") },
         { type: "Place", show: true, toRender: b.includes("place_block") },
         { type: "Tag", show: true, toRender: b.includes("tag_block") },
+        { type: "Tag Group", show: true, toRender: b.includes("tag_block") },
       ],
       placeObj: {
         withPlace: b.includes("photo_block") && b.includes("place_block"),
@@ -62,14 +63,16 @@ export default class Main extends Component {
   handleClick = (event, type) => {
     event && event.stopPropagation()
     // l("Block from main", event.target, type)
-    if(type === "Tag" || type === "Place"){
+    if(type !== "Photo"){
       // l("Deselect")
       // Call block->photoblock function
-      let pb = this.childBlock[0].photoBlock
-      // l(pb.state.adding)
-      if(pb.state.adding === "" || pb.state.adding === "editing-shape"){
-        // pb.resetForAdding()
-        pb.makeImmutable()
+      // if(this.child && this.child.childBlock[0]){      
+        // let pb = this.child.childBlock[0].photoBlock
+      if(this.childBlock[0] && this.childBlock[0].photoBlock){      
+        let pb = this.childBlock[0].photoBlock
+        if(pb.state.adding === "" || pb.state.adding === "editing-shape"){
+          pb.makeImmutable()
+        }
       }
     }
   }
