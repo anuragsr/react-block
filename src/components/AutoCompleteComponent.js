@@ -83,9 +83,9 @@ export default class AutoCompleteComponent extends Component {
 
     if(this.props.type === "tag"){
       url = '/api/v1/tags'
-      if(this.props.parent === "place"){
-        params.place_id = this.props.placeId        
-      }
+      // if(this.props.parent === "place"){
+      //   params.place_id = this.props.placeId        
+      // }
     }else if(this.props.type === "place"){
       url = '/api/v1/places'
       params.from_ml_page = true
