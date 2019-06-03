@@ -21,7 +21,7 @@ export default class Main extends Component {
         { type: "Photo", show: true, toRender: b.includes("photo_block") },
         { type: "Place", show: true, toRender: b.includes("place_block") },
         { type: "Tag", show: true, toRender: b.includes("tag_block") },
-        { type: "Tag Group", show: true, toRender: b.includes("tag_group_block") },
+        { type: "Tag Group", show: true, toRender: b.includes("tag_block") },
       ],
       placeObj: {
         withPlace: b.includes("photo_block") && b.includes("place_block"),
