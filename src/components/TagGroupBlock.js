@@ -73,8 +73,13 @@ export default class TagGroupBlock extends Component {
       let tags = res.data.results
       this.setState({
         tags, 
+        mainChosen: false,
         showTags: true,
         showAttr: true,
+        att: {
+          manual: 0,
+          auto: 0
+        }
       })
     })
     .catch(error => {
@@ -134,7 +139,14 @@ export default class TagGroupBlock extends Component {
     let tags = [...this.state.tags, tag]
     , showTags = !!tags.length
     , showAuto = false
-    , mainChosen = tag.isMain?true:false
+    , mainTagLength = tags.filter(curr => curr.isMain).length
+    , mainChosen
+
+    if(mainTagLength) mainChosen = true          
+    else{
+      if(tag.isMain) mainChosen = true
+      mainChosen = false
+    }
 
     this.setState({ 
       tags, 
@@ -149,13 +161,21 @@ export default class TagGroupBlock extends Component {
 
   tagRemoved = tag => {
     let tags = this.state.tags.filter(curr => curr.id !== tag.id), showAttr
+    , mainTagLength = tags.filter(curr => curr.isMain).length
+    , mainChosen
+
+    if(mainTagLength){
+      if(tag.isMain) mainChosen = false
+      else mainChosen = true
+    } else mainChosen = false
+
     if(tags.length === 0){
       showAttr = false
     }else{
       showAttr = true
     }
 
-    this.setState({ mainChosen: !tag.isMain, showAttr, tags }, this.tagsChanged)
+    this.setState({ mainChosen, showAttr, tags }, this.tagsChanged)
   }
 
   tagsChanged = () => {

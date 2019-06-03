@@ -36,13 +36,13 @@ export default class App extends Component {
         password: ck.x_p
       }, this.signIn)
     }
-    // else{      
-    //   this.setState({
-    //     showNav: false,      
-    //     username: 'ml_page',
-    //     password: '}XhE9p2/FQjx9.e'
-    //   }, this.signIn)
-    // }
+    else{
+      this.setState({
+        showNav: false,      
+        username: 'ml_page',
+        password: '}XhE9p2/FQjx9.e'
+      }, this.signIn)
+    }
   }
 
   handleInputChange = event => {

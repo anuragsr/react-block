@@ -72,6 +72,10 @@ export default class TagBlock extends Component {
         tags, 
         showTags: true,
         showAttr: true,
+        att: {
+          manual: 0,
+          auto: 0
+        }
       })
     })
     .catch(error => {
