@@ -50,7 +50,8 @@ export default class PlaceBlock extends Component {
       this.http
       .get('/api/v1/places', {
         query: "",
-        approved: true
+        approved: true,
+        city_id=41
       }, auth)
       .then(res => {
         let places = res.data.results
