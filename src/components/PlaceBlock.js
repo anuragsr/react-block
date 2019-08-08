@@ -51,7 +51,7 @@ export default class PlaceBlock extends Component {
       .get('/api/v1/places', {
         query: "",
         approved: true,
-        city_id=41
+        city_id: 41
       }, auth)
       .then(res => {
         let places = res.data.results
@@ -331,7 +331,7 @@ export default class PlaceBlock extends Component {
         {this.state.places.length > 0 &&
           <div className="title row place">
           <div className="col-lg-5">
-            <a href={"https://admin-staging.oyster.ai/places/edit/" + this.state.currPlace.id} 
+            <a href={"https://admin.oyster.ai/places/edit/" + this.state.currPlace.id} 
               rel="noopener noreferrer" 
               target="_blank"
             >
