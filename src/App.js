@@ -125,7 +125,7 @@ export default class App extends Component {
       <div className="app-outer" onMouseDown={e => this.handleClick(e)}>
         {this.state.showNav && <nav className="navbar navbar-expand-lg navbar-dark">
           <div className="container-fluid p-0">
-            <a className="navbar-brand" href="javascript:void(0)">
+            <a className="navbar-brand" href={void (0)}>
               <img src="assets/burger.svg" alt=""/>
             </a>
             <div className="ml-auto">
@@ -142,10 +142,10 @@ export default class App extends Component {
                   <span className="mx-3">{this.state.username}</span>
                 </li>
                 <li className="nav-item dropdown">
-                  <a className="nav-link dropdown-toggle" href="javascript:void(0)" data-toggle="dropdown">
+                  <a className="nav-link dropdown-toggle" href={void(0)} data-toggle="dropdown">
                   </a>
                   <div className="dropdown-menu">
-                    <a className="dropdown-item" onClick={this.logOut} href="javascript:void(0)">Logout</a>
+                    <a className="dropdown-item" onClick={this.logOut} href={void(0)}>Logout</a>
                   </div>
                 </li>
               </ul>}
