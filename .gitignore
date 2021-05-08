@@ -20,7 +20,6 @@
 .env.test.local
 .env.production.local
 ws.code-workspace
-ws.sublime-workspace
 specs
 agent_socket
 
