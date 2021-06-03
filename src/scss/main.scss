@@ -51,12 +51,14 @@ body{
   }
   .dropdown-menu{
     left: -8rem;
+    .dropdown-item{ cursor: pointer; }
   }
   .dropdown-toggle{
     color: $w !important;
     border-left: 1px solid rgba($w, .1);
     padding-top: 0.9rem;
     padding-left: 1rem !important;
+    cursor: pointer;
     &::after{
       border-top: .5em solid;
       border-right: .5em solid transparent;

@@ -50,6 +50,7 @@ input.tag-inp{
       color: $sc;
       display: flex;
       flex-direction: column;
+      img{ height: 35px; }
       span{
         line-height: 1.53;
         font-size: 17px;
