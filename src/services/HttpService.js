@@ -10,7 +10,8 @@ export default class HttpService {
     if(mock){
       this.initMock()     
     }else{
-      apiHost = 'https://api-admin.oyster.ai'
+      // apiHost = 'https://api-admin.oyster.ai'
+      apiHost = 'https://api-admin-staging.oyster.ai'
     }
   }
   

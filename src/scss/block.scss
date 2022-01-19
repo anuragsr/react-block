@@ -134,7 +134,7 @@
         width: 200px;
         @include prefixed(appearance, none);
         background: transparent;
-        background-image: url('./img/select-arrow.png');
+        background-image: url('../img/select-arrow.png');
         background-repeat: no-repeat;
         background-position-x: 100%;
         background-position-y: 7px;

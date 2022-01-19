@@ -19,9 +19,9 @@ export default class Main extends Component {
     this.setState({
       blocks: [
         { type: "Photo", show: true, toRender: b.includes("photo_block") },
-        { type: "Place", show: true, toRender: b.includes("place_block") },
-        { type: "Tag", show: true, toRender: b.includes("tag_block") },
-        { type: "Tag Group", show: true, toRender: b.includes("tag_group_block") },
+        // { type: "Place", show: true, toRender: b.includes("place_block") },
+        // { type: "Tag", show: true, toRender: b.includes("tag_block") },
+        // { type: "Tag Group", show: true, toRender: b.includes("tag_group_block") },
       ],
       placeObj: {
         withPlace: b.includes("photo_block") && b.includes("place_block"),
@@ -48,8 +48,10 @@ export default class Main extends Component {
     
     let blocks = state.blocks
     , showPhoto = blocks.filter(bl => bl.type === "Photo")[0].show
-    , showPlace = blocks.filter(bl => bl.type === "Place")[0].show
-    , withPlace = showPhoto && showPlace
+    // , showPlace = blocks.filter(bl => bl.type === "Place")[0].show
+    // , withPlace = showPhoto && showPlace
+    , showPlace = false
+    , withPlace = false
 
     this.setState({
       blocks: state.blocks,
