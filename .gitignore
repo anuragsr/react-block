@@ -20,6 +20,7 @@
 .env.test.local
 .env.production.local
 ws.code-workspace
+/.idea
 specs
 agent_socket
 
