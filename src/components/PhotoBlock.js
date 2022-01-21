@@ -389,7 +389,8 @@ export default class PhotoBlock extends Component {
   }
 
   componentDidMount = () => {
-    this.getCategories()    
+    this.getCategories()
+    l("Call api")
     this.doApiCall(this.props)
     window.addEventListener('resize', this.resizeObjects)
   }
@@ -417,9 +418,10 @@ export default class PhotoBlock extends Component {
 
     if (props.placeObj.withPlace) {
       this.setState({ currPlace: {}, showCityDropdown: false })
+      canCall = true
       if (Object.keys(props.placeObj.place).length) {
         placeId = props.placeObj.place.id
-        canCall = true
+        // canCall = true
       } else {
         // l("Wait for place selection")
       }
@@ -462,7 +464,7 @@ export default class PhotoBlock extends Component {
         this.destroyCanvas()
       }
 
-      // l("Photos:", photos)
+      l("Photos:", photos)
       this.setState({ photos, currPhoto, currCat, imgOrientation: "" }, () => {        
         // l(plRect)
         if(typeof plRect !== "undefined") {
@@ -1740,6 +1742,9 @@ export default class PhotoBlock extends Component {
       // l(spaceCount, inputSize)
     }
 
+    let vicinityData = photo.place_vicinity && photo.place_vicinity.length ? photo.place_vicinity : null
+      , contactData = photo.contact_data && photo.contact_data.length ? photo.contact_data : null
+
     return (
       <div ref={blkRef} className="block-content" tabIndex="0" onKeyUp={this.handleKey} onMouseDown={this.handleMouseDownOutside}>
         <div style={{ display: !this.state.showUpload ? "block" : "none" }}>
@@ -1753,7 +1758,7 @@ export default class PhotoBlock extends Component {
                         display: showingUploaded ? "inline-block" : "none"
                       }}
                     >{currPhotoIdx + 1}/{photos.length}</div>
-                    <div className="checkTime"
+                    <div className="photo-info"
                       style={{
                         display: photo.ml_check_date !== null ? "inline-block" : "none"
                       }}
@@ -1767,6 +1772,8 @@ export default class PhotoBlock extends Component {
                     <div className="title photo">
                       <span title={photo.name}>{photo.name}</span>
                     </div>
+                    {vicinityData && <div className="photo-info"><span title={vicinityData}>{vicinityData}</span></div>}
+                    {contactData && <div className="photo-info"><span title={contactData}>{contactData}</span></div>}
                   </div>
                 </div>
               </div>
@@ -1823,10 +1830,10 @@ export default class PhotoBlock extends Component {
                   />
                 </div>}
                 
-                <div className="ctn-icon" onClick={this.addPhoto}>
+                {/*<div className="ctn-icon" onClick={this.addPhoto}>
                   <img src="assets/image.svg" alt=""/>
                   <div className="up-link">Upload Photos</div>
-                </div>
+                </div>*/}
               </div>
             </div>
 
