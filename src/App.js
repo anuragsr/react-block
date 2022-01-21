@@ -37,11 +37,11 @@ export default class App extends Component {
       }, this.signIn)
     }
     else{
-      this.setState({
-        showNav: false,
-        username: 'ml_page',
-        password: '}XhE9p2/FQjx9.e'
-      }, this.signIn)
+      // this.setState({
+      //   showNav: false,
+      //   username: 'ml_page',
+      //   password: '}XhE9p2/FQjx9.e'
+      // }, this.signIn)
     }
   }
 

@@ -82,18 +82,18 @@
         font-family: $sp-m;
       }
     }
+    .photo-info{
+      // margin-top: 10px;
+      font-family: $sp-r;
+      color: $sub-title;
+      font-size: 15px;
+    }
     .photo-sb{
       @extend %j-s-b;
       .counter{
         font-size: 23px;
         color: $sub-title;
         font-family: $sp-l;
-      }
-      .checkTime{
-        // margin-top: 10px;
-        font-family: $sp-r;
-        color: $sub-title;
-        font-size: 15px;
       }
       .ctn-icon{
         @extend %j-c;
