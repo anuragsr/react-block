@@ -488,6 +488,22 @@ export default class PhotoBlock extends Component {
 
     if(!afterSubmit){
       // l(lastParams)
+      let im = this.state.currPhoto
+      , req = {
+        id: im.id,
+        bad: true,
+        labels: im.labels.map(lbl => {
+          let tmp = {...lbl}
+          delete tmp.ref
+          return tmp
+        }),
+        category: im.category
+      }
+
+      this.http
+      .put('/api/v1/submit_photo', req)
+      .then(res => { l(res) })
+
       if(lastParams.place_id !== null){
         params.place_id = lastParams.place_id
       } else if(lastParams.city_id !== null){
@@ -1762,8 +1778,10 @@ export default class PhotoBlock extends Component {
                       style={{
                         display: photo.ml_check_date !== null ? "inline-block" : "none"
                       }}
-                    ><FontAwesomeIcon style={{ color: "#56d86c" }} icon={faCheck} />
-                      &nbsp;&nbsp;Checked: {getFormattedTime(photo.ml_check_date)}
+                    >
+                      {/*<FontAwesomeIcon style={{ color: "#56d86c" }} icon={faCheck} />
+                      &nbsp;&nbsp;*/}
+                      Checked: {getFormattedTime(photo.ml_check_date)}
                     </div>
                   </div>
                 </div>
@@ -1782,7 +1800,8 @@ export default class PhotoBlock extends Component {
                   className="btn btn-accent-outline"
                   disabled={this.state.adding !== ""}
                 >
-                  Next&nbsp;&nbsp;<FontAwesomeIcon icon={faCaretRight} />
+                  Delete
+                  {/*&nbsp;&nbsp;<FontAwesomeIcon icon={faCaretRight} />*/}
                 </button>
                 <button onClick={this.submit} 
                   className="ml-3 btn btn-accent"
