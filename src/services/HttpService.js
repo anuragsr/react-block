@@ -197,11 +197,33 @@ export default class HttpService {
       .reply(200, {
         id: 1
       })
-      .onPost("/api/v1/keywords")
+      .onGet("/api/v1/categories")
       .reply(200, {
-        id: 7738,
-        name: "fashion accessory",
-        tag: null
+        results: ["food", "kitchen", "table"]
+      })
+      .onGet("/api/v1/tags", {})
+      .reply(200, {
+        count: 2,
+        results: [
+          {
+            id: 1,
+            name: "tag1:tag2:tag3",
+            full_name: "tag1:tag2:tag3",
+            image: "assets/tag-plh.png"
+          },
+          {
+            id: 2,
+            name: "tag2:tag3:tag4",
+            full_name: "tag2:tag3:tag4",
+            image: "assets/tag-plh.png"
+          },
+          {
+            id: 3,
+            name: "tag3:tag4:tag5",
+            full_name: "tag3:tag4:tag5",
+            image: "assets/tag-plh.png"
+          }
+        ]
       })
       .onPut("/api/v1/submit_photo")
       .reply(200, {})

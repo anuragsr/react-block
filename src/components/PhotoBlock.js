@@ -384,6 +384,7 @@ export default class PhotoBlock extends Component {
 
   getCategories = () => {
     this.http.get("/api/v1/categories").then(res => {
+      l(res);
       let categories = res.data.results; //, currCat = categories[0]
       this.setState({ categories });
     });
