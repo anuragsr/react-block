@@ -355,7 +355,7 @@ export default class PhotoBlock extends Component {
       currPlace: {},
       uncheckedOnly: false,
       ml: false,
-      showUpload: false,
+      showUpload: true,
       uploadedFiles: [],
       loadUrl: "",
       showCityDropdown: false,
@@ -1811,19 +1811,14 @@ export default class PhotoBlock extends Component {
         onKeyUp={this.handleKey}
         onMouseDown={this.handleMouseDownOutside}
       >
-        <div style={{ display: !this.state.showUpload ? "block" : "none" }}>
+        <div>
           <div className="title row pb-0">
             {photos.length > 0 ? (
               <>
                 <div className="col-lg-9">
                   <div className="row pb-0">
                     <div className="col-lg-12 photo-sb">
-                      <div
-                        className="counter"
-                        style={{
-                          display: showingUploaded ? "inline-block" : "none"
-                        }}
-                      >
+                      <div className="counter">
                         {currPhotoIdx + 1}/{photos.length}
                       </div>
                       <div
@@ -1835,9 +1830,12 @@ export default class PhotoBlock extends Component {
                               : "none"
                         }}
                       >
-                        {/*<FontAwesomeIcon style={{ color: "#56d86c" }} icon={faCheck} />
-                      &nbsp;&nbsp;*/}
-                        Checked: {getFormattedTime(photo.ml_check_date)}
+                        <FontAwesomeIcon
+                          style={{ color: "#56d86c" }}
+                          icon={faCheck}
+                        />
+                        &nbsp;&nbsp; Checked:{" "}
+                        {getFormattedTime(photo.ml_check_date)}
                       </div>
                     </div>
                   </div>
@@ -2206,7 +2204,7 @@ export default class PhotoBlock extends Component {
           </div>
         </div>
 
-        <div style={{ display: this.state.showUpload ? "block" : "none" }}>
+        <div>
           <div className="title row">
             <div className="col-lg-6">Upload Photos</div>
           </div>
